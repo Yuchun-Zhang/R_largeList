@@ -1,11 +1,11 @@
 Package: largeList
 Type: Package
 Title: Save, append and read large lists.
-Version: 0.2.1
-Date: 2016-05-16
+Version: 0.3.0
+Date: 2016-07-04
 Author: Yuchun Zhang
 Maintainer: Yuchun Zhang <yczhangvrc@gmail.com>
-Description: Save, append and read large lists without loading the whole date into memory. The idea behind is storing positions of elements at the end of binary files.
+Description: Functions to write or append a R list to a file, read or remove elements from it without restoring the whole list.
 License: GPL (>= 2)
 Imports:
     Rcpp (>= 0.12.5)

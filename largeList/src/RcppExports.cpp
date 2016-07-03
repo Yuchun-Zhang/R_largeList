@@ -5,28 +5,62 @@
 
 using namespace Rcpp;
 
-// readLargeList
-RcppExport SEXP readLargeList(SEXP fileName, SEXP index);
-RcppExport SEXP largeList_readLargeList(SEXP fileNameSEXP, SEXP indexSEXP) {
+// getListLength
+RcppExport SEXP getListLength(SEXP file);
+RcppExport SEXP largeList_getListLength(SEXP fileSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< SEXP >::type fileName(fileNameSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type index(indexSEXP);
-    __result = Rcpp::wrap(readLargeList(fileName, index));
+    Rcpp::traits::input_parameter< SEXP >::type file(fileSEXP);
+    __result = Rcpp::wrap(getListLength(file));
     return __result;
 END_RCPP
 }
-// saveLargeList
-RcppExport SEXP saveLargeList(SEXP object, SEXP fileName, SEXP append);
-RcppExport SEXP largeList_saveLargeList(SEXP objectSEXP, SEXP fileNameSEXP, SEXP appendSEXP) {
+// getListName
+RcppExport SEXP getListName(SEXP file);
+RcppExport SEXP largeList_getListName(SEXP fileSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< SEXP >::type file(fileSEXP);
+    __result = Rcpp::wrap(getListName(file));
+    return __result;
+END_RCPP
+}
+// readList
+RcppExport SEXP readList(SEXP file, SEXP index);
+RcppExport SEXP largeList_readList(SEXP fileSEXP, SEXP indexSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< SEXP >::type file(fileSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type index(indexSEXP);
+    __result = Rcpp::wrap(readList(file, index));
+    return __result;
+END_RCPP
+}
+// removeFromList
+RcppExport SEXP removeFromList(SEXP file, SEXP index);
+RcppExport SEXP largeList_removeFromList(SEXP fileSEXP, SEXP indexSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< SEXP >::type file(fileSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type index(indexSEXP);
+    __result = Rcpp::wrap(removeFromList(file, index));
+    return __result;
+END_RCPP
+}
+// saveList
+RcppExport SEXP saveList(SEXP object, SEXP file, SEXP append);
+RcppExport SEXP largeList_saveList(SEXP objectSEXP, SEXP fileSEXP, SEXP appendSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< SEXP >::type object(objectSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type fileName(fileNameSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type file(fileSEXP);
     Rcpp::traits::input_parameter< SEXP >::type append(appendSEXP);
-    __result = Rcpp::wrap(saveLargeList(object, fileName, append));
+    __result = Rcpp::wrap(saveList(object, file, append));
     return __result;
 END_RCPP
 }
