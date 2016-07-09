@@ -1,5 +1,4 @@
 #include "largeList.h"
-using namespace Rcpp;
 
 int getHeadInfo(SEXP _x, int &level, int &object, SEXP &attribute, SEXP &tag){
   level = LEVELS(_x);
@@ -19,39 +18,34 @@ int getHeadInfo(SEXP _x, int &level, int &object, SEXP &attribute, SEXP &tag){
 }
 
 int writeREALSXP(SEXP _x, std::fstream &fout){
-  NumericVector x(_x);
-  fout.write(reinterpret_cast<char*>(& x[0]),8*x.size());
+  fout.write((char *)(& REAL(_x)[0]),8*Rf_xlength(_x));
   return(true);
 }
 
 int writeNILSXP(std::fstream &fout){
-  int nil = 254;
-  fout.write(reinterpret_cast<char*>(& nil),4);
+  BYTE nil[4] = {0xfe,0x00,0x00,0x00};
+  fout.write((char *)&(nil[0]),4);
   return(true);
 }
 
 int writeINTSXP(SEXP _x, std::fstream &fout){
-  IntegerVector x(_x);
-  fout.write(reinterpret_cast<char*>(& x[0]),4*x.size());
+  fout.write((char *)(& INTEGER(_x)[0]),4*Rf_xlength(_x));
   return(true);
 }
 
 int writeLGLSXP(SEXP _x, std::fstream &fout){
-  LogicalVector x(_x);
-  fout.write(reinterpret_cast<char*>(& x[0]),4*x.size());
+  fout.write((char *)(& LOGICAL(_x)[0]),4*Rf_xlength(_x));
   return(true);
 }
 
 int writeRAWSXP(SEXP _x, std::fstream &fout){
-  RawVector x(_x);
-  fout.write(reinterpret_cast<char*>(& x[0]),x.size());
+  fout.write((char *)(& RAW(_x)[0]),Rf_xlength(_x));
   return(true);
 }
   
 int writeSTRSXP(SEXP _x, std::fstream &fout){
-  StringVector x(_x);
-  for (int64_t i = 0; i < x.size(); i++){
-    writeSEXP(x[i], fout);
+  for (int64_t i = 0; i < Rf_xlength(_x); i++){
+    writeSEXP(STRING_ELT(_x, i), fout);
   }
   return(true);
 }
@@ -61,16 +55,14 @@ int writeCHARSXP(SEXP _x, std::fstream &fout){
     BYTE ffff[4] = {0xff,0xff,0xff,0xff};
     fout.write((char *)&(ffff[0]),4);
   }else{
-    std::string x = Rcpp::as<std::string>(_x);
-    fout.write(x.c_str(),x.size());
+    fout.write(CHAR(_x),Rf_xlength(_x));
   }
   return(true);
 }
 
 int writeVECSXP(SEXP _x, std::fstream &fout){
-  List x(_x);
-  for (int64_t i = 0; i < x.size(); i++){
-    writeSEXP(x[i], fout);
+  for (int64_t i = 0; i < Rf_xlength(_x); i++){
+    writeSEXP(VECTOR_ELT(_x, i), fout);
   }
   return(true);
 }
@@ -95,13 +87,13 @@ int writeHead(SEXP _x, int level, int object, SEXP attribute, SEXP tag, std::fst
              ((int)(attribute != R_NilValue) << 9) + 
              ((int)(tag != R_NilValue) << 10) + 
              (level <<12);
-  fout.write(reinterpret_cast<char*>(&head),4);
+  fout.write((char *)(&head),4);
   return(true);
 }
 
 int writeLength(SEXP _x, std::fstream & fout){
   int length = LENGTH(_x);
-  fout.write(reinterpret_cast<char*>(&length),4);
+  fout.write((char *)&length,4);
   return(true);
 }
 
@@ -115,11 +107,12 @@ int writeHeadAndLength(SEXP _x, std::fstream & fout){
 }
 
 int writeSEXP(SEXP _x, std::fstream &fout){
-  //Rcout <<"give in "<< TYPEOF(_x) << "\n";
   int level, object;
   SEXP attribute, tag;
   getHeadInfo(_x, level, object, attribute, tag);
-  writeHead(_x, level, object, attribute, tag, fout);
+  if (TYPEOF(_x) != NILSXP){
+    writeHead(_x, level, object, attribute, tag, fout);
+  }
   if (TYPEOF(_x) != NILSXP && TYPEOF(_x) != LISTSXP && TYPEOF(_x) != SYMSXP && _x != NA_STRING){
     writeLength(_x, fout);
   }

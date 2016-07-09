@@ -1,15 +1,12 @@
 #include "largeList.h"
-using namespace Rcpp;
 
-// [[Rcpp::export]]
-RcppExport SEXP removeFromList(SEXP file, 
-                         SEXP index)
+extern "C" SEXP removeFromList(SEXP file, SEXP index)
 {
-  std::string fileName = Rcpp::as<std::string>(file);
+  const char *fileName = CHAR(STRING_ELT(file,0));
   std::fstream fout;
   std::fstream fin;
-  fout.open(fileName.c_str(), std::ios_base::binary | std::ios_base::out | std::ios_base::in);
-  fin.open(fileName.c_str(), std::ios_base::binary | std::ios_base::in);
+  fout.open(fileName, std::ios_base::binary | std::ios_base::out | std::ios_base::in);
+  fin.open(fileName, std::ios_base::binary | std::ios_base::in);
   std::vector<int64_t> positions;
   std::vector<int> indexNum;
   std::vector<std::string> names;
@@ -20,8 +17,13 @@ RcppExport SEXP removeFromList(SEXP file,
   fin.read((char*)&(lengthOfList), 4);
   
   if (TYPEOF(index) == INTSXP ||  TYPEOF(index) == REALSXP){
-    indexNum = Rcpp::as< std::vector<int> >(index);
-    for(size_t i = 0 ; i < indexNum.size(); i++){
+    indexNum.resize(Rf_length(index));
+    if (TYPEOF(index) == INTSXP){
+      indexNum.assign(INTEGER(index),INTEGER(index)+Rf_length(index));
+    }else{
+      indexNum.assign(REAL(index),REAL(index)+Rf_length(index));
+    }
+    for(int i = 0 ; i < Rf_length(index); i++){
       indexNum[i] = indexNum[i]-1;
     }
     int maxIndex = *std::max_element(indexNum.begin(), indexNum.end());
@@ -35,10 +37,13 @@ RcppExport SEXP removeFromList(SEXP file,
   }
   
   if (TYPEOF(index) == STRSXP){
-    names = Rcpp::as<std::vector<std::string> >(index);
+    names.resize(Rf_length(index));
+    for (int i = 0; i < Rf_length(index); i ++){
+      names[i].assign(CHAR(STRING_ELT(index,i)),Rf_length(STRING_ELT(index,i)));
+    }
     positions.resize(names.size());
     indexNum.resize(names.size());
-    for(size_t i = 0 ; i < names.size(); i++){
+    for(int i = 0 ; i < Rf_length(index); i++){
       names[i].resize(8);
       fileBinarySearch(fin,positions[i],names[i],indexNum[i],lengthOfList);
       if (positions[i] == -1)
@@ -61,7 +66,7 @@ RcppExport SEXP removeFromList(SEXP file,
     
     //if no element to delete, exit.
     if (indexNum.size() == 0){
-      return(wrap(true)); 
+      return(ScalarLogical(1)); 
     }
   }
   
@@ -174,8 +179,8 @@ RcppExport SEXP removeFromList(SEXP file,
   fout.close();
 #if defined PREDEF_PLATFORM_UNIX
   //Rcout << "unix\n"; 
-  if (truncate(fileName.c_str(),fileLength) != 0){
-    Rcout<<"File truncation failed (Unix)!";
+  if (truncate(fileName,fileLength) != 0){
+    Rprintf("File truncation failed (Unix)!");
   }
 #endif
   
@@ -184,7 +189,7 @@ RcppExport SEXP removeFromList(SEXP file,
   LARGE_INTEGER fileLengthW;
   fileLengthW.QuadPart= fileLength;
   std::wstring fileNameW;
-  fileNameW.assign(fileName.begin(), fileName.end());
+  fileNameW.assign(fileName, fileName + sizeof(fileName) - 1);
   
   HANDLE fh = CreateFileW(fileNameW.c_str(), 
                      GENERIC_WRITE, // open for write
@@ -196,11 +201,10 @@ RcppExport SEXP removeFromList(SEXP file,
   SetFilePointerEx(fh, fileLengthW, NULL, 0);
   if (SetEndOfFile(fh) == 0){
     DWORD lastError = GetLastError();
-    Rcout << "File truncation failed (Unix)!" << std::hex
-              << lastError << ".\n";
+    Rprintf("File truncation failed (Windows)!");
   }
   CloseHandle(fh);
 #endif
 
-  return(wrap(true)); 
+  return(ScalarLogical(1)); 
 }

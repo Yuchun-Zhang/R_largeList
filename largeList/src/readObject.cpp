@@ -1,40 +1,48 @@
 #include "largeList.h"
-using namespace Rcpp;
 
-int readREALSXP(SEXP & _x, std::fstream &fin, int &length){
-  NumericVector x(length);
-  fin.read((char*)(&x[0]),8*length);
-  _x = x;
-  return(true);
+SEXP readREALSXP(std::fstream &fin){
+  int length;
+  readLength(fin,length);
+  SEXP x = PROTECT(Rf_allocVector(REALSXP, length));
+  fin.read((char*)(&REAL(x)[0]),8*length);
+  UNPROTECT(1);
+  return(x);
 }
 
-int readINTSXP(SEXP & _x, std::fstream &fin, int &length){
-  IntegerVector x(length);
-  fin.read((char*)(&x[0]),4*length);
-  _x = x;
-  return(true);
+SEXP readINTSXP(std::fstream &fin){
+  int length;
+  readLength(fin,length);
+  SEXP x = PROTECT(Rf_allocVector(INTSXP, length));
+  fin.read((char*)(&INTEGER(x)[0]),4*length);
+  UNPROTECT(1);
+  return(x);
 }
 
-int readRAWSXP(SEXP & _x, std::fstream &fin, int &length){
-  RawVector x(length);
-  fin.read((char*)(&x[0]),length);
-  _x = x;
-  return(true);
+SEXP readRAWSXP(std::fstream &fin){
+  int length;
+  readLength(fin,length);
+  SEXP x = PROTECT(Rf_allocVector(RAWSXP, length));
+  fin.read((char*)(&RAW(x)[0]),length);
+  UNPROTECT(1);
+  return(x);
 }
 
-int readLGLSXP(SEXP & _x, std::fstream &fin, int &length){
-  LogicalVector x(length);
-  fin.read((char*)(&x[0]),4*length);
-  _x = x;
-  return(true);
+SEXP readLGLSXP(std::fstream &fin){
+  int length;
+  readLength(fin,length);
+  SEXP x = PROTECT(Rf_allocVector(LGLSXP, length));
+  fin.read((char*)(&LOGICAL(x)[0]),4*length);
+  UNPROTECT(1);
+  return(x);
 }
 
-int readCHARSXP(SEXP & _x, std::fstream &fin){
+SEXP readCHARSXP(std::fstream &fin){
   std::vector<BYTE> tempRaw(4);
   std::vector<BYTE> naString(4,0xff);
   fin.read((char *)&(tempRaw[0]),4);
+  SEXP _x;
   if (tempRaw == naString){
-    _x = NA_STRING;
+    _x = PROTECT(NA_STRING);
   }else{
     std::string x;
     int length;
@@ -42,43 +50,47 @@ int readCHARSXP(SEXP & _x, std::fstream &fin){
     fin.read((char *)&(length),4);
     x.resize(length);
     fin.read((char*)(&x[0]),length);
-    _x = Rf_mkChar(x.c_str());
+    _x = PROTECT(Rf_mkChar(x.c_str()));
   }
-  return(true);
+  UNPROTECT(1);
+  return(_x);
 }
 
-int readSTRSXP(SEXP & _x, std::fstream &fin, int &length){
-  StringVector x(length);
+SEXP readSTRSXP(std::fstream &fin){
+  int length;
+  readLength(fin,length);
+  SEXP x = PROTECT(Rf_allocVector(STRSXP, length));
   for (int64_t i = 0; i < length; i++){
-    SEXP temp;
-    readSEXP(temp, fin);
-    x(i) = temp;
+    SEXP temp = PROTECT(readSEXP(fin));
+    SET_STRING_ELT(x, i, temp);
+    UNPROTECT(1);
   }
-  _x = x;
-  return(true);
+  UNPROTECT(1);
+  return(x);
 }
 
-int readVECSXP(SEXP & _x, std::fstream &fin, int &length){
-  List x(length);
+SEXP readVECSXP(std::fstream &fin){
+  int length;
+  readLength(fin,length);
+  SEXP x = PROTECT(Rf_allocVector(VECSXP, length));
   for (int64_t i = 0; i < length; i++){
-    SEXP temp;
-    readSEXP(temp, fin);
-    x[i] = temp;
+    SEXP temp = PROTECT(readSEXP(fin));
+    SET_VECTOR_ELT(x,i,temp);
+    UNPROTECT(1);
   }
-  _x = x;
-  return(true);
+  UNPROTECT(1);
+  return(x);
 }
 
-int readSYMSXP(SEXP & _x, std::fstream &fin, int &length){
-  SEXP chars;
-  readSEXP(chars, fin);
-  Symbol x(chars);
-  _x = x;
-  return(true);
+SEXP readSYMSXP(std::fstream &fin){
+  SEXP chars = PROTECT(readSEXP(fin));
+  SEXP x = PROTECT(Rf_install(CHAR(chars)));
+  UNPROTECT(2);
+  return(x);
 }
 
 
-int readHead(std::fstream &fin, int &type, int &hasAttr, int &hasTag, int &hasObject, int &level){
+void readHead(std::fstream &fin, int &type, int &hasAttr, int &hasTag, int &hasObject, int &level){
   int headInfo;
   fin.read((char*)(&headInfo),4);
   type = headInfo & 255;
@@ -86,84 +98,69 @@ int readHead(std::fstream &fin, int &type, int &hasAttr, int &hasTag, int &hasOb
   hasAttr = (headInfo >> 9) & 1;
   hasTag =  (headInfo >> 10) & 1;
   level = headInfo >> 12; 
-  return(true);
+  return;
 }
 
-int readLength(std::fstream &fin, int &length){
+void readLength(std::fstream &fin, int &length){
   fin.read((char*)(&length),4);
-  return(true);
+  return;
 }
 
-int readATTR(SEXP &_x, std::fstream &fin){
-  SEXP chan;
-  readSEXP(chan, fin);
-  SEXP parlist = chan;
+void readATTR(SEXP &_x, std::fstream &fin){
+  SEXP parlist = PROTECT(readSEXP(fin));
   SEXP currentChan = parlist;
   while(true){
-    SEXP chan;
-    readSEXP(chan, fin);
+    SEXP chan = PROTECT(readSEXP(fin));
     if (chan != R_NilValue){
       currentChan = SETCDR(currentChan,chan);
+      UNPROTECT_PTR(chan);
     }else{
+      UNPROTECT_PTR(chan);
       break;
     }
   }
   SET_ATTRIB(_x,parlist);
-  return(true);
+  UNPROTECT_PTR(parlist);
+  return;
 }
 
 
-int readSEXP(SEXP & _x, std::fstream &fin)
+SEXP readSEXP(std::fstream &fin)
 {
   int type, hasAttr, hasTag, hasObject, level;
-  int length;
   readHead(fin, type, hasAttr, hasTag, hasObject, level);
-  if (type != NILSXP && type != LISTSXP && type != SYMSXP  && type != CHARSXP){
-    readLength(fin,length);
-  }
-  SEXP element(R_NilValue);
   //Rcout << "TYPE " << type <<"\n";
   //Rcout << "object attr tag"<< hasObject <<" " << hasAttr << " " << hasTag <<"\n";
+  SEXP element;
   switch(type){
-  case NILSXP : break;
-  case REALSXP  : readREALSXP(element, fin, length); break;
-  case INTSXP   : readINTSXP(element, fin, length);  break;
-  case STRSXP   : readSTRSXP(element, fin, length);  break;
-  case CHARSXP  : readCHARSXP(element, fin);  break;
-  case LGLSXP   : readLGLSXP(element, fin, length);  break;
-  case VECSXP   : readVECSXP(element, fin, length);   break;
-  case RAWSXP   : readRAWSXP(element, fin, length);  break;
-  case SYMSXP   : readSYMSXP(element, fin, length);  break;
+  case 0xfe : element = PROTECT(R_NilValue); break;
+  case REALSXP  : element = PROTECT(readREALSXP(fin)); break;
+  case INTSXP   : element = PROTECT(readINTSXP(fin));  break;
+  case STRSXP   : element = PROTECT(readSTRSXP(fin));  break;
+  case CHARSXP  : element = PROTECT(readCHARSXP(fin)); break;
+  case LGLSXP   : element = PROTECT(readLGLSXP(fin));  break;
+  case VECSXP   : element = PROTECT(readVECSXP(fin));   break;
+  case RAWSXP   : element = PROTECT(readRAWSXP(fin));  break;
+  case SYMSXP   : element = PROTECT(readSYMSXP(fin));  break;
   case LISTSXP  :  
     {
       SEXP tag;
       SEXP el;
       if (hasTag == 1){ 
-        readSEXP(tag,fin);
+        tag = PROTECT(readSEXP(fin));
       }
-      readSEXP(el,fin);
-      element = Rf_cons(el, R_NilValue); 
-      if (hasTag == 1){SET_TAG(element,tag);}
+      el = PROTECT(readSEXP(fin));
+      element = PROTECT(Rf_cons(el, R_NilValue));
+      UNPROTECT_PTR(el);
+      if (hasTag == 1){SET_TAG(element,tag); UNPROTECT_PTR(tag);}
     }break;
   }
-  _x = element;
   if (hasAttr == 1){
-    readATTR(_x,fin);
+    readATTR(element,fin);
   }
   if (hasObject == 1){
-    SET_OBJECT(_x,1);
+    SET_OBJECT(element,1);
   }
-  return(true);
+  UNPROTECT_PTR(element);
+  return(element);
 }
-
-// RcppExport SEXP unitTestRead(CharacterVector fileName){
-//   std::fstream fin;
-//   std::string fname = Rcpp::as<std::string>(fileName);
-//   fin.open(fname, std::ios_base::binary | std::ios_base::in);
-//   RawVector fileHead(14);
-//   fin.read((char*)(&fileHead[0]),14);
-//   SEXP element(R_NilValue); 
-//   readSEXP(element, fin);
-//   fin.close();
-//   return(element);
-// }

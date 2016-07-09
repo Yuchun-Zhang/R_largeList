@@ -11,15 +11,15 @@
 #include <math.h>
 #include <iostream> 
 #include <fstream>
+#include <vector>
 #undef ERROR
-#include <Rcpp.h> 
+#include <R.h>
+#include <Rinternals.h>
+#include <Rversion.h>
 
 #define BYTE unsigned char
 #define NAMELENGTH 8
 
-// RcppExport SEXP int2RawVec(int64_t, int  bitLength = 4);
-// int64_t rawVec2Int(SEXP, int  bitLength = 4);
-int getObjectName(SEXP, Rcpp::StringVector &);
 int writeNameAttrHead( std::fstream &);
 int writeNameAttrEnd( std::fstream &);
 int writeNameAttrLength(int &, std::fstream &);
@@ -41,19 +41,28 @@ int writeLength(SEXP, std::fstream &);
 int writeSEXP(SEXP, std::fstream &);
 int writeHeadAndLength(SEXP, std::fstream &);
 
-int readSEXP(SEXP &, std::fstream &);
-int readREALSXP(SEXP &, std::fstream &, int &);
-int readINTSXP(SEXP &, std::fstream &, int &);
-int readRAWSXP(SEXP &, std::fstream &, int &);
-int readLGLSXP(SEXP &, std::fstream &, int &);
-int readCHARSXP(SEXP &, std::fstream &);
-int readSTRSXP(SEXP &, std::fstream &, int &);
-int readVECSXP(SEXP &, std::fstream &, int &);
-int readSYMSXP(SEXP &, std::fstream &, int &);
-int readHead(std::fstream &, int &, int &, int &, int &, int &);
-int readLength(std::fstream &, int &);
-int readATTR(SEXP &, std::fstream &);
+SEXP readSEXP(std::fstream &);
+SEXP readREALSXP(std::fstream &);
+SEXP readINTSXP(std::fstream &);
+SEXP readRAWSXP(std::fstream &);
+SEXP readLGLSXP(std::fstream &);
+SEXP readCHARSXP(std::fstream &);
+SEXP readSTRSXP(std::fstream &);
+SEXP readVECSXP(std::fstream &);
+SEXP readSYMSXP(std::fstream &);
+void readHead(std::fstream &, int &, int &, int &, int &, int &);
+void readLength(std::fstream &, int &);
+void readATTR(SEXP &, std::fstream &);
+
 bool cmp (std::pair<std::string, int64_t> const & , std::pair<std::string, int64_t> const & );
 void fileBinarySearch (std::fstream &, int64_t &, std::string &, int &, int &);
 void fileBinarySearchIndex (std::fstream &, int64_t &, int &, int &);
 void getPositionByIndex(std::fstream &, int &, int &, int64_t &);
+void writeVersion (std::fstream &);
+SEXP getObjectName(SEXP);
+
+extern "C" SEXP saveList(SEXP, SEXP, SEXP);
+extern "C" SEXP removeFromList(SEXP, SEXP);
+extern "C" SEXP readList(SEXP, SEXP);
+extern "C" SEXP getListName(SEXP);
+extern "C" SEXP getListLength(SEXP);

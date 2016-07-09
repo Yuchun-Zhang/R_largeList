@@ -7,7 +7,4 @@ Author: Yuchun Zhang
 Maintainer: Yuchun Zhang <yczhangvrc@gmail.com>
 Description: Functions to write or append a R list to a file, read or remove elements from it without restoring the whole list.
 License: GPL (>= 2)
-Imports:
-    Rcpp (>= 0.12.5)
-LinkingTo: Rcpp
 RoxygenNote: 5.0.1

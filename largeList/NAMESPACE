@@ -1,3 +1,2 @@
 useDynLib(largeList)
 exportPattern("^[[:alpha:]]+")
-importFrom(Rcpp, evalCpp)

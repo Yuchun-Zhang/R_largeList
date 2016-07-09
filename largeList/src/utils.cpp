@@ -1,5 +1,5 @@
 #include "largeList.h"
-using namespace Rcpp;
+
 bool cmp (std::pair<std::string, int64_t> const & a, std::pair<std::string, int64_t> const & b)
 {
   return a.first != b.first?  a.first < b.first : a.second < b.second;
@@ -59,4 +59,28 @@ void fileBinarySearchIndex (std::fstream &fin, int64_t &position, int &index, in
     }
   }
   return;
+}
+
+void writeVersion (std::fstream &fout){
+  const int version = 2;
+  BYTE format[3] = {'B','\n'};
+  fout.write((char *)&format[0],2);
+  fout.write((char *)&version,4);
+  int R_VERSION_VAR = R_VERSION;
+  int R_Version_VAR = R_Version(2,3,0);
+  fout.write((char *)&R_VERSION_VAR,4);
+  fout.write((char *)&R_Version_VAR,4);
+}
+
+
+SEXP getObjectName(SEXP x){
+  SEXP nameSXP = Rf_getAttrib(x,R_NamesSymbol);
+  if (nameSXP == R_NilValue){
+    nameSXP = PROTECT(Rf_allocVector(STRSXP, Rf_length(x)));
+    for (int i = 0 ; i < Rf_length(x); i ++){
+      SET_STRING_ELT(nameSXP, i, NA_STRING);
+    }
+    UNPROTECT(1);
+  }
+  return(nameSXP);
 }
