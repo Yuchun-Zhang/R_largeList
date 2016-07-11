@@ -1,62 +1,71 @@
 #include "largeList.h"
 
-SEXP readREALSXP(std::fstream &fin){
+inline SEXP readREALSXP(FILE *fin){
   int length;
   readLength(fin,length);
   SEXP x = PROTECT(Rf_allocVector(REALSXP, length));
-  fin.read((char*)(&REAL(x)[0]),8*length);
+  fread((char*)(&REAL(x)[0]), 8, length, fin);
   UNPROTECT(1);
   return(x);
 }
 
-SEXP readINTSXP(std::fstream &fin){
+inline SEXP readINTSXP(FILE *fin){
   int length;
   readLength(fin,length);
   SEXP x = PROTECT(Rf_allocVector(INTSXP, length));
-  fin.read((char*)(&INTEGER(x)[0]),4*length);
+  fread((char*)(&INTEGER(x)[0]), 4, length, fin);
   UNPROTECT(1);
   return(x);
 }
 
-SEXP readRAWSXP(std::fstream &fin){
+inline SEXP readCPLXSXP(FILE *fin){
+  int length;
+  readLength(fin,length);
+  SEXP x = PROTECT(Rf_allocVector(CPLXSXP, length));
+  fread((char*)(&COMPLEX(x)[0]), 16, length, fin);
+  UNPROTECT(1);
+  return(x);
+}
+
+inline SEXP readRAWSXP(FILE *fin){
   int length;
   readLength(fin,length);
   SEXP x = PROTECT(Rf_allocVector(RAWSXP, length));
-  fin.read((char*)(&RAW(x)[0]),length);
+  fread((char*)(&RAW(x)[0]), 1, length, fin);
   UNPROTECT(1);
   return(x);
 }
 
-SEXP readLGLSXP(std::fstream &fin){
+inline SEXP readLGLSXP(FILE *fin){
   int length;
   readLength(fin,length);
   SEXP x = PROTECT(Rf_allocVector(LGLSXP, length));
-  fin.read((char*)(&LOGICAL(x)[0]),4*length);
+  fread((char*)(&LOGICAL(x)[0]),4, length, fin);
   UNPROTECT(1);
   return(x);
 }
 
-SEXP readCHARSXP(std::fstream &fin){
+inline SEXP readCHARSXP(FILE *fin){
   std::vector<BYTE> tempRaw(4);
   std::vector<BYTE> naString(4,0xff);
-  fin.read((char *)&(tempRaw[0]),4);
+  fread((char *)&(tempRaw[0]), 1, 4, fin);
   SEXP _x;
   if (tempRaw == naString){
     _x = PROTECT(NA_STRING);
   }else{
     std::string x;
     int length;
-    fin.seekg(-4,std::ios_base::cur);
-    fin.read((char *)&(length),4);
+    fseek(fin, -4, SEEK_CUR);
+    fread((char *)&(length), 4, 1, fin);
     x.resize(length);
-    fin.read((char*)(&x[0]),length);
+    fread((char*)(&x[0]), 1, length, fin);
     _x = PROTECT(Rf_mkChar(x.c_str()));
   }
   UNPROTECT(1);
   return(_x);
 }
 
-SEXP readSTRSXP(std::fstream &fin){
+inline SEXP readSTRSXP(FILE *fin){
   int length;
   readLength(fin,length);
   SEXP x = PROTECT(Rf_allocVector(STRSXP, length));
@@ -69,7 +78,7 @@ SEXP readSTRSXP(std::fstream &fin){
   return(x);
 }
 
-SEXP readVECSXP(std::fstream &fin){
+inline SEXP readVECSXP(FILE *fin){
   int length;
   readLength(fin,length);
   SEXP x = PROTECT(Rf_allocVector(VECSXP, length));
@@ -82,7 +91,7 @@ SEXP readVECSXP(std::fstream &fin){
   return(x);
 }
 
-SEXP readSYMSXP(std::fstream &fin){
+inline SEXP readSYMSXP(FILE *fin){
   SEXP chars = PROTECT(readSEXP(fin));
   SEXP x = PROTECT(Rf_install(CHAR(chars)));
   UNPROTECT(2);
@@ -90,9 +99,9 @@ SEXP readSYMSXP(std::fstream &fin){
 }
 
 
-void readHead(std::fstream &fin, int &type, int &hasAttr, int &hasTag, int &hasObject, int &level){
+inline void readHead(FILE *fin, int &type, int &hasAttr, int &hasTag, int &hasObject, int &level){
   int headInfo;
-  fin.read((char*)(&headInfo),4);
+  fread((char*)(&headInfo), 4 , 1, fin);
   type = headInfo & 255;
   hasObject = (headInfo >> 8) & 1;
   hasAttr = (headInfo >> 9) & 1;
@@ -101,12 +110,12 @@ void readHead(std::fstream &fin, int &type, int &hasAttr, int &hasTag, int &hasO
   return;
 }
 
-void readLength(std::fstream &fin, int &length){
-  fin.read((char*)(&length),4);
+inline void readLength(FILE *fin, int &length){
+  fread((char*)(&length), 4, 1, fin);
   return;
 }
 
-void readATTR(SEXP &_x, std::fstream &fin){
+inline void readATTR(SEXP &_x, FILE *fin){
   SEXP parlist = PROTECT(readSEXP(fin));
   SEXP currentChan = parlist;
   while(true){
@@ -125,7 +134,7 @@ void readATTR(SEXP &_x, std::fstream &fin){
 }
 
 
-SEXP readSEXP(std::fstream &fin)
+SEXP readSEXP(FILE *fin)
 {
   int type, hasAttr, hasTag, hasObject, level;
   readHead(fin, type, hasAttr, hasTag, hasObject, level);
@@ -136,6 +145,7 @@ SEXP readSEXP(std::fstream &fin)
   case 0xfe : element = PROTECT(R_NilValue); break;
   case REALSXP  : element = PROTECT(readREALSXP(fin)); break;
   case INTSXP   : element = PROTECT(readINTSXP(fin));  break;
+  case CPLXSXP   : element = PROTECT(readCPLXSXP(fin));  break;
   case STRSXP   : element = PROTECT(readSTRSXP(fin));  break;
   case CHARSXP  : element = PROTECT(readCHARSXP(fin)); break;
   case LGLSXP   : element = PROTECT(readLGLSXP(fin));  break;

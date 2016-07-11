@@ -1,6 +1,7 @@
 #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
 #define PREDEF_PLATFORM_UNIX
 #include <unistd.h>
+#include <stdlib.h>
 #endif
 
 #if defined(_WIN32)
@@ -12,6 +13,7 @@
 #include <iostream> 
 #include <fstream>
 #include <vector>
+#include <ctime>
 #undef ERROR
 #include <R.h>
 #include <Rinternals.h>
@@ -20,47 +22,54 @@
 #define BYTE unsigned char
 #define NAMELENGTH 8
 
-int writeNameAttrHead( std::fstream &);
-int writeNameAttrEnd( std::fstream &);
-int writeNameAttrLength(int &, std::fstream &);
-int getHeadInfo(SEXP, int &, SEXP &, SEXP &);
-int writeREALSXP(SEXP, std::fstream &);
-int writeNILSXP(std::fstream &);
-int writeINTSXP(SEXP, std::fstream &);
-int writeLGLSXP(SEXP, std::fstream &);
-int writeRAWSXP(SEXP, std::fstream &);
-int writeSTRSXP(SEXP, std::fstream &);
-int writeCHARSXP(SEXP, std::fstream &);
-int writeSEXP(SEXP, std::fstream &);
-int writeSYMSXP(SEXP, std::fstream &);
-int writeVECSXP(SEXP, std::fstream &);
-int writeATTR(SEXP, std::fstream &);
-int writeSYMSXP(SEXP, std::fstream &);
-int writeHead(SEXP, int, int, SEXP, SEXP, std::fstream &);
-int writeLength(SEXP, std::fstream &);
-int writeSEXP(SEXP, std::fstream &);
-int writeHeadAndLength(SEXP, std::fstream &);
 
-SEXP readSEXP(std::fstream &);
-SEXP readREALSXP(std::fstream &);
-SEXP readINTSXP(std::fstream &);
-SEXP readRAWSXP(std::fstream &);
-SEXP readLGLSXP(std::fstream &);
-SEXP readCHARSXP(std::fstream &);
-SEXP readSTRSXP(std::fstream &);
-SEXP readVECSXP(std::fstream &);
-SEXP readSYMSXP(std::fstream &);
-void readHead(std::fstream &, int &, int &, int &, int &, int &);
-void readLength(std::fstream &, int &);
-void readATTR(SEXP &, std::fstream &);
+//writeObject.cpp
+inline void  getHeadInfo(SEXP, int &, SEXP &, SEXP &);
+inline void  writeREALSXP(SEXP, FILE *);
+inline void  writeNILSXP(FILE *);
+inline void  writeINTSXP(SEXP, FILE *);
+inline void  writeCPLXSXP(SEXP, FILE *);
+inline void  writeLGLSXP(SEXP, FILE *);
+inline void  writeRAWSXP(SEXP, FILE *);
+inline void  writeSTRSXP(SEXP, FILE *);
+inline void  writeCHARSXP(SEXP, FILE *);
+inline void  writeSYMSXP(SEXP, FILE *);
+inline void  writeVECSXP(SEXP, FILE *);
+inline void  writeATTR(SEXP, FILE *);
+inline void  writeHead(SEXP, int, int, SEXP, SEXP, FILE *);
+inline void  writeLength(SEXP, FILE *);
+int writeSEXP(SEXP, FILE *);
 
+//readObject.cpp
+SEXP readSEXP(FILE *);
+inline SEXP readREALSXP(FILE *);
+inline SEXP readINTSXP(FILE *);
+inline SEXP readRAWSXP(FILE *);
+inline SEXP readLGLSXP(FILE *);
+inline SEXP readCHARSXP(FILE *);
+inline SEXP readSTRSXP(FILE *);
+inline SEXP readVECSXP(FILE *);
+inline SEXP readSYMSXP(FILE *);
+inline void readHead(FILE *, int &, int &, int &, int &, int &);
+inline void readLength(FILE *, int &);
+inline void readATTR(SEXP &, FILE *);
+
+//utils.cpp
 bool cmp (std::pair<std::string, int64_t> const & , std::pair<std::string, int64_t> const & );
-void fileBinarySearch (std::fstream &, int64_t &, std::string &, int &, int &);
-void fileBinarySearchIndex (std::fstream &, int64_t &, int &, int &);
-void getPositionByIndex(std::fstream &, int &, int &, int64_t &);
-void writeVersion (std::fstream &);
+void fileBinarySearch (FILE *, int64_t &, std::string &, int &, int &);
+void fileBinarySearchIndex (FILE *, int64_t &, int &, int &);
+void getPositionByIndex(FILE *, int &, int &, int64_t &);
+void writeVersion (FILE *);
 SEXP getObjectName(SEXP);
+void writeItemIdx(std::vector<std::pair<std::string, int64_t> > &, FILE* , int &);
+void readItemIdx(std::vector<std::pair<std::string, int64_t> > &, FILE* , int &);
+void mergeTwoSortedItemIdx(std::vector<std::pair<std::string, int64_t> > &,
+                           std::vector<std::pair<std::string, int64_t> > &,
+                           std::vector<std::pair<std::string, int64_t> > &);
+bool checkFile(const char *);
+const char* getFullPath(SEXP);
 
+//export files.
 extern "C" SEXP saveList(SEXP, SEXP, SEXP);
 extern "C" SEXP removeFromList(SEXP, SEXP);
 extern "C" SEXP readList(SEXP, SEXP);

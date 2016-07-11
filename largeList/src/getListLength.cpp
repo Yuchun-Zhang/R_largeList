@@ -1,13 +1,16 @@
 #include "largeList.h"
 
 extern "C" SEXP getListLength(SEXP file){
-  const char *fileName = CHAR(STRING_ELT(file,0));
-  std::fstream fin;
-  fin.open(fileName, std::ios_base::binary | std::ios_base::in);
+  //check parameters
+  if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("File should be a charater vector of length 1.\n");
+  
+  const char *fileName = getFullPath(file);
+  if(checkFile(fileName) == false) error("File does not exist.\n");
+  FILE *fin = fopen(fileName, "rb");
   
   //get length of List
-  fin.seekg(18, std::ios_base::beg);
   int lengthOfList;
-  fin.read((char*)&(lengthOfList), 4);
+  fseek(fin, 18, SEEK_SET);
+  fread((char*)&(lengthOfList), 4, 1, fin);
   return(ScalarInteger(lengthOfList));
 }

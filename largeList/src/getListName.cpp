@@ -2,23 +2,24 @@
 
 extern "C" SEXP getListName(SEXP file)
 {
-  const char *fileName = CHAR(STRING_ELT(file,0));
-  std::fstream fin;
-  fin.open(fileName, std::ios_base::binary | std::ios_base::in);
-  
+  //check parameters
+  if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("File should be a charater vector of length 1.\n");
+  const char *fileName = getFullPath(file);
+  if(checkFile(fileName) == false) error("File does not exist.\n");
+  FILE *fin = fopen(fileName, "rb");
+      
   //get length of List
-  fin.seekg(18, std::ios_base::beg);
   int lengthOfList;
-  fin.read((char*)&(lengthOfList), 4);
+  fseek(fin, 18, SEEK_SET);
+  fread((char*)&(lengthOfList), 4, 1, fin);
 
   //get names
   SEXP namesSXP = PROTECT(Rf_allocVector(STRSXP, lengthOfList));
-  std::string name;
+  char name[NAMELENGTH];
   for(int i = 0 ; i < lengthOfList; i++){
-    fin.seekg(-(8+NAMELENGTH)*lengthOfList -(8+NAMELENGTH)*(lengthOfList-i), std::ios_base::end);
-    fin.read(&(name[0]),NAMELENGTH);
-    // Rcout << "name " << name.c_str() <<"\n";
-    SET_STRING_ELT(namesSXP, i, Rf_mkChar(name.c_str()));
+    fseek(fin,-(8+NAMELENGTH)*lengthOfList -(8+NAMELENGTH)*(lengthOfList-i), SEEK_END);
+    fread(&(name[0]), 1, NAMELENGTH, fin);
+    SET_STRING_ELT(namesSXP, i, Rf_mkChar(name));
   }
   UNPROTECT(1);
   return(namesSXP);

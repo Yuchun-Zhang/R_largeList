@@ -5,7 +5,7 @@ bool cmp (std::pair<std::string, int64_t> const & a, std::pair<std::string, int6
   return a.first != b.first?  a.first < b.first : a.second < b.second;
 };
 
-void fileBinarySearch (std::fstream &fin, int64_t &position, std::string &name, int &index, int &length){
+void fileBinarySearch (FILE *fin, int64_t &position, std::string &name, int &index, int &length){
   int left = 0;
   int right = length-1;
   int mid;
@@ -13,8 +13,8 @@ void fileBinarySearch (std::fstream &fin, int64_t &position, std::string &name, 
   while (left <= right)
   {
     mid = (int) ((left + right) / 2);
-    fin.seekg(-16*length+mid*16+8, std::ios_base::end);
-    fin.read((char*)&(currentName[0]),8);
+    fseek(fin, -16*length+mid*16+8, SEEK_END);
+    fread((char*)&(currentName[0]), 8 , 1, fin);
     // Rprintf("current name is %d, name is %d, left %d, right %d , cmp %d\n",
     //         currentName.size(),
     //         name.size(),
@@ -22,8 +22,8 @@ void fileBinarySearch (std::fstream &fin, int64_t &position, std::string &name, 
     if (currentName == name)
     {
       index = mid;
-      fin.seekg(-16*length+mid*16, std::ios_base::end);
-      fin.read((char*)&(position),8);
+      fseek(fin, -16*length+mid*16, SEEK_END);
+      fread((char*)&(position), 8, 1, fin);
       return;
     }else if (currentName > name)
     {
@@ -37,7 +37,7 @@ void fileBinarySearch (std::fstream &fin, int64_t &position, std::string &name, 
   return;
 }
 
-void fileBinarySearchIndex (std::fstream &fin, int64_t &position, int &index, int &length){
+void fileBinarySearchIndex (FILE *fin, int64_t &position, int &index, int &length){
   int left = 0;
   int right = length-1;
   int mid;
@@ -45,8 +45,8 @@ void fileBinarySearchIndex (std::fstream &fin, int64_t &position, int &index, in
   while (left <= right)
   {
     mid = (int) ((left + right) / 2);
-    fin.seekg(-2*(8+NAMELENGTH)*length-8+mid*(8+NAMELENGTH), std::ios_base::end);
-    fin.read((char*)&(currentPosition),8);
+    fseek(fin, -2*(8+NAMELENGTH)*length-8+mid*(8+NAMELENGTH), SEEK_END);
+    fread((char*)&(currentPosition), 8, 1, fin);
     if (currentPosition == position)
     {
       index = mid;
@@ -61,15 +61,15 @@ void fileBinarySearchIndex (std::fstream &fin, int64_t &position, int &index, in
   return;
 }
 
-void writeVersion (std::fstream &fout){
+void writeVersion (FILE *fout){
   const int version = 2;
   BYTE format[3] = {'B','\n'};
-  fout.write((char *)&format[0],2);
-  fout.write((char *)&version,4);
+  fwrite((char *)&format[0], 1, 2, fout);
+  fwrite((char *)&version, 1, 4, fout);
   int R_VERSION_VAR = R_VERSION;
   int R_Version_VAR = R_Version(2,3,0);
-  fout.write((char *)&R_VERSION_VAR,4);
-  fout.write((char *)&R_Version_VAR,4);
+  fwrite((char *)&R_VERSION_VAR, 1, 4, fout);
+  fwrite((char *)&R_Version_VAR, 1, 4, fout);
 }
 
 
@@ -83,4 +83,68 @@ SEXP getObjectName(SEXP x){
     UNPROTECT(1);
   }
   return(nameSXP);
+}
+
+void writeItemIdx(std::vector<std::pair<std::string, int64_t> > &itemIdx, FILE* fout, int &length){
+  for(int i = 0; i < length; i++){
+    fwrite((char *)&(itemIdx[i].second), 8, 1, fout);
+    fwrite(itemIdx[i].first.c_str(), NAMELENGTH, 1, fout);
+  }
+  return;
+}
+
+void readItemIdx(std::vector<std::pair<std::string, int64_t> > &itemIdx, FILE* fin, int &length){
+  for(int i = 0; i < length; i++){
+    fread((char *)&(itemIdx[i].second),8, 1, fin);
+    itemIdx[i].first.resize(NAMELENGTH);
+    fread((char *)&((itemIdx[i].first)[0]), NAMELENGTH, 1, fin);
+  }
+  return;
+}
+
+void mergeTwoSortedItemIdx(std::vector<std::pair<std::string, int64_t> > &idx1,
+                           std::vector<std::pair<std::string, int64_t> > &idx2,
+                           std::vector<std::pair<std::string, int64_t> > &idxNew){
+  int idx1Pt = 0;
+  int idx2Pt = 0;
+  int idxNewPt = 0;
+  int idx1Length = idx1.size();
+  int idx2Length = idx2.size();
+  do {
+    if (idx1Pt == idx1Length) {
+      idxNew[idxNewPt] = idx2[idx2Pt];
+      idx2Pt ++;
+    }else
+      if (idx2Pt == idx2Length)
+      {
+        idxNew[idxNewPt] = idx1[idx1Pt];
+        idx1Pt ++;
+      }else
+        if (cmp(idx1[idx1Pt], idx2[idx2Pt]) == true)
+        {
+          idxNew[idxNewPt] = idx1[idx1Pt];
+          idx1Pt ++;
+        }else
+        {
+          idxNew[idxNewPt] = idx2[idx2Pt];
+          idx2Pt ++;
+        }
+        idxNewPt ++;
+  }while( idxNewPt < idx1Length+idx2Length);
+  return;
+}
+
+bool checkFile(const char *fileName){
+  if (FILE *ftest = fopen(fileName, "r")) {
+    fclose(ftest);
+    return(true);
+  }else{
+    return(false);
+  }
+}
+
+const char* getFullPath(SEXP file){
+  const char *fileNameRelative = CHAR(STRING_ELT(file,0));
+  const char * res = R_ExpandFileName(fileNameRelative);
+  return(res);
 }
