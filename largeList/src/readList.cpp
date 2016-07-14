@@ -35,7 +35,7 @@ extern "C" SEXP readList(SEXP file, SEXP index = R_NilValue)
     for(int i = 0 ; i < lengthOfList; i++){
       fseek(fin, -2*(8+NAMELENGTH)*lengthOfList-8+(indexNum[i])*(8+NAMELENGTH), SEEK_END);
       fread((char*)&(positions[i]), 8, 1, fin); 
-      names[i].resize(8);
+      names[i].resize(NAMELENGTH);
       fread((char*)&(names[i][0]), NAMELENGTH, 1, fin);
     }
   }
@@ -63,7 +63,7 @@ extern "C" SEXP readList(SEXP file, SEXP index = R_NilValue)
     for(int i = 0 ; i < Rf_length(index); i++){
       fseek(fin, -2*(8+NAMELENGTH)*lengthOfList-8+(indexNum[i])*(8+NAMELENGTH), SEEK_END);
       fread((char*)&(positions[i]), 8, 1, fin); 
-      names[i].resize(8);
+      names[i].resize(NAMELENGTH);
       fread((char*)&(names[i][0]), NAMELENGTH, 1, fin);
     }
   }
@@ -76,7 +76,7 @@ extern "C" SEXP readList(SEXP file, SEXP index = R_NilValue)
     positions.resize(names.size());
     indexNum.resize(names.size());
     for(int i = 0 ; i < Rf_length(index); i++){
-      names[i].resize(8);
+      names[i].resize(NAMELENGTH);
       fileBinarySearch(fin, positions[i], names[i], indexNum[i], lengthOfList);
     }
   }
@@ -100,7 +100,7 @@ extern "C" SEXP readList(SEXP file, SEXP index = R_NilValue)
     }
   }
   SEXP namesSXP = PROTECT(Rf_allocVector(STRSXP, indexSize));
-  std::string naString(8,'\xff');
+  std::string naString(NAMELENGTH,'\xff');
   for (int i = 0; i <indexSize; i++ ){
       names[i] == naString ? 
       SET_STRING_ELT(namesSXP, i, NA_STRING) :

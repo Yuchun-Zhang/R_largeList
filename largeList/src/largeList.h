@@ -20,7 +20,7 @@
 #include <Rversion.h>
 
 #define BYTE unsigned char
-#define NAMELENGTH 8
+#define NAMELENGTH 16
 
 
 //writeObject.cpp
@@ -68,6 +68,7 @@ void mergeTwoSortedItemIdx(std::vector<std::pair<std::string, int64_t> > &,
                            std::vector<std::pair<std::string, int64_t> > &);
 bool checkFile(const char *);
 const char* getFullPath(SEXP);
+void cutFile(const char *, const int64_t &);
 
 //export files.
 extern "C" SEXP saveList(SEXP, SEXP, SEXP);

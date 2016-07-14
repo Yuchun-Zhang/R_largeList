@@ -133,7 +133,7 @@ int writeSEXP(SEXP _x, FILE *fout){
                     writeSEXP(tag, fout);
                     writeSEXP(el, fout); 
                     break; }
-  default : { Rf_warning("Data type not supported, the written element might not be readable"); }
+  default : {throw -1;}
   }
   if (attribute != R_NilValue){
     writeATTR(attribute, fout);

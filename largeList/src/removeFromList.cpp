@@ -43,7 +43,7 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index)
     positions.resize(names.size());
     indexNum.resize(names.size());
     for(int i = 0 ; i < Rf_length(index); i++){
-      names[i].resize(8);
+      names[i].resize(NAMELENGTH);
       fileBinarySearch(fin,positions[i],names[i],indexNum[i],lengthOfList);
       if (positions[i] == -1)
       {
@@ -83,11 +83,10 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index)
   fread((char *)&(itemIdx[lengthOfList].second), 8, 1, fin);
 
   moveToPosition = itemIdx[indexNum[0]].second;
-  // Rcout << indexNum[0] << "\n";
 
+  //Rprintf("index %d, position %lf", indexNum[0], (double)moveToPosition);
   //move elements
   for (size_t i = 0; i < indexNum.size(); i ++){
-     // Rcout << indexNum[i] <<" "<< lengthOfList <<" "<< i << " "<< indexNum.size() << "\n";
     if (indexNum[i] == lengthOfList -1) break; // if the to remove element is the last in the list, do nothing.
     positionDiff += itemIdx[indexNum[i]+1].second - itemIdx[indexNum[i]].second;
     if (i == indexNum.size() -1){
@@ -97,7 +96,7 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index)
       toMoveFirstIndex = indexNum[i] +1;
       toMoveLastIndex = indexNum[i+1]-1;
     }
-    // Rcout << toMoveFirstIndex << " "<<toMoveLastIndex<<"\n";
+    //Rprintf("First %d, last %d", toMoveFirstIndex,toMoveLastIndex );
     if (toMoveLastIndex < toMoveFirstIndex) {continue;}
     for (int j = toMoveFirstIndex; j<= toMoveLastIndex; j++){
       toMoveFirstPosition = itemIdx[j].second;
@@ -106,7 +105,7 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index)
       fseek(fin, toMoveFirstPosition, SEEK_SET);
       fread((char*)&(toMoveRaw[0]),1, toMoveLastPosition-toMoveFirstPosition, fin);
       fseek(fout, moveToPosition, SEEK_SET);
-      fwrite((char*)&(toMoveRaw[0]), 1, toMoveLastPosition-toMoveFirstPosition, fin);
+      fwrite((char*)&(toMoveRaw[0]), 1, toMoveLastPosition-toMoveFirstPosition, fout);
       moveToPosition += toMoveLastPosition-toMoveFirstPosition;
     }
     for (int j = toMoveFirstIndex; j<= toMoveLastIndex; j++)
@@ -162,30 +161,6 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index)
 
   fclose(fin);
   fclose(fout);
-#if defined PREDEF_PLATFORM_UNIX
-  if (truncate(fileName,fileLength) != 0){
-    error("File truncation failed (Unix).");
-  }
-#endif
-
-#if defined PREDEF_PLATFORM_WIN32
-  LARGE_INTEGER fileLengthW;
-  fileLengthW.QuadPart= fileLength;
-  std::wstring fileNameW;
-  fileNameW.assign(fileName, fileName + sizeof(fileName) - 1);
-
-  HANDLE fh = CreateFileW(fileNameW.c_str(),
-                     GENERIC_WRITE, // open for write
-                     0,
-                     NULL, // default security
-                     OPEN_EXISTING, // existing file only
-                     FILE_ATTRIBUTE_NORMAL, // normal file
-                     NULL);
-  SetFilePointerEx(fh, fileLengthW, NULL, 0);
-  if (SetEndOfFile(fh) == 0){
-    error("File truncation failed (Windows).");
-  }
-  CloseHandle(fh);
-#endif
-   return(ScalarLogical(1)); 
+  cutFile(fileName, fileLength);
+  return(ScalarLogical(1)); 
 }

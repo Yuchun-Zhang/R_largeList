@@ -27,7 +27,15 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append)
     //array itemIdx stores the positions of elements.
     for(int i = 0; i < lengthOfList; i++){
       itemIdx[i].second = ftell(fout);
-      writeSEXP(VECTOR_ELT(object, i),fout);
+      try{
+        writeSEXP(VECTOR_ELT(object, i),fout);
+      }catch(int &exception){
+        if (exception == -1){ 
+          fclose(fout); 
+          remove(fileName); 
+          error("Data type in element %d not supported. Please check ?largeList", i+1);
+        }
+      }
     }
     lastPosition = ftell(fout);
     
@@ -36,7 +44,7 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append)
 
     for(int i = 0; i < lengthOfList; i++){
       std::string nameTemp = STRING_ELT(namesSXP,i) == NA_STRING ? 
-                            "\x00\x00\x00\x00\x00\x00\x00\x00" :  
+                            '\x00' :  
                             CHAR(STRING_ELT(namesSXP, i));
       itemIdx[i].first = nameTemp;
       itemIdx[i].first.resize(NAMELENGTH);
@@ -61,6 +69,7 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append)
 
     //get previous length.
     fin = fopen(fileName, "rb");
+    fout = fopen(fileName, "r+b");
     fseek(fin, 18, SEEK_SET);
     int lengthOfListOld;
     fread((char*)(&lengthOfListOld), 4, 1, fin);
@@ -68,45 +77,59 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append)
     int64_t lastPositionNew;
     int lengthOfListNew = lengthOfListOld+lengthOfListAppend;
 
-    std::vector<std::pair<std::string, int64_t> > itemIdx(lengthOfListOld);
+    std::vector<std::pair<std::string, int64_t> > itemIdx(lengthOfListNew);
     
     //get previous first table
     fseek(fin, -(8+NAMELENGTH)*2*lengthOfListOld-8, SEEK_END);
     readItemIdx(itemIdx, fin, lengthOfListOld);
     fread((char *)&(lastPositionOld), 8, 1, fin);
-    
-    //save the new length to file.
-    fout = fopen(fileName, "r+b");
-    fseek(fout, 18, SEEK_SET);
-    fwrite((char *)&(lengthOfListNew), 4, 1, fout);
 
     //save elements in the new list
     fseek(fout, lastPositionOld, SEEK_SET);
 
     for(int i = 0; i < lengthOfListAppend; i++){
       itemIdx[i+lengthOfListOld].second = ftell(fout);
-      writeSEXP(VECTOR_ELT(object,i),fout);
+      try{
+        writeSEXP(VECTOR_ELT(object, i),fout);
+      }catch(int &exception){
+        if (exception == -1){ 
+          fseek(fout, lastPositionOld, SEEK_SET);
+          writeItemIdx(itemIdx, fout, lengthOfListOld);
+          fwrite((char *)&(lastPositionOld), 8, 1, fout);
+          std::vector<std::pair<std::string, int64_t> > itemIdxRecover(lengthOfListOld);
+          itemIdxRecover.assign(itemIdx.begin(),itemIdx.begin()+lengthOfListOld);
+          std::stable_sort(itemIdxRecover.begin(), itemIdxRecover.end(), cmp);
+          writeItemIdx(itemIdxRecover, fout, lengthOfListOld);
+          int64_t fileLength = ftell(fout);
+          cutFile(fileName, fileLength);
+          error("Data type in element %d not supported. Please check ?largeList", i+1);
+        }
+      }
     }
     lastPositionNew = ftell(fout);
 
-    // get the new names 
+    // get the new names
     SEXP namesSXP = getObjectName(object);
     for(int i = 0; i < lengthOfListAppend; i++){
       std::string nameTemp = STRING_ELT(namesSXP,i) == NA_STRING ?
-                             "\x00\x00\x00\x00\x00\x00\x00\x00" :
+                             '\x00' :
                              CHAR(STRING_ELT(namesSXP, i));
       itemIdx[i+lengthOfListOld].first = nameTemp;
       itemIdx[i+lengthOfListOld].first.resize(NAMELENGTH);
     }
 
-    //write the first table 
+    //write the first table
     writeItemIdx(itemIdx, fout, lengthOfListNew);
     fwrite((char *)&(lastPositionNew), 8, 1, fout);
-    
-    //merge to generate the second table and write 
+
+    //merge to generate the second table and write
     std::stable_sort(itemIdx.begin(), itemIdx.end(), cmp);
     writeItemIdx(itemIdx, fout, lengthOfListNew);
 
+    //save the new length to file.
+    fseek(fout, 18, SEEK_SET);
+    fwrite((char *)&(lengthOfListNew), 4, 1, fout);
+    
     fclose(fin);
     fclose(fout);
     return(ScalarLogical(1)); 

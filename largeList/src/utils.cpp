@@ -9,12 +9,12 @@ void fileBinarySearch (FILE *fin, int64_t &position, std::string &name, int &ind
   int left = 0;
   int right = length-1;
   int mid;
-  std::string currentName(8,' ');
+  std::string currentName(NAMELENGTH,' ');
   while (left <= right)
   {
     mid = (int) ((left + right) / 2);
-    fseek(fin, -16*length+mid*16+8, SEEK_END);
-    fread((char*)&(currentName[0]), 8 , 1, fin);
+    fseek(fin, -(8+NAMELENGTH)*length+mid*(8+NAMELENGTH)+8, SEEK_END);
+    fread((char*)&(currentName[0]), NAMELENGTH , 1, fin);
     // Rprintf("current name is %d, name is %d, left %d, right %d , cmp %d\n",
     //         currentName.size(),
     //         name.size(),
@@ -22,7 +22,7 @@ void fileBinarySearch (FILE *fin, int64_t &position, std::string &name, int &ind
     if (currentName == name)
     {
       index = mid;
-      fseek(fin, -16*length+mid*16, SEEK_END);
+      fseek(fin, -(8+NAMELENGTH)*length+mid*(8+NAMELENGTH), SEEK_END);
       fread((char*)&(position), 8, 1, fin);
       return;
     }else if (currentName > name)
@@ -147,4 +147,32 @@ const char* getFullPath(SEXP file){
   const char *fileNameRelative = CHAR(STRING_ELT(file,0));
   const char * res = R_ExpandFileName(fileNameRelative);
   return(res);
+}
+
+void cutFile(const char *fileName, const int64_t &fileLength){
+#if defined PREDEF_PLATFORM_UNIX
+  if (truncate(fileName,fileLength) != 0){
+    error("File truncation failed (Unix).");
+  }
+#endif
+  
+#if defined PREDEF_PLATFORM_WIN32
+  LARGE_INTEGER fileLengthW;
+  fileLengthW.QuadPart= fileLength;
+  std::wstring fileNameW;
+  fileNameW.assign(fileName, fileName + sizeof(fileName) - 1);
+  
+  HANDLE fh = CreateFileW(fileNameW.c_str(),
+                          GENERIC_WRITE, // open for write
+                          0,
+                          NULL, // default security
+                          OPEN_EXISTING, // existing file only
+                          FILE_ATTRIBUTE_NORMAL, // normal file
+                          NULL);
+  SetFilePointerEx(fh, fileLengthW, NULL, 0);
+  if (SetEndOfFile(fh) == 0){
+    error("File truncation failed (Windows).");
+  }
+  CloseHandle(fh);
+#endif
 }

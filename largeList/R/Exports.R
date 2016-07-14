@@ -11,10 +11,10 @@ readList <- function(file, index = NULL) {
 }
 
 removeFromList <- function(file, index) {
-    .Call('removeFromList', PACKAGE = 'largeList', file, index)
+    res <- .Call('removeFromList', PACKAGE = 'largeList', file, index)
 }
 
 saveList <- function(object, file, append = FALSE) {
-    .Call('saveList', PACKAGE = 'largeList', object, file, append)
+    res <- .Call('saveList', PACKAGE = 'largeList', object, file, append)
 }
 

@@ -1,8 +1,8 @@
 Package: largeList
 Type: Package
-Title: Save, append and read large lists.
-Version: 0.3.0
-Date: 2016-07-04
+Title: Serialization Interface for Large List Objects.
+Version: 0.1.0
+Date: 2016-07-13
 Author: Yuchun Zhang
 Maintainer: Yuchun Zhang <yczhangvrc@gmail.com>
 Description: Functions to write or append a R list to a file, read or remove elements from it without restoring the whole list.
