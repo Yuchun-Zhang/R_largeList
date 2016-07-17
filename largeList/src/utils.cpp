@@ -1,10 +1,12 @@
 #include "largeList.h"
 
+//compare two elements in a pair. 
 bool cmp (std::pair<std::string, int64_t> const & a, std::pair<std::string, int64_t> const & b)
 {
   return a.first != b.first?  a.first < b.first : a.second < b.second;
 };
 
+//given name, find the corresponding position and index.
 void fileBinarySearch (FILE *fin, int64_t &position, std::string &name, int &index, int &length){
   int left = 0;
   int right = length-1;
@@ -37,6 +39,8 @@ void fileBinarySearch (FILE *fin, int64_t &position, std::string &name, int &ind
   return;
 }
 
+
+//given position, find the corresponding index.
 void fileBinarySearchIndex (FILE *fin, int64_t &position, int &index, int &length){
   int left = 0;
   int right = length-1;
@@ -61,6 +65,7 @@ void fileBinarySearchIndex (FILE *fin, int64_t &position, int &index, int &lengt
   return;
 }
 
+//output the version info, this part is the same as in saveRDS.
 void writeVersion (FILE *fout){
   const int version = 2;
   BYTE format[3] = {'B','\n'};
@@ -72,7 +77,7 @@ void writeVersion (FILE *fout){
   fwrite((char *)&R_Version_VAR, 1, 4, fout);
 }
 
-
+//get the name object of a given R object
 SEXP getObjectName(SEXP x){
   SEXP nameSXP = Rf_getAttrib(x,R_NamesSymbol);
   if (nameSXP == R_NilValue){
@@ -85,6 +90,7 @@ SEXP getObjectName(SEXP x){
   return(nameSXP);
 }
 
+//write the position-name table.
 void writeItemIdx(std::vector<std::pair<std::string, int64_t> > &itemIdx, FILE* fout, int &length){
   for(int i = 0; i < length; i++){
     fwrite((char *)&(itemIdx[i].second), 8, 1, fout);
@@ -93,6 +99,7 @@ void writeItemIdx(std::vector<std::pair<std::string, int64_t> > &itemIdx, FILE* 
   return;
 }
 
+//read the position-name table.
 void readItemIdx(std::vector<std::pair<std::string, int64_t> > &itemIdx, FILE* fin, int &length){
   for(int i = 0; i < length; i++){
     fread((char *)&(itemIdx[i].second),8, 1, fin);
@@ -102,6 +109,7 @@ void readItemIdx(std::vector<std::pair<std::string, int64_t> > &itemIdx, FILE* f
   return;
 }
 
+//merge two ordered position-name tables into one
 void mergeTwoSortedItemIdx(std::vector<std::pair<std::string, int64_t> > &idx1,
                            std::vector<std::pair<std::string, int64_t> > &idx2,
                            std::vector<std::pair<std::string, int64_t> > &idxNew){
@@ -134,6 +142,7 @@ void mergeTwoSortedItemIdx(std::vector<std::pair<std::string, int64_t> > &idx1,
   return;
 }
 
+//check if the file exists or not
 bool checkFile(const char *fileName){
   if (FILE *ftest = fopen(fileName, "r")) {
     fclose(ftest);
@@ -143,12 +152,14 @@ bool checkFile(const char *fileName){
   }
 }
 
+//get the full file path
 const char* getFullPath(SEXP file){
   const char *fileNameRelative = CHAR(STRING_ELT(file,0));
   const char * res = R_ExpandFileName(fileNameRelative);
   return(res);
 }
 
+//cut file to given length, implementation depends on OS.
 void cutFile(const char *fileName, const int64_t &fileLength){
 #if defined PREDEF_PLATFORM_UNIX
   if (truncate(fileName,fileLength) != 0){

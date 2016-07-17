@@ -1,5 +1,6 @@
 #include "largeList.h"
 
+//read REAL object
 inline SEXP readREALSXP(FILE *fin){
   int length;
   readLength(fin,length);
@@ -9,6 +10,7 @@ inline SEXP readREALSXP(FILE *fin){
   return(x);
 }
 
+//read INTEGER object
 inline SEXP readINTSXP(FILE *fin){
   int length;
   readLength(fin,length);
@@ -18,6 +20,7 @@ inline SEXP readINTSXP(FILE *fin){
   return(x);
 }
 
+//write COMPLEX object
 inline SEXP readCPLXSXP(FILE *fin){
   int length;
   readLength(fin,length);
@@ -27,6 +30,7 @@ inline SEXP readCPLXSXP(FILE *fin){
   return(x);
 }
 
+//read RAW object
 inline SEXP readRAWSXP(FILE *fin){
   int length;
   readLength(fin,length);
@@ -36,6 +40,7 @@ inline SEXP readRAWSXP(FILE *fin){
   return(x);
 }
 
+//read LOGICAL object
 inline SEXP readLGLSXP(FILE *fin){
   int length;
   readLength(fin,length);
@@ -45,6 +50,7 @@ inline SEXP readLGLSXP(FILE *fin){
   return(x);
 }
 
+//read CHAR object
 inline SEXP readCHARSXP(FILE *fin){
   std::vector<BYTE> tempRaw(4);
   std::vector<BYTE> naString(4,0xff);
@@ -65,6 +71,7 @@ inline SEXP readCHARSXP(FILE *fin){
   return(_x);
 }
 
+//read CHARACTER VECTOR object
 inline SEXP readSTRSXP(FILE *fin){
   int length;
   readLength(fin,length);
@@ -78,6 +85,7 @@ inline SEXP readSTRSXP(FILE *fin){
   return(x);
 }
 
+//read a LIST object
 inline SEXP readVECSXP(FILE *fin){
   int length;
   readLength(fin,length);
@@ -91,6 +99,7 @@ inline SEXP readVECSXP(FILE *fin){
   return(x);
 }
 
+//read a SYM object
 inline SEXP readSYMSXP(FILE *fin){
   SEXP chars = PROTECT(readSEXP(fin));
   SEXP x = PROTECT(Rf_install(CHAR(chars)));
@@ -98,7 +107,7 @@ inline SEXP readSYMSXP(FILE *fin){
   return(x);
 }
 
-
+//read the head info the object
 inline void readHead(FILE *fin, int &type, int &hasAttr, int &hasTag, int &hasObject, int &level){
   int headInfo;
   fread((char*)(&headInfo), 4 , 1, fin);
@@ -110,11 +119,13 @@ inline void readHead(FILE *fin, int &type, int &hasAttr, int &hasTag, int &hasOb
   return;
 }
 
+//read object length
 inline void readLength(FILE *fin, int &length){
   fread((char*)(&length), 4, 1, fin);
   return;
 }
 
+//read ATTRIBUTE of object
 inline void readATTR(SEXP &_x, FILE *fin){
   SEXP parlist = PROTECT(readSEXP(fin));
   SEXP currentChan = parlist;
@@ -133,19 +144,17 @@ inline void readATTR(SEXP &_x, FILE *fin){
   return;
 }
 
-
+//main function of reading a R object
 SEXP readSEXP(FILE *fin)
 {
   int type, hasAttr, hasTag, hasObject, level;
   readHead(fin, type, hasAttr, hasTag, hasObject, level);
-  //Rcout << "TYPE " << type <<"\n";
-  //Rcout << "object attr tag"<< hasObject <<" " << hasAttr << " " << hasTag <<"\n";
-  SEXP element;
+  SEXP element = R_NilValue;
   switch(type){
   case 0xfe : element = PROTECT(R_NilValue); break;
   case REALSXP  : element = PROTECT(readREALSXP(fin)); break;
   case INTSXP   : element = PROTECT(readINTSXP(fin));  break;
-  case CPLXSXP   : element = PROTECT(readCPLXSXP(fin));  break;
+  case CPLXSXP  : element = PROTECT(readCPLXSXP(fin));  break;
   case STRSXP   : element = PROTECT(readSTRSXP(fin));  break;
   case CHARSXP  : element = PROTECT(readCHARSXP(fin)); break;
   case LGLSXP   : element = PROTECT(readLGLSXP(fin));  break;
@@ -171,6 +180,7 @@ SEXP readSEXP(FILE *fin)
   if (hasObject == 1){
     SET_OBJECT(element,1);
   }
-  UNPROTECT_PTR(element);
+  SETLEVELS(element, level);
+  UNPROTECT(1);
   return(element);
 }

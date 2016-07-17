@@ -41,10 +41,10 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append)
     
     //get element names
     SEXP namesSXP = getObjectName(object);
-
+    
     for(int i = 0; i < lengthOfList; i++){
       std::string nameTemp = STRING_ELT(namesSXP,i) == NA_STRING ? 
-                            '\x00' :  
+                            std::string(NAMELENGTH, '\x00') :  
                             CHAR(STRING_ELT(namesSXP, i));
       itemIdx[i].first = nameTemp;
       itemIdx[i].first.resize(NAMELENGTH);
@@ -102,6 +102,8 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append)
           writeItemIdx(itemIdxRecover, fout, lengthOfListOld);
           int64_t fileLength = ftell(fout);
           cutFile(fileName, fileLength);
+          fclose(fin);
+          fclose(fout);
           error("Data type in element %d not supported. Please check ?largeList", i+1);
         }
       }
@@ -112,7 +114,7 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append)
     SEXP namesSXP = getObjectName(object);
     for(int i = 0; i < lengthOfListAppend; i++){
       std::string nameTemp = STRING_ELT(namesSXP,i) == NA_STRING ?
-                             '\x00' :
+                             std::string(NAMELENGTH, '\x00') : 
                              CHAR(STRING_ELT(namesSXP, i));
       itemIdx[i+lengthOfListOld].first = nameTemp;
       itemIdx[i+lengthOfListOld].first.resize(NAMELENGTH);

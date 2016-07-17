@@ -1,5 +1,6 @@
 #include "largeList.h"
 
+//get the info of the object, e.g. level, is a object?, attribute, tag. 
 inline void getHeadInfo(SEXP _x, int &level, int &object, SEXP &attribute, SEXP &tag){
   attribute = TYPEOF(_x) == CHARSXP ? R_NilValue : ATTRIB(_x);
   level = TYPEOF(_x) == CHARSXP ? LEVELS(_x) & 65502 : LEVELS(_x);
@@ -8,42 +9,49 @@ inline void getHeadInfo(SEXP _x, int &level, int &object, SEXP &attribute, SEXP 
   return;
 }
 
+//write a REAL object.
 inline void  writeREALSXP(SEXP _x, FILE *fout){
   writeLength(_x, fout);
   fwrite((char *)(& REAL(_x)[0]),8, Rf_xlength(_x), fout);
   return;
 }
 
+//write a  NULL object.
 inline void  writeNILSXP(FILE *fout){
   BYTE nil[4] = {0xfe,0x00,0x00,0x00};
   fwrite((char *)&(nil[0]), 1, 4, fout);
   return;
 }
 
+//write a INTEGER object
 inline void  writeINTSXP(SEXP _x, FILE *fout){
   writeLength(_x, fout);
   fwrite((char *)(& INTEGER(_x)[0]), 4, Rf_xlength(_x), fout);
   return;
 }
 
+//write a COMPLEX object
 inline void  writeCPLXSXP(SEXP _x, FILE *fout){
   writeLength(_x, fout);
   fwrite((char *)(& COMPLEX(_x)[0]), 16, Rf_xlength(_x), fout);
   return;
 }
 
+//write a LOGICAL object
 inline void  writeLGLSXP(SEXP _x, FILE *fout){
   writeLength(_x, fout);
   fwrite((char *)(& LOGICAL(_x)[0]), 4, Rf_xlength(_x), fout);
   return;
 }
 
+//write a RAW object
 inline void  writeRAWSXP(SEXP _x, FILE *fout){
   writeLength(_x, fout);
   fwrite((char *)(& RAW(_x)[0]), 1, Rf_xlength(_x), fout);
   return;
 }
   
+//write a CHARACTER VECTOR object
 inline void  writeSTRSXP(SEXP _x, FILE *fout){
   writeLength(_x, fout);
   for (int64_t i = 0; i < Rf_xlength(_x); i++){
@@ -52,6 +60,7 @@ inline void  writeSTRSXP(SEXP _x, FILE *fout){
   return;
 }
 
+//write a CHAR object
 inline void  writeCHARSXP(SEXP _x, FILE *fout){
   if (_x == NA_STRING ){
     BYTE ffff[4] = {0xff,0xff,0xff,0xff};
@@ -63,6 +72,7 @@ inline void  writeCHARSXP(SEXP _x, FILE *fout){
   return;
 }
 
+//write a LIST object
 inline void  writeVECSXP(SEXP _x, FILE *fout){
   writeLength(_x, fout);
   for (int64_t i = 0; i < Rf_xlength(_x); i++){
@@ -71,6 +81,7 @@ inline void  writeVECSXP(SEXP _x, FILE *fout){
   return;
 }
 
+//write ATTRIBUTE of an object
 inline void  writeATTR(SEXP _x, FILE *fout){
   for(SEXP nxt = _x; nxt!= R_NilValue; nxt = CDR(nxt)) {
     writeSEXP(nxt,fout);
@@ -79,12 +90,14 @@ inline void  writeATTR(SEXP _x, FILE *fout){
   return;
 }
 
+//write a SYM object
 inline void  writeSYMSXP(SEXP _x, FILE *fout){
   SEXP name = PRINTNAME(_x);
   writeSEXP(name, fout);
   return;
 }
 
+//write the object Info. 
 inline void  writeHead(SEXP _x, int level, int object, SEXP attribute, SEXP tag, FILE *fout){
   int head = TYPEOF(_x) +
              (object << 8) + 
@@ -95,21 +108,14 @@ inline void  writeHead(SEXP _x, int level, int object, SEXP attribute, SEXP tag,
   return;
 }
 
+//write the length of object
 inline void  writeLength(SEXP _x, FILE *fout){
   int length = LENGTH(_x);
   fwrite((char *)&length,4, 1, fout);
   return;
 }
 
-// inline void  writeHeadAndLength(SEXP _x, std::fstream & fout){
-//   int level, object;
-//   SEXP attribute, tag;
-//   getHeadInfo(_x, level, object, attribute, tag);
-//   writeHead(_x, level, object, attribute, tag, fout);
-//   writeLength(_x, fout);
-//   return;
-// }
-
+//main function of writing a R object to file
 int writeSEXP(SEXP _x, FILE *fout){
   int level, object;
   SEXP attribute, tag;
@@ -141,21 +147,3 @@ int writeSEXP(SEXP _x, FILE *fout){
   //Rcout <<"give in finished \n";
   return(true);
 }
-
-// RcppExport SEXP unitTest(SEXP x, CharacterVector fileName){
-//   std::fstream fout;
-//   std::string fname = Rcpp::as<std::string>(fileName);
-//   fout.open(fname, std::ios_base::binary | std::ios_base::out | std::ios_base::trunc);
-//   Environment base("package:base");
-//   Function serialize = base["serialize"];
-//   List emptyList(0);
-//   RawVector emptyListrawVec = serialize(emptyList,R_NilValue,wrap(false), wrap(false));
-//   fout.write((char *)&(emptyListrawVec[0]),14);
-//   writeSEXP(x,fout);
-//   fout.close();
-//   return(wrap(true));
-// }
-
-
-
-

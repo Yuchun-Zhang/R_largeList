@@ -5,6 +5,7 @@ Version: 0.1.0
 Date: 2016-07-13
 Author: Yuchun Zhang
 Maintainer: Yuchun Zhang <yczhangvrc@gmail.com>
+Depends: R (>= 3.2.0)
 Description: Functions to write or append a R list to a file, read or remove elements from it without restoring the whole list.
 License: GPL (>= 2)
 RoxygenNote: 5.0.1

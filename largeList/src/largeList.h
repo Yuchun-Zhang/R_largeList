@@ -9,11 +9,11 @@
 #include <windows.h>
 #endif
 
+#include <stdint.h>
 #include <math.h>
-#include <iostream> 
 #include <fstream>
 #include <vector>
-#include <ctime>
+#include <algorithm>
 #undef ERROR
 #include <R.h>
 #include <Rinternals.h>

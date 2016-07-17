@@ -31,8 +31,8 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index)
     }
     int maxIndex = *std::max_element(indexNum.begin(), indexNum.end());
     int minIndex = *std::min_element(indexNum.begin(), indexNum.end());
-    if (minIndex < 0) error("Index should be positive.");
-    if (maxIndex > lengthOfList-1) error("Index beyonds list length.");
+    if (minIndex < 0) {fclose(fin); fclose(fout); error("Index should be positive.");}
+    if (maxIndex > lengthOfList-1) {fclose(fin); fclose(fout); error("Index beyonds list length.");}
   }
 
   if (TYPEOF(index) == STRSXP){
@@ -84,7 +84,6 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index)
 
   moveToPosition = itemIdx[indexNum[0]].second;
 
-  //Rprintf("index %d, position %lf", indexNum[0], (double)moveToPosition);
   //move elements
   for (size_t i = 0; i < indexNum.size(); i ++){
     if (indexNum[i] == lengthOfList -1) break; // if the to remove element is the last in the list, do nothing.
@@ -96,7 +95,6 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index)
       toMoveFirstIndex = indexNum[i] +1;
       toMoveLastIndex = indexNum[i+1]-1;
     }
-    //Rprintf("First %d, last %d", toMoveFirstIndex,toMoveLastIndex );
     if (toMoveLastIndex < toMoveFirstIndex) {continue;}
     for (int j = toMoveFirstIndex; j<= toMoveLastIndex; j++){
       toMoveFirstPosition = itemIdx[j].second;
@@ -111,20 +109,13 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index)
     for (int j = toMoveFirstIndex; j<= toMoveLastIndex; j++)
     {
        itemIdx[j].second -= positionDiff;
-       //Rcout << (double)itemIdx[j].second <<"\n";
     }
   }
 
   itemIdx[lengthOfList].second = moveToPosition;
   fseek(fout, moveToPosition, SEEK_SET);
 
-  //Rcout << itemIdx.size() << "\n";
   int newLengthOfList = lengthOfList - indexNum.size();
-
-  // for (int i = 0; i < lengthOfList; i ++){
-  //   Rcout << itemIdx[i].first.c_str() << "\n";
-  // }
-
 
   // remove elements in the two refference tables.
   std::vector<std::pair<std::string, int64_t> > itemIdxRemain(newLengthOfList);
@@ -141,11 +132,6 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index)
       itemIdxRemain[i-currentDeleteIndex].first = itemIdx[i].first;
     }
   }
-
-  // for (int i = 0; i < newLengthOfList; i ++){
-  //   Rcout << itemIdxRemain[i].first.c_str() << "\n";
-  // }
-  //
 
   // write new tables
   writeItemIdx(itemIdxRemain, fout, newLengthOfList);

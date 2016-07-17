@@ -24,11 +24,11 @@ If append is \code{TRUE} but the file does not exist, an error will be displayed
 \item{index}{A numeric/integer vector representing indicies of required elements or a character vector representing the names.For readList function, if index is not given, the whole list will be read.}
 }
 \value{
-For \code{saveList}, \code{TRUE} if successfully.
+For \code{saveList}, \code{void} if successfully.
 
 For \code{readList},  a list of required elements.
 
-For \code{removeFromList}, \code{TRUE} if successfully.
+For \code{removeFromList}, \code{void} if successfully.
 
 For \code{getListName}, a character vector containing names of all elements.
 
