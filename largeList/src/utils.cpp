@@ -182,6 +182,7 @@ void cutFile(const char *fileName, const int64_t &fileLength){
                           NULL);
   SetFilePointerEx(fh, fileLengthW, NULL, 0);
   if (SetEndOfFile(fh) == 0){
+    CloseHandle(fh);
     error("File truncation failed (Windows).");
   }
   CloseHandle(fh);
