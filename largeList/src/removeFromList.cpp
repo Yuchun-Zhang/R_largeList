@@ -6,147 +6,132 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index)
   if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("File should be a charater vector of length 1.\n");
   if (index != R_NilValue && TYPEOF(index) != INTSXP &&  TYPEOF(index) != REALSXP && TYPEOF(index) != STRSXP)
     error("Index should be an integer vector, a numeric vector or a character vector.\n");
-  
-  const char *fileName = getFullPath(file);
+
+  const char *file_name = getFullPath(file);
+  //check if the file exists and the format is valid
+  checkFile(file_name);
+  checkVersion(file_name);
+
   FILE *fin;
   FILE *fout;
-  fin = fopen(fileName,"rb");
-  fout = fopen(fileName,"rb+");
-  std::vector<int64_t> positions;
-  std::vector<int> indexNum;
-  std::vector<std::string> names;
+  fin = fopen(file_name, "rb");
+  fout = fopen(file_name, "rb+");
+
+  std::vector<int> index_num;
+  std::vector<std::pair<std::string, int64_t> > index_pair;
 
   //get list length
-  fseek(fin, 18, SEEK_SET);
-  int lengthOfList;
-  fread((char*)&(lengthOfList), 4, 1, fin);
+  fseek(fin, LENGTH_POSITION, SEEK_SET);
+  int length_of_list;
+  safe_fread((char*) & (length_of_list), 4, 1, fin);
 
-  if (TYPEOF(index) == INTSXP ||  TYPEOF(index) == REALSXP){
-    indexNum.resize(Rf_length(index));
-    TYPEOF(index) == INTSXP ? 
-      indexNum.assign(INTEGER(index),INTEGER(index)+Rf_length(index)) :
-      indexNum.assign(REAL(index),REAL(index)+Rf_length(index));
-    for(int i = 0 ; i < Rf_length(index); i++){
-      indexNum[i] = indexNum[i]-1;
+  //get index
+  int length_of_index = Rf_length(index);
+  if (TYPEOF(index) == INTSXP ||  TYPEOF(index) == REALSXP) {
+    index_num.resize(length_of_index);
+    TYPEOF(index) == INTSXP ?
+    index_num.assign(INTEGER(index), INTEGER(index) + length_of_index) :
+    index_num.assign(REAL(index), REAL(index) + length_of_index);
+    for (int i = 0 ; i < length_of_index; i++) {
+      index_num[i] = index_num[i] - 1;
     }
-    int maxIndex = *std::max_element(indexNum.begin(), indexNum.end());
-    int minIndex = *std::min_element(indexNum.begin(), indexNum.end());
-    if (minIndex < 0) {fclose(fin); fclose(fout); error("Index should be positive.");}
-    if (maxIndex > lengthOfList-1) {fclose(fin); fclose(fout); error("Index beyonds list length.");}
+    int max_index = *std::max_element(index_num.begin(), index_num.end());
+    int min_index = *std::min_element(index_num.begin(), index_num.end());
+    if (min_index < 0) { fclose(fin); fclose(fout); error("Index should be positive.");}
+    if (max_index > length_of_list - 1) { fclose(fin); fclose(fout); error("Index beyonds list length.");}
   }
 
-  if (TYPEOF(index) == STRSXP){
-    names.resize(Rf_length(index));
-    for (int i = 0; i < Rf_length(index); i ++){
-      names[i].assign(CHAR(STRING_ELT(index,i)),Rf_length(STRING_ELT(index,i)));
+  if (TYPEOF(index) == STRSXP) {
+    index_pair.resize(length_of_index);
+    for (int i = 0; i < length_of_index; i ++) {
+      index_pair[i].first.assign(CHAR(STRING_ELT(index, i)), Rf_length(STRING_ELT(index, i)));
+      index_pair[i].first.resize(NAMELENGTH);
     }
-    positions.resize(names.size());
-    indexNum.resize(names.size());
-    for(int i = 0 ; i < Rf_length(index); i++){
-      names[i].resize(NAMELENGTH);
-      fileBinarySearch(fin,positions[i],names[i],indexNum[i],lengthOfList);
-      if (positions[i] == -1)
-      {
-        Rf_warning("Element with name %s not found! \n",names[i].c_str());
-        indexNum[i] =  -1;
-      }else{
-        fileBinarySearchIndex(fin,positions[i],indexNum[i],lengthOfList);
+    index_num.resize(length_of_index);
+    for (int i = 0 ; i < length_of_index; i++) {
+      fileBinarySearchByName(fin, index_pair[i].second, index_pair[i].first, index_num[i], length_of_list);
+      if (index_pair[i].second == -1) {
+        Rf_warning("Element with name %s not found! \n", index_pair[i].first.c_str());
+        index_num[i] =  -1;
+      } else {
+        fileBinarySearchByPosition(fin, index_pair[i].second, index_num[i], length_of_list);
       }
     }
     //remove invalide elements in the delete list
-    int deleteNum = 0;
-    for(size_t i = 0 ; i < names.size(); i++){
-      if (indexNum[i] ==  -1){
-        indexNum.erase(indexNum.begin()+i-deleteNum);
-        deleteNum ++;
+    int delete_num = 0;
+    for (int i = 0 ; i < length_of_index; i++) {
+      if (index_num[i] ==  -1) {
+        index_num.erase(index_num.begin() + i - delete_num);
+        delete_num ++;
       }
     }
-
     //if no element to delete, exit.
-    if (indexNum.size() == 0){
-      return(ScalarLogical(1));
+    if (index_num.size() == 0) {
+      return (ScalarLogical(1));
     }
+    length_of_index = index_num.size();
   }
-
-  std::sort(indexNum.begin(),indexNum.end());
-  int64_t moveToPosition;
-  int64_t toMoveFirstPosition;
-  int64_t toMoveLastPosition;
-  int64_t positionDiff = 0;
-  int toMoveFirstIndex;
-  int toMoveLastIndex;
 
   //get all positions and names
-  fseek(fin, -(8+NAMELENGTH)*2*lengthOfList-8, SEEK_END);
-  std::vector<std::pair<std::string, int64_t> > itemIdx(lengthOfList+1);
-  readItemIdx(itemIdx, fin, lengthOfList);
-  fread((char *)&(itemIdx[lengthOfList].second), 8, 1, fin);
+  std::vector<std::pair<std::string, int64_t> > pair(length_of_list + 1);
+  fseek(fin, -(8 + NAMELENGTH) * 2 * length_of_list - 8, SEEK_END);
+  readPair(pair, fin, length_of_list);
+  safe_fread((char *) & (pair[length_of_list].second), 8, 1, fin);
 
-  moveToPosition = itemIdx[indexNum[0]].second;
-
-  //move elements
-  for (size_t i = 0; i < indexNum.size(); i ++){
-    if (indexNum[i] == lengthOfList -1) break; // if the to remove element is the last in the list, do nothing.
-    positionDiff += itemIdx[indexNum[i]+1].second - itemIdx[indexNum[i]].second;
-    if (i == indexNum.size() -1){
-      toMoveFirstIndex = indexNum[i] +1;
-      toMoveLastIndex = lengthOfList -1;
-    } else{
-      toMoveFirstIndex = indexNum[i] +1;
-      toMoveLastIndex = indexNum[i+1]-1;
+  //copy new positions
+  std::sort(index_num.begin(), index_num.end());
+  std::vector<int64_t> new_positions(length_of_list + 1);
+  for (int i = 0; i <= length_of_list; i ++) {
+    new_positions[i] = pair[i].second;
+    // Rprintf("Element %d, olfPosition %lf \n ", i, (double)new_positions[i]);
+  }
+  // change the positions according to the new value lengths.
+  for (int i = 0; i < length_of_index; i ++) {
+    for (int j = index_num[i] + 1; j <= length_of_list; j++) {
+      new_positions[j] += pair[index_num[i]].second - pair[index_num[i] + 1].second;
     }
-    if (toMoveLastIndex < toMoveFirstIndex) {continue;}
-    for (int j = toMoveFirstIndex; j<= toMoveLastIndex; j++){
-      toMoveFirstPosition = itemIdx[j].second;
-      toMoveLastPosition = itemIdx[j+1].second;
-      std::vector<BYTE> toMoveRaw(toMoveLastPosition-toMoveFirstPosition);
-      fseek(fin, toMoveFirstPosition, SEEK_SET);
-      fread((char*)&(toMoveRaw[0]),1, toMoveLastPosition-toMoveFirstPosition, fin);
-      fseek(fout, moveToPosition, SEEK_SET);
-      fwrite((char*)&(toMoveRaw[0]), 1, toMoveLastPosition-toMoveFirstPosition, fout);
-      moveToPosition += toMoveLastPosition-toMoveFirstPosition;
-    }
-    for (int j = toMoveFirstIndex; j<= toMoveLastIndex; j++)
-    {
-       itemIdx[j].second -= positionDiff;
+  }
+  // for (int i = 0; i<=length_of_list; i ++){
+  //   Rprintf("Element %d, newPosition %lf \n", i, (double)new_positions[i]);
+  // }
+  // move the data
+  for (int i = 0; i < length_of_list; i ++) {
+    if (new_positions[i] < pair[i].second) {
+      moveData(fin, fout, pair[i].second, pair[i + 1].second, new_positions[i], new_positions[i + 1]);
+      // Rprintf("MOVE %3.0ld,%3.0ld,%3.0ld,%3.0ld \n", pair[i].second, pair[i+1].second, new_positions[i], new_positions[i+1]);
     }
   }
 
-  itemIdx[lengthOfList].second = moveToPosition;
-  fseek(fout, moveToPosition, SEEK_SET);
-
-  int newLengthOfList = lengthOfList - indexNum.size();
+  int new_length_of_list = length_of_list - length_of_index;
 
   // remove elements in the two refference tables.
-  std::vector<std::pair<std::string, int64_t> > itemIdxRemain(newLengthOfList);
-  int currentDeleteIndex = 0;
-  for (int i = 0; i < lengthOfList; i ++)
-  {
-    if (i == indexNum[currentDeleteIndex])
-    {
-      currentDeleteIndex++;
+  std::vector<std::pair<std::string, int64_t> > pair_remain(new_length_of_list);
+  int current_delete_index = 0;
+  for (int i = 0; i < length_of_list; i ++) {
+    if (i == index_num[current_delete_index]) {
+      current_delete_index++;
       continue;
-    }else
-    {
-      itemIdxRemain[i-currentDeleteIndex].second = itemIdx[i].second;
-      itemIdxRemain[i-currentDeleteIndex].first = itemIdx[i].first;
+    } else {
+      pair_remain[i - current_delete_index].second = new_positions[i];
+      pair_remain[i - current_delete_index].first = pair[i].first;
     }
   }
 
   // write new tables
-  writeItemIdx(itemIdxRemain, fout, newLengthOfList);
-  fwrite((char *)&(itemIdx[lengthOfList].second), 8, 1, fout);
-  std::stable_sort(itemIdxRemain.begin(), itemIdxRemain.end(), cmp);
-  writeItemIdx(itemIdxRemain, fout, newLengthOfList);
+  fseek(fout, new_positions[length_of_list], SEEK_SET);
+  writePair(pair_remain, fout, new_length_of_list);
+  safe_fwrite((char *) & (new_positions[length_of_list]), 8, 1, fout);
+  std::stable_sort(pair_remain.begin(), pair_remain.end(), cmp);
+  writePair(pair_remain, fout, new_length_of_list);
 
-  int64_t fileLength = ftell(fout);
+  int64_t file_length = ftell(fout);
 
   //save new length to head
-  fseek(fout, 18, SEEK_SET);
-  fwrite((char *)&(newLengthOfList), 4, 1, fout);
+  fseek(fout, LENGTH_POSITION, SEEK_SET);
+  safe_fwrite((char *) & (new_length_of_list), 4, 1, fout);
 
   fclose(fin);
   fclose(fout);
-  cutFile(fileName, fileLength);
-  return(ScalarLogical(1)); 
+  cutFile(file_name, file_length);
+  return (ScalarLogical(1));
 }
