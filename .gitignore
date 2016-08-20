@@ -3,3 +3,5 @@
 /**/*.so
 /**/*.rds
 /**/*.dll
+/**/*.Rapp.history
+/**/*.Rhistory
