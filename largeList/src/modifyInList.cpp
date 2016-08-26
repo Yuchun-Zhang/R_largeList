@@ -143,6 +143,7 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object)
   }
 
   fseek(fout, pair[length_of_list].second, SEEK_SET);
+
   // write new tables
   writePair(pair, fout, length_of_list);
   safe_fwrite((char *) & (pair[length_of_list].second), 8, 1, fout);

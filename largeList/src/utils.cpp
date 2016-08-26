@@ -63,8 +63,10 @@ void writeVersion (FILE *fout) {
   int readable_version = READABLE_VERSION;
   safe_fwrite((char *)&current_version, 1, 4, fout);
   safe_fwrite((char *)&readable_version, 1, 4, fout);
-  std::string reserved_string(8, '\x00');
-  safe_fwrite((char*)reserved_string.c_str(), 1, 8, fout);
+  int has_name = 0;
+  safe_fwrite((char *)&has_name, 1, 1, fout);
+  std::string reserved_string(7, '\x00');
+  safe_fwrite((char*)reserved_string.c_str(), 1, 7, fout);
 }
 
 void checkVersion(const char *file_name) {
@@ -96,9 +98,11 @@ void checkVersion(const char *file_name) {
 }
 
 //get the name object of a given R object
-SEXP getObjectName(SEXP x) {
+SEXP getObjectName(SEXP x, int & has_name) {
+  has_name = 1;
   SEXP name_sxp = Rf_getAttrib(x, R_NamesSymbol);
   if (name_sxp == R_NilValue) {
+  	has_name = 0;
     name_sxp = PROTECT(Rf_allocVector(STRSXP, Rf_length(x)));
     for (int i = 0 ; i < Rf_length(x); i ++) {
       SET_STRING_ELT(name_sxp, i, NA_STRING);

@@ -30,8 +30,9 @@ size is 2^63 -1 bytes.
 * **modifyNameInList:** Modify names of elements in a list file.
 * **getListName:** Get number of elements in a list file.
 * **getListLength:** Get names of elements in a list file.
-}
+
 Some operators / functions are overloaded. 
+
 * **getList:** Bind a R object with a list file.
 * **\[.largeList:** Get elements.
 * **\[\[.largeList:** Get element.

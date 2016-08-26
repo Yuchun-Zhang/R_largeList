@@ -96,16 +96,22 @@ extern "C" SEXP readList(SEXP file, SEXP index = R_NilValue)
   }
 
   //get names
-  SEXP names_sxp = PROTECT(Rf_allocVector(STRSXP, length_of_index));
-  std::string na_string(NAMELENGTH, '\xff');
-  for (int i = 0; i < length_of_index; i++ ) {
-    index_pair[i].first == na_string ?
-    SET_STRING_ELT(names_sxp, i, NA_STRING) :
-    SET_STRING_ELT(names_sxp, i, Rf_mkChar(index_pair[i].first.c_str()));
+  int has_name = 0;
+  fseek(fin, HAS_NAME_POSITION, SEEK_SET);
+  safe_fread((char *) & (has_name), 1, 1, fin);
+  if (has_name == 1) {
+    SEXP names_sxp = PROTECT(Rf_allocVector(STRSXP, length_of_index));
+    std::string na_string(NAMELENGTH, '\xff');
+    for (int i = 0; i < length_of_index; i++ ) {
+      index_pair[i].first == na_string ?
+      SET_STRING_ELT(names_sxp, i, NA_STRING) :
+      SET_STRING_ELT(names_sxp, i, Rf_mkChar(index_pair[i].first.c_str()));
+    }
+    //set names
+    Rf_setAttrib(output_list, R_NamesSymbol, names_sxp);
+    UNPROTECT(1);
   }
-  //set names
-  Rf_setAttrib(output_list, R_NamesSymbol, names_sxp);
   fclose(fin);
-  UNPROTECT(2);
+  UNPROTECT(1);
   return (output_list);
 }

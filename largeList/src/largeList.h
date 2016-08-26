@@ -24,6 +24,7 @@
 #define READABLE_VERSION ((0<<8) + (2<<4) + 0)
 #define LENGTH_POSITION 30
 #define MAXRETRIES 5
+#define HAS_NAME_POSITION 18
 
 //writeObject.cpp
 void  getHeadInfo(SEXP, int &, int &, SEXP &, SEXP &);
@@ -77,7 +78,7 @@ void fileBinarySearchByPosition (FILE *, int64_t &, int &, int &);
 void getPositionByIndex(FILE *, int &, int &, int64_t &);
 void writeVersion (FILE *);
 void checkVersion (const char *);
-SEXP getObjectName(SEXP);
+SEXP getObjectName(SEXP, int &);
 void writePair(std::vector<std::pair<std::string, int64_t> > &, FILE* , int &);
 void readPair(std::vector<std::pair<std::string, int64_t> > &, FILE* , int &);
 void mergeTwoSortedPairs(std::vector<std::pair<std::string, int64_t> > &,

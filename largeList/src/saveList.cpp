@@ -36,23 +36,28 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append)
     last_position = ftell(fout);
 
     //get element names
-    SEXP names_sxp = getObjectName(object);
+    int has_name = 0;
+    SEXP names_sxp = getObjectName(object, has_name);
     //assign the names to pair
     for (int i = 0; i < length_of_list; i++) {
       std::string name_temp = STRING_ELT(names_sxp, i) == NA_STRING ?
-                              std::string(NAMELENGTH, '\x00') :
+                              std::string(NAMELENGTH, '\xff') :
                               CHAR(STRING_ELT(names_sxp, i));
       pair[i].first = name_temp;
       pair[i].first.resize(NAMELENGTH);
     }
 
-    // write first refference table
+    //write first refference table
     writePair(pair, fout, length_of_list);
     safe_fwrite((char *) & (last_position), 8, 1, fout);
 
     //sort and write second table
     std::stable_sort(pair.begin(), pair.end(), cmp);
     writePair(pair, fout, length_of_list);
+
+    //write digit indicates if the list has names
+    fseek(fout, HAS_NAME_POSITION, SEEK_SET);
+    safe_fwrite((char *) & (has_name), 1, 1, fout);
 
     fclose(fout);
     return (ScalarLogical(1));
@@ -89,10 +94,11 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append)
     last_position_new = ftell(fout);
 
     // get the new names
-    SEXP names_sxp = getObjectName(object);
+    int has_name_new = 0;
+    SEXP names_sxp = getObjectName(object, has_name_new);
     for (int i = 0; i < length_of_list_append; i++) {
       std::string name_temp = STRING_ELT(names_sxp, i) == NA_STRING ?
-                              std::string(NAMELENGTH, '\x00') :
+                              std::string(NAMELENGTH, '\xff') :
                               CHAR(STRING_ELT(names_sxp, i));
       pair[i + length_of_list_old].first = name_temp;
       pair[i + length_of_list_old].first.resize(NAMELENGTH);
@@ -109,6 +115,14 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append)
     //save the new length to file.
     fseek(fout, LENGTH_POSITION, SEEK_SET);
     safe_fwrite((char *) & (length_of_list_new), 4, 1, fout);
+
+    //save digit has_name
+    int has_name_old = 0;
+    fseek(fin, HAS_NAME_POSITION, SEEK_SET);
+    safe_fread((char *) & (has_name_old), 1, 1, fin);
+    int has_name_all = (has_name_old || has_name_new);
+    fseek(fout, HAS_NAME_POSITION, SEEK_SET);
+    safe_fwrite((char *) & (has_name_all), 1, 1, fout);
 
     fclose(fin);
     fclose(fout);

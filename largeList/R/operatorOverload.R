@@ -47,7 +47,7 @@
       removeFromList(file = largeListObject$file, index = index)
     ## if value is not null, elements are either appended or substitute the existing elements.
     }else{
-      ## vectors are transfered to list since function saveList and modifyInList only support list.
+      ## vectors are transfered to list since function saveList and modifyInList only supports list.
       if (class(value) != "list") {value <- as.list(value)}
       ## if index is of type integer/numeric
       if (class(index) %in% c("numeric","integer")){
@@ -146,7 +146,7 @@ print.largeList <- function(x, ...){
 #' @seealso \code{\link{largeList}} 
 #' @export
 length.largeList <- function(x){
-  return(x$length)
+  return(getListLength(x$file))
 }
 
 #' Overload of function names.
@@ -155,7 +155,7 @@ length.largeList <- function(x){
 #' @seealso \code{\link{largeList}} 
 #' @export
 names.largeList <- function(x){
-  return(x$name)
+  return(getListName(x$file))
 }
 
 #' Overload of operator names<-.
