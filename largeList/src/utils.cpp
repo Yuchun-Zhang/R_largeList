@@ -192,18 +192,32 @@ void cutFile(const char *file_name, const int64_t &file_length) {
 #if defined PREDEF_PLATFORM_WIN32
   LARGE_INTEGER file_length_w;
   file_length_w.QuadPart = file_length;
-
-  HANDLE fh = CreateFile((LPCTSTR)file_name,
-                         GENERIC_WRITE, // open for write
-                         0,
-                         NULL, // default security
-                         OPEN_EXISTING, // existing file only
-                         FILE_ATTRIBUTE_NORMAL, // normal file
-                         NULL);
+  int retries = 0;
+  HANDLE fh;
+  do {
+    fh = CreateFile((LPCTSTR)file_name,
+                    GENERIC_WRITE, // open for write
+                    0,
+                    NULL, // default security
+                    OPEN_EXISTING, // existing file only
+                    FILE_ATTRIBUTE_NORMAL, // normal file
+                    NULL);
+    if (fh == INVALID_HANDLE_VALUE) {
+      DWORD last_error = GetLastError();
+      if (ERROR_SHARING_VIOLATION == last_error) {
+        retries += 1;
+        Sleep(RETRYDELAY);
+        continue;
+      } else {
+        error("File truncation failed (Windows), get file handle error. Error Code %d .", last_error);
+      }
+    } 
+    break;
+  } while (retries < MAXRETRIES);
   if (fh == INVALID_HANDLE_VALUE) {
-    DWORD last_error = GetLastError();
-    error("File truncation failed (Windows), get file handle error. Error Code %d .", last_error);
+    error("Tried to trauncate file but it was already in use");
   }
+
   SetFilePointerEx(fh, file_length_w, NULL, 0);
   if (SetEndOfFile(fh) == 0) {
     DWORD last_error = GetLastError();

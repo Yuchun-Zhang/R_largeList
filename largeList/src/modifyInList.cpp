@@ -71,6 +71,8 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object)
 
     //if no element to modify, exit.
     if (index_num.size() == 0) {
+      fclose(fin);
+      fclose(fout);
       return (ScalarLogical(1));
     }
   }
@@ -150,10 +152,10 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object)
   std::stable_sort(pair.begin(), pair.begin() + length_of_list, cmp);
   writePair(pair, fout, length_of_list);
 
-  int64_t fileLength = ftell(fout);
+  int64_t file_length = ftell(fout);
 
   fclose(fin);
   fclose(fout);
-  cutFile(file_name, fileLength);
+  cutFile(file_name, file_length);
   return (ScalarLogical(1));
 }

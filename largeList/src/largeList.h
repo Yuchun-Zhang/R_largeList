@@ -24,6 +24,7 @@
 #define READABLE_VERSION ((0<<8) + (2<<4) + 0)
 #define LENGTH_POSITION 30
 #define MAXRETRIES 5
+#define RETRYDELAY  250
 #define HAS_NAME_POSITION 18
 
 //writeObject.cpp
