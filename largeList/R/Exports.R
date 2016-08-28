@@ -27,13 +27,13 @@ getListName <- function(file) {
 #' Get elements from a list file.
 #' @details  
 #' If no index provided, the whole list will be read. Given index could be a numeric (integer) 
-#' vector or a character vector representing the names. If for a given name, there exist more 
-#' then one elements related, the first matched one will be returned. If there are no elements 
+#' vector or a character vector representing the names. If there exist more then one elements 
+#' corresponding to a given name, , the first matched one will be returned. If there are no elements 
 #' with given name, \code{NULL} will be returned. \cr
 #' Files created by \code{\link{saveRDS}} can't be read.
 #' @param file Name of file.
 #' @param index \code{NULL}, a numeric vector or a character vecter.
-#' @return void
+#' @return A list object.
 #' @seealso \code{\link{largeList}}
 #' @examples 
 #' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
@@ -48,12 +48,12 @@ readList <- function(file, index = NULL) {
 
 #' Remove elements from a list file.
 #' @details 
-#' Removes elements with given indices or names. This function may relocate all the data 
+#' It removes elements with given indices or names. This function may relocate all the data 
 #' in the stored file, thus can be very slow! Please consider to call this function 
 #' batchwise instead of one by one.
 #' @param file Name of file.
 #' @param index  A numeric vector or a character vecter.
-#' @return void
+#' @return \code{TRUE} if no error occurs.
 #' @seealso \code{\link{largeList}}
 #' @examples 
 #' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
@@ -67,7 +67,7 @@ removeFromList <- function(file, index) {
 
 #' Save or append elements to a list file.
 #' @details 
-#' Save or append a list consisting of elements and orresponding names to a file.
+#' Save or append a list with / without names to a file.
 #' Notice that, all the names will be truncated to 16 characters. The rest attributes of lists
 #' will be discarded. \cr
 #' The generated file is not readable by \code{\link{readRDS}}.
@@ -75,7 +75,7 @@ removeFromList <- function(file, index) {
 #' @param file Name of file.
 #' @param append \code{TRUE/FALSE}, \code{TRUE} refers to truncating and saving. 
 #' \code{FALSE} refers to appending.
-#' @return void
+#' @return \code{TRUE} if no error occurs.
 #' @seealso \code{\link{largeList}}
 #' @examples 
 #' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
@@ -88,14 +88,14 @@ saveList <- function(object, file, append = FALSE) {
 
 #' Modify elements in a list file.
 #' @details 
-#' Modify elements with given indices by replacement values provided in parameter object. If the length 
+#' It modifies elements with given indices by replacement values provided in parameter object. If the length 
 #' of replacement values is shorter than the length of indices, values will be used circularly. This function may 
 #' relocate all the data in the stored file, thus can be very slow! Please consider to call this
 #' function batchwise instead of one by one.
 #' @param file Name of file.
 #' @param index A numeric vector or a character vecter.
-#' @param object A list consisting replacement values.
-#' @return void
+#' @param object A list consisting of replacement values.
+#' @return \code{TRUE} if no error occurs.
 #' @seealso \code{\link{largeList}}
 #' @examples 
 #' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
@@ -114,7 +114,7 @@ modifyInList <- function(file, index, object) {
 #' @param file Name of file.
 #' @param index A numeric vector.
 #' @param name A character vector consisting replacement names.
-#' @return void
+#' @return \code{TRUE} if no error occurs.
 #' @seealso \code{\link{largeList}}
 #' @examples 
 #' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))

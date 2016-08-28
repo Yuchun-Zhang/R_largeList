@@ -13,5 +13,6 @@ extern "C" SEXP getListLength(SEXP file) {
   int length_of_list;
   fseek(fin, LENGTH_POSITION, SEEK_SET);
   safe_fread((char*) & (length_of_list), 4, 1, fin);
+  fclose(fin);
   return (ScalarInteger(length_of_list));
 }

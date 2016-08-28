@@ -12,13 +12,13 @@ removeFromList(file, index)
 \item{index}{A numeric vector or a character vecter.}
 }
 \value{
-void
+\code{TRUE} if no error occurs.
 }
 \description{
 Remove elements from a list file.
 }
 \details{
-Removes elements with given indices or names. This function may relocate all the data 
+It removes elements with given indices or names. This function may relocate all the data 
 in the stored file, thus can be very slow! Please consider to call this function 
 batchwise instead of one by one.
 }

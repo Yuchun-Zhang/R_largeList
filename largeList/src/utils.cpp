@@ -253,3 +253,13 @@ void safe_fread(char *data, int nbytes, int nblocks, FILE *fin) {
   }
   return;
 }
+
+//check file and version (external)
+extern "C" SEXP checkFileAndVersionExternal(SEXP file)
+{
+  if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("File should be a charater vector of length 1.\n");
+  const char *file_name = getFullPath(file);
+  checkFile(file_name);
+  checkVersion(file_name);
+  return (ScalarLogical(1));
+}

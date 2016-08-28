@@ -66,7 +66,9 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index)
       }
     }
     //if no element to delete, exit.
-    if (index_num.size() == 0) {
+    if (index_num.size() == 0) {  
+      fclose(fin);
+      fclose(fout);
       return (ScalarLogical(1));
     }
     length_of_index = index_num.size();

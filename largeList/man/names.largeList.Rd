@@ -9,6 +9,9 @@
 \arguments{
 \item{x}{A largeList object created by \code{\link{getList}}.}
 }
+\value{
+A character vector.
+}
 \description{
 Get the names of elements stored in list file.
 }

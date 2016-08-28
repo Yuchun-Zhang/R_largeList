@@ -22,6 +22,7 @@ extern "C" SEXP getListName(SEXP file)
   if (has_name == 0) {
     SEXP names_sxp = PROTECT(R_NilValue);
     UNPROTECT(1);
+    fclose(fin);
     return (names_sxp);
   } else {
     SEXP names_sxp = PROTECT(Rf_allocVector(STRSXP, length_of_list));
@@ -36,6 +37,7 @@ extern "C" SEXP getListName(SEXP file)
       SET_STRING_ELT(names_sxp, i, Rf_mkChar(name.c_str()));
     }
     UNPROTECT(1);
+    fclose(fin);
     return (names_sxp);
   }
 }

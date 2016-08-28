@@ -4,15 +4,15 @@
 \alias{[[.largeList}
 \title{Overload of operator [[]].}
 \usage{
-\method{[[}{largeList}(largeListObject, index = NULL)
+\method{[[}{largeList}(x, index = NULL)
 }
 \arguments{
-\item{largeListObject}{A largeList object created by \code{\link{getList}}.}
+\item{x}{A largeList object created by \code{\link{getList}}.}
 
 \item{index}{A numeric vector or a character vecter of length 1.}
 }
 \value{
-a R object.
+A R object.
 }
 \description{
 Overload of operator [[]].

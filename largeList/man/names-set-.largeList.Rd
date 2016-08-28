@@ -11,9 +11,6 @@
 
 \item{value}{A character vector.}
 }
-\value{
-a largeList object
-}
 \description{
 Overload of operator names<-.
 }

@@ -12,15 +12,15 @@ readList(file, index = NULL)
 \item{index}{\code{NULL}, a numeric vector or a character vecter.}
 }
 \value{
-void
+A list object.
 }
 \description{
 Get elements from a list file.
 }
 \details{
 If no index provided, the whole list will be read. Given index could be a numeric (integer) 
-vector or a character vector representing the names. If for a given name, there exist more 
-then one elements related, the first matched one will be returned. If there are no elements 
+vector or a character vector representing the names. If there exist more then one elements 
+corresponding to a given name, , the first matched one will be returned. If there are no elements 
 with given name, \code{NULL} will be returned. \cr
 Files created by \code{\link{saveRDS}} can't be read.
 }

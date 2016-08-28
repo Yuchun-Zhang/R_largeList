@@ -11,16 +11,16 @@ modifyInList(file, index, object)
 
 \item{index}{A numeric vector or a character vecter.}
 
-\item{object}{A list consisting replacement values.}
+\item{object}{A list consisting of replacement values.}
 }
 \value{
-void
+\code{TRUE} if no error occurs.
 }
 \description{
 Modify elements in a list file.
 }
 \details{
-Modify elements with given indices by replacement values provided in parameter object. If the length 
+It modifies elements with given indices by replacement values provided in parameter object. If the length 
 of replacement values is shorter than the length of indices, values will be used circularly. This function may 
 relocate all the data in the stored file, thus can be very slow! Please consider to call this
 function batchwise instead of one by one.

@@ -14,7 +14,7 @@ modifyNameInList(file, index, name)
 \item{name}{A character vector consisting replacement names.}
 }
 \value{
-void
+\code{TRUE} if no error occurs.
 }
 \description{
 Modify names of elements in a list file.

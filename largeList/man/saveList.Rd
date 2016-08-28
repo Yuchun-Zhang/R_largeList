@@ -15,13 +15,13 @@ saveList(object, file, append = FALSE)
 \code{FALSE} refers to appending.}
 }
 \value{
-void
+\code{TRUE} if no error occurs.
 }
 \description{
 Save or append elements to a list file.
 }
 \details{
-Save or append a list consisting of elements and orresponding names to a file.
+Save or append a list with / without names to a file.
 Notice that, all the names will be truncated to 16 characters. The rest attributes of lists
 will be discarded. \cr
 The generated file is not readable by \code{\link{readRDS}}.

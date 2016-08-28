@@ -4,17 +4,14 @@
 \alias{[[<-.largeList}
 \title{Overload of operator [[]]<-.}
 \usage{
-\method{[[}{largeList}(largeListObject, index = NULL) <- value
+\method{[[}{largeList}(x, index = NULL) <- value
 }
 \arguments{
-\item{largeListObject}{A largeList object created by \code{\link{getList}}.}
+\item{x}{A largeList object created by \code{\link{getList}}.}
 
 \item{index}{\code{NULL}, a numeric vector or a character vecter.}
 
 \item{value}{\code{NULL}, a vector or a list.}
-}
-\value{
-a largeList object
 }
 \description{
 Overload of operator [[]]<-.
@@ -22,8 +19,8 @@ Overload of operator [[]]<-.
 \details{
 It behaviours the same as a normal list object. If index is not provided, the list file
 binding with the largeList object will be truncated and elements in
-value wiil be saved to the list file. If value is \code{NULL}, elements with given index 
-willbe removed.
+value will be saved to the list file. If value is \code{NULL}, element with given index 
+will be removed.
 }
 \seealso{
 \code{\link{largeList}}

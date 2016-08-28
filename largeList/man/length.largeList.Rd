@@ -9,6 +9,9 @@
 \arguments{
 \item{x}{A largeList object created by \code{\link{getList}}.}
 }
+\value{
+An integer.
+}
 \description{
 Get the length of list stored in file.
 }
