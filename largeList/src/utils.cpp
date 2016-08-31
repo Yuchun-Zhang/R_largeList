@@ -16,6 +16,7 @@ void fileBinarySearchByName (FILE *fin, int64_t &position, std::string &name, in
     mid =  (left + right) / 2;
     fseek(fin, -(8 + NAMELENGTH) * length + mid * (8 + NAMELENGTH) + 8, SEEK_END);
     safe_fread((char*) & (current_name[0]), NAMELENGTH , 1, fin);
+    replaceChar(current_name, 0xff, 0x00);
     if (current_name == name) {
       index = mid;
       fseek(fin, -(8 + NAMELENGTH) * length + mid * (8 + NAMELENGTH), SEEK_END);
@@ -276,4 +277,11 @@ extern "C" SEXP checkFileAndVersionExternal(SEXP file)
   checkFile(file_name);
   checkVersion(file_name);
   return (ScalarLogical(1));
+}
+
+void replaceChar(std::string &str, char ch1, char ch2) {
+  for (int i = 0; i < str.size(); i++ ) {
+    if (str[i] == ch1) { str[i] = ch2; }
+  }
+  return;
 }

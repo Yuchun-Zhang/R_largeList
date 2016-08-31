@@ -92,6 +92,7 @@ void moveData(FILE *, FILE*, const int64_t &, const int64_t &, const int64_t &, 
 void safe_fwrite(char *, int , int , FILE *);
 void safe_fread(char *, int , int , FILE *);
 extern "C" SEXP checkFileAndVersionExternal(SEXP);
+void replaceChar(std::string &, char, char);
 
 
 //export files.
