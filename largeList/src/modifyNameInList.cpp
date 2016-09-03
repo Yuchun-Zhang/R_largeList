@@ -67,19 +67,25 @@ extern "C" SEXP modifyNameInList(SEXP file, SEXP index, SEXP names)
   // if the list has names and parameter names has some values, modify the names.
   if (has_name == 1 && TYPEOF(names) != NILSXP) {
     for (int i = 0; i < length_of_index; i++) {
-      SEXP name_element = STRING_ELT(names, i % length_of_names);
-      pair[i].first = name_element == NA_STRING ?
-                      std::string(NAMELENGTH, '\xff') :
-                      CHAR(name_element);
+      if (STRING_ELT(names, i % length_of_names) == NA_STRING) {
+        pair[i].first = std::string(NAMELENGTH, '\xff');
+      } else {
+        pair[i].first = std::string(NAMELENGTH, '\x00');
+        pair[i].first.replace(0, Rf_length(STRING_ELT(names, i % length_of_names)), 
+                              CHAR(STRING_ELT(names, i % length_of_names)));
+      }  
     }
   }
   // if the list has no names and parameter names has some values, modify them and set has_name to 1.
   if (has_name == 0 && TYPEOF(names) != NILSXP) {
     for (int i = 0; i < length_of_index; i++) {
-      SEXP name_element = STRING_ELT(names, i % length_of_names);
-      pair[i].first = name_element == NA_STRING ?
-                      std::string(NAMELENGTH, '\xff') :
-                      CHAR(name_element);
+      if (STRING_ELT(names, i % length_of_names) == NA_STRING) {
+        pair[i].first = std::string(NAMELENGTH, '\xff');
+      } else {
+        pair[i].first = std::string(NAMELENGTH, '\x00');
+        pair[i].first.replace(0, Rf_length(STRING_ELT(names, i % length_of_names)), 
+                              CHAR(STRING_ELT(names, i % length_of_names)));
+      }  
     }
     has_name = 1;
     fseek(fout, HAS_NAME_POSITION, SEEK_SET);

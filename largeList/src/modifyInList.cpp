@@ -62,7 +62,7 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object)
     }
     //remove invalide elements in the modify list
     int delete_num = 0;
-    for (size_t i = 0 ; i < names.size(); i++) {
+    for (size_t i = 0 ; i < names.size() - delete_num; i++) {
       if (index_num[i] ==  -1) {
         index_num.erase(index_num.begin() + i - delete_num);
         delete_num ++;

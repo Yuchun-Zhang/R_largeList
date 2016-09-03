@@ -20,8 +20,8 @@
 
 #define BYTE unsigned char
 #define NAMELENGTH 16
-#define CURRENT_VERSION ((0<<8) + (2<<4) + 0)
-#define READABLE_VERSION ((0<<8) + (2<<4) + 0)
+#define CURRENT_VERSION ((0<<8) + (2<<4) + 1)
+#define READABLE_VERSION ((0<<8) + (2<<4) + 1)
 #define LENGTH_POSITION 30
 #define MAXRETRIES 5
 #define RETRYDELAY  250

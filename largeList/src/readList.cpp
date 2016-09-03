@@ -67,12 +67,20 @@ extern "C" SEXP readList(SEXP file, SEXP index = R_NilValue)
     length_of_index = Rf_length(index);
     index_pair.resize(length_of_index);
     for (int i = 0; i < length_of_index; i ++) {
-      index_pair[i].first.assign(CHAR(STRING_ELT(index, i)), Rf_length(STRING_ELT(index, i)));
-      index_pair[i].first.resize(NAMELENGTH);
+      if (STRING_ELT(index, i) == NA_STRING) {
+        index_pair[i].first = std::string(NAMELENGTH, '\xff');
+      } else {
+        index_pair[i].first = std::string(NAMELENGTH, '\x00');
+        index_pair[i].first.replace(0, Rf_length(STRING_ELT(index, i)), CHAR(STRING_ELT(index, i)));
+      } 
     }
     index_num.resize(length_of_index);
     for (int i = 0 ; i < length_of_index; i++) {
-      fileBinarySearchByName(fin, index_pair[i].second, index_pair[i].first, index_num[i], length_of_list);
+      if (STRING_ELT(index, i) == NA_STRING) {
+        index_pair[i].second = -1;
+      } else {
+        fileBinarySearchByName(fin, index_pair[i].second, index_pair[i].first, index_num[i], length_of_list);
+      }
     }
   }
 
@@ -80,7 +88,7 @@ extern "C" SEXP readList(SEXP file, SEXP index = R_NilValue)
   SEXP output_list = PROTECT(Rf_allocVector(VECSXP, length_of_index));
   for (int i = 0; i < length_of_index; i++ ) {
     if (index_pair[i].second == -1) {
-      Rf_warning("Element %s not found! \n", index_pair[i].first.c_str());
+      //Rf_warning("Element %s not found! \n", index_pair[i].first.c_str());
       SET_VECTOR_ELT(output_list, i, R_NilValue);
     } else {
       if (index_pair[i].second > file_size ) {

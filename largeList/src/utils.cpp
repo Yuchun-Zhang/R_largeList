@@ -11,12 +11,15 @@ void fileBinarySearchByName (FILE *fin, int64_t &position, std::string &name, in
   int64_t left = 0;
   int64_t right = length - 1;
   int64_t mid;
-  std::string current_name(NAMELENGTH, ' ');
+  std::string current_name(NAMELENGTH, '\xff');
   while (left <= right) {
     mid =  (left + right) / 2;
     fseek(fin, -(8 + NAMELENGTH) * length + mid * (8 + NAMELENGTH) + 8, SEEK_END);
     safe_fread((char*) & (current_name[0]), NAMELENGTH , 1, fin);
-    replaceChar(current_name, 0xff, 0x00);
+    //Rprintf("%d \n", current_name.size());
+    //Rprintf("%d \n", name.size());
+    //Rprintf("%04x \n", current_name[0]);
+    //Rprintf("%04x \n", name[0]);
     if (current_name == name) {
       index = mid;
       fseek(fin, -(8 + NAMELENGTH) * length + mid * (8 + NAMELENGTH), SEEK_END);

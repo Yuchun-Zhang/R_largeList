@@ -40,11 +40,12 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append)
     SEXP names_sxp = getObjectName(object, has_name);
     //assign the names to pair
     for (int i = 0; i < length_of_list; i++) {
-      std::string name_temp = STRING_ELT(names_sxp, i) == NA_STRING ?
-                              std::string(NAMELENGTH, '\xff') :
-                              CHAR(STRING_ELT(names_sxp, i));
-      pair[i].first = name_temp;
-      pair[i].first.resize(NAMELENGTH);
+      if (STRING_ELT(names_sxp, i) == NA_STRING) {
+        pair[i].first = std::string(NAMELENGTH, '\xff');
+      } else {
+        pair[i].first = std::string(NAMELENGTH, '\x00');
+        pair[i].first.replace(0, Rf_length(STRING_ELT(names_sxp, i)), CHAR(STRING_ELT(names_sxp, i)));
+      }                       
     }
 
     //write first refference table
@@ -97,11 +98,12 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append)
     int has_name_new = 0;
     SEXP names_sxp = getObjectName(object, has_name_new);
     for (int i = 0; i < length_of_list_append; i++) {
-      std::string name_temp = STRING_ELT(names_sxp, i) == NA_STRING ?
-                              std::string(NAMELENGTH, '\xff') :
-                              CHAR(STRING_ELT(names_sxp, i));
-      pair[i + length_of_list_old].first = name_temp;
-      pair[i + length_of_list_old].first.resize(NAMELENGTH);
+      if (STRING_ELT(names_sxp, i) == NA_STRING) {
+        pair[i + length_of_list_old].first = std::string(NAMELENGTH, '\xff');
+      } else {
+        pair[i + length_of_list_old].first = std::string(NAMELENGTH, '\x00');
+        pair[i + length_of_list_old].first.replace(0, Rf_length(STRING_ELT(names_sxp, i)), CHAR(STRING_ELT(names_sxp, i)));
+      }                   
     }
 
     //write the first table
