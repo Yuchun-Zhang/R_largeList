@@ -17,6 +17,11 @@ Overload of operator names<-.
 \details{
 It behaviours the same as a normal list object.
 }
+\examples{
+largelist_object <- getList("example.llo", truncate = TRUE)
+largelist_object[[]] <- list("A" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
+names(largelist_object) <- c("AA", "BB", "CC")
+}
 \seealso{
 \code{\link{largeList}}
 }

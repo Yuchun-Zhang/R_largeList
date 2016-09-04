@@ -20,6 +20,12 @@ Overload of operator [].
 \details{
 It behaviours the same as a normal list object.
 }
+\examples{
+largelist_object <- getList("example.llo", truncate = TRUE)
+largelist_object[[]] <- list("A" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
+largelist_object[c(1, 2)] ## get list("A" = 1, "B" = 2)
+largelist_object[c("A", "C")] ## get list("A" = 1, "C" = 3)
+}
 \seealso{
 \code{\link{largeList}}
 }

@@ -3,9 +3,9 @@
 extern "C" SEXP readList(SEXP file, SEXP index = R_NilValue)
 {
   //check parameters
-  if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("File should be a charater vector of length 1.\n");
+  if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("File should be a charater vector of length 1.");
   if (index != R_NilValue && TYPEOF(index) != INTSXP &&  TYPEOF(index) != REALSXP && TYPEOF(index) != STRSXP)
-    error("Index should be a NULL, an integer vector, a numeric vector or a character vector.\n");
+    error("Index should be a NULL, an integer vector, a numeric vector or a character vector.");
 
   const char *file_name = getFullPath(file);
   //check if the file exists and the format is valid
@@ -51,8 +51,8 @@ extern "C" SEXP readList(SEXP file, SEXP index = R_NilValue)
     //check the range of indicies
     int max_index = *std::max_element(index_num.begin(), index_num.end());
     int min_index = *std::min_element(index_num.begin(), index_num.end());
-    if (min_index < 0) { fclose(fin); error("Index should be positive.\n"); }
-    if (max_index > length_of_list - 1) { fclose(fin); error("Index beyonds list length.\n");}
+    if (min_index < 0) { fclose(fin); error("Index should be positive."); }
+    if (max_index > length_of_list - 1) { fclose(fin); error("Index beyonds list length.");}
 
     index_pair.resize(length_of_list);
     for (int i = 0 ; i < length_of_index; i++) {
@@ -67,12 +67,7 @@ extern "C" SEXP readList(SEXP file, SEXP index = R_NilValue)
     length_of_index = Rf_length(index);
     index_pair.resize(length_of_index);
     for (int i = 0; i < length_of_index; i ++) {
-      if (STRING_ELT(index, i) == NA_STRING) {
-        index_pair[i].first = std::string(NAMELENGTH, '\xff');
-      } else {
-        index_pair[i].first = std::string(NAMELENGTH, '\x00');
-        index_pair[i].first.replace(0, Rf_length(STRING_ELT(index, i)), CHAR(STRING_ELT(index, i)));
-      } 
+      index_pair[i].first = charsxpToString(STRING_ELT(index, i));   
     }
     index_num.resize(length_of_index);
     for (int i = 0 ; i < length_of_index; i++) {

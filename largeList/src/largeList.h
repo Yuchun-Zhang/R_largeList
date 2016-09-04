@@ -93,6 +93,7 @@ void safe_fwrite(char *, int , int , FILE *);
 void safe_fread(char *, int , int , FILE *);
 extern "C" SEXP checkFileAndVersionExternal(SEXP);
 void replaceChar(std::string &, char, char);
+std::string charsxpToString(SEXP);
 
 
 //export files.

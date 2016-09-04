@@ -15,6 +15,11 @@ An integer.
 \description{
 Get the length of list stored in file.
 }
+\examples{
+largelist_object <- getList("example.llo", truncate = TRUE)
+largelist_object[[]] <- list("A" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
+length(largelist_object) ## get 3
+}
 \seealso{
 \code{\link{largeList}}
 }

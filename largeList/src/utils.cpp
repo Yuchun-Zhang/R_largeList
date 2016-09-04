@@ -173,7 +173,7 @@ void checkFile(const char *file_name) {
     return;
   } else {
     fclose(ftest);
-    error("File does not exist.\n");
+    error("File does not exist.");
   }
 }
 
@@ -282,9 +282,22 @@ extern "C" SEXP checkFileAndVersionExternal(SEXP file)
   return (ScalarLogical(1));
 }
 
+//replace all character ch1 in string str with ch2.
 void replaceChar(std::string &str, char ch1, char ch2) {
   for (int i = 0; i < str.size(); i++ ) {
     if (str[i] == ch1) { str[i] = ch2; }
   }
   return;
+}
+
+//
+std::string charsxpToString(SEXP char_sexp) {
+  std::string str;
+  if (char_sexp== NA_STRING) {
+    str = std::string(NAMELENGTH, '\xff');
+  } else {
+    str = std::string(NAMELENGTH, '\x00');
+    str.replace(0, Rf_length(char_sexp), CHAR(char_sexp));
+  }
+  return(str);
 }

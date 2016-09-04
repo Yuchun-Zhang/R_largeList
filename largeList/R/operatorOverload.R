@@ -38,6 +38,11 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
 #' @param index  A numeric vector or a character vecter.
 #' @return A list
 #' @seealso \code{\link{largeList}} 
+#' @examples
+#' largelist_object <- getList("example.llo", truncate = TRUE)
+#' largelist_object[[]] <- list("A" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
+#' largelist_object[c(1, 2)] ## get list("A" = 1, "B" = 2)
+#' largelist_object[c("A", "C")] ## get list("A" = 1, "C" = 3)
 #' @export
 "[.largeList" <- function(x, index = NULL) {
   res <- readList(file = x$file, index = index)
@@ -49,6 +54,11 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
 #' @param x A largeList object created by \code{\link{getList}}.
 #' @param index  A numeric vector or a character vecter of length 1.
 #' @return A R object.
+#' @examples
+#' largelist_object <- getList("example.llo", truncate = TRUE)
+#' largelist_object[[]] <- list("A" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
+#' largelist_object[[1]] ## get 1
+#' largelist_object[["B"]] ## get 2
 #' @seealso \code{\link{largeList}} 
 #' @export
 "[[.largeList" <- function(x, index = NULL) {
@@ -65,7 +75,16 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
 #' @param x A largeList object created by \code{\link{getList}}.
 #' @param index  \code{NULL}, a numeric vector or a character vecter.
 #' @param value \code{NULL}, a vector or a list.
-#' @seealso \code{\link{largeList}} 
+#' @seealso \code{\link{largeList}}
+#' @examples
+#' largelist_object <- getList("example.llo", truncate = TRUE)
+#' largelist_object[] <- list("A" = 1, "B" = 2)  ## append list to the list file
+#' largelist_object[] <- list("C" = 3, "D" = 4)  ## append list to the list file
+#' largelist_object[1] <- NULL ## remove first element
+#' largelist_object["B"] <- NULL ## remove element with name "B"
+#' largelist_object[c("C","D")] <- c(5, 6) ## change value
+#' largelist_object[2] <- 5 ## change value
+#' largelist_object[c(4, 5)] <- list(6, 7) ## append 6, 7 to 4th, 5th position and NULL to 3rd position
 #' @export
 "[<-.largeList" <- function(x, index = NULL, value) {
   ## if index is null, append value to list object.
@@ -144,6 +163,14 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
 #' @param index  \code{NULL}, a numeric vector or a character vecter.
 #' @param value \code{NULL}, a vector or a list.
 #' @seealso \code{\link{largeList}} 
+#' @examples
+#' largelist_object <- getList("example.llo", truncate = TRUE)
+#' largelist_object[[]] <- list("A" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
+#' largelist_object[[1]] <- NULL ## remove first element
+#' largelist_object[["B"]] <- NULL ## remove element with name "B"
+#' largelist_object[["C"]] <- 5 ## change value
+#' largelist_object[[2]] <- 5 ## change value
+#' largelist_object[[4]] <- 6 ## append 6 to 4th and NULL to 3rd position
 #' @export
 "[[<-.largeList" <- function(x, index = NULL, value){
   if (length(index) > 1) {stop("subscript out of bounds")}
@@ -165,6 +192,11 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
 #' @description  If length of list dose not exceed getOption("max.print"), all elements will be printed,
 #' otherwise, elements beyond getOption("max.print") will be omitted.
 #' @seealso \code{\link{largeList}} 
+#' @examples
+#' largelist_object <- getList("example.llo", truncate = TRUE)
+#' largelist_object[[]] <- list("A" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
+#' print(largelist_object) ## print to screen
+#' largelist_object ## print to screen
 #' @export
 print.largeList <- function(x, ...) {
   x_length = length(x)
@@ -182,6 +214,10 @@ print.largeList <- function(x, ...) {
 #' @return An integer.
 #' @description Get the length of list stored in file.
 #' @seealso \code{\link{largeList}} 
+#' @examples
+#' largelist_object <- getList("example.llo", truncate = TRUE)
+#' largelist_object[[]] <- list("A" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
+#' length(largelist_object) ## get 3
 #' @export
 length.largeList <- function(x) {
   return(getListLength(x$file))
@@ -192,6 +228,10 @@ length.largeList <- function(x) {
 #' @return A character vector.
 #' @description Get the names of elements stored in list file.
 #' @seealso \code{\link{largeList}} 
+#' @examples
+#' largelist_object <- getList("example.llo", truncate = TRUE)
+#' largelist_object[[]] <- list("A" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
+#' names(largelist_object) ## get c("A", "B", "C")
 #' @export
 names.largeList <- function(x) {
   return(getListName(x$file))
@@ -203,6 +243,10 @@ names.largeList <- function(x) {
 #' @param x A largeList object created by \code{\link{getList}}.
 #' @param value A character vector.
 #' @seealso \code{\link{largeList}} 
+#' @examples 
+#' largelist_object <- getList("example.llo", truncate = TRUE)
+#' largelist_object[[]] <- list("A" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
+#' names(largelist_object) <- c("AA", "BB", "CC")
 #' @export
 "names<-.largeList" <- function(x, value) {
   x_length <- length(x)

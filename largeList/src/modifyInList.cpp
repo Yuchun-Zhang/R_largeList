@@ -3,10 +3,10 @@
 extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object)
 {
   //check parameters
-  if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("File should be a charater vector of length 1.\n");
-  if (TYPEOF(object) != VECSXP) error("Object is not a list.\n");
+  if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("File should be a charater vector of length 1.");
+  if (TYPEOF(object) != VECSXP) error("Object is not a list.");
   if (index != R_NilValue && TYPEOF(index) != INTSXP &&  TYPEOF(index) != REALSXP && TYPEOF(index) != STRSXP)
-    error("Index should be an integer vector, a numeric vector or a character vector.\n");
+    error("Index should be an integer vector, a numeric vector or a character vector.");
   try { checkSEXP(object);} catch (int e) { error("Data type not supported. Please check ?largeList");}
 
   const char *file_name = getFullPath(file);
@@ -61,13 +61,15 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object)
       }
     }
     //remove invalide elements in the modify list
-    int delete_num = 0;
-    for (size_t i = 0 ; i < names.size() - delete_num; i++) {
-      if (index_num[i] ==  -1) {
-        index_num.erase(index_num.begin() + i - delete_num);
-        delete_num ++;
+    std::vector<int> index_num_processed;
+    int temp_index = 0;
+    for (size_t i = 0 ; i < names.size() ; i++) {
+      if (index_num[i] !=  -1) {
+        index_num_processed[temp_index] = index_num[i];
+        temp_index ++ ;
       }
     }
+    index_num = index_num_processed;
 
     //if no element to modify, exit.
     if (index_num.size() == 0) {
