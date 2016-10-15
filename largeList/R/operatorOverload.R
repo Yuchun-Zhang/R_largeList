@@ -62,7 +62,14 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
 #' @seealso \code{\link{largeList}} 
 #' @export
 "[[.largeList" <- function(x, index = NULL) {
+  if (is.null(index)) {stop("invalid subscript type 'symbol'")}
   if (length(index) > 1) {stop("subscript out of bounds")}
+  if (class(index) %in% c("integer","numeric") && index > length(x)) {
+    stop("subscript out of bounds")
+  }
+  if (class(index) %in% c("integer","numeric") && index <= 0) {
+    stop("attempt to select less than one element")
+  }
   res <- readList(file = x$file, index = index)
   return(res[[1]])
 }
@@ -101,51 +108,34 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
     }else{
       ## vectors are transfered to list since function saveList and modifyInList only supports list.
       if (class(value) != "list") {value <- as.list(value)}
-      ## if index is of type integer/numeric
-      if (class(index) %in% c("numeric","integer")) {
-        x_length <- length(x)
-        index <- as.integer(index)
-        if (length(index) %% length(value) != 0){
-          warning("number of items to replace is not a multiple of replacement length")
-        }
-        to_append_index <- index[index > x_length]
-        to_modify_index <- index[index <= x_length]
-        if (length(to_append_index) > 0) {
-          ## here it should be considered that the number of items to replace is not a
-          ## multiple of replacement length.
-          to_append_value_index <- which(index > x_length) %% length(value)
-          to_append_value_index[to_append_value_index == 0] <- length(value)
-          to_append_value <- rep(list(NULL), max(to_append_index) - x_length)
-          to_append_value[to_append_index - x_length] <- value[to_append_value_index]
-        }
-        if (length(to_modify_index) > 0) {
-          to_modify_value_index <- which(index <= x_length) %% length(value)
-          to_modify_value_index[to_modify_value_index == 0] <- length(value)
-          to_modify_value <- value[to_modify_value_index]
-        }
+      x_length = length(x)
+      if (class(index) %in% c("numeric","integer") && !all(index < 0, na.rm = T)) {
+        temp_list <- list()
+        temp_list[index] <- value
+        to_append_value <- temp_list[(1:length(temp_list)) > x_length]
+        to_modify_index <- unique(index[index <= x_length])
+        to_modify_value <- temp_list[to_modify_index]
+      }else 
+      if (class(index) %in% c("numeric","integer") && all(index < 0, na.rm = T)) {
+        to_modify_index <- index
+        to_modify_value <- value
+        to_append_value <- integer(0)
+      }else 
+      if  (class(index) %in% c("character")) {
+        temp_list <- list()
+        temp_list[index] <- value
+        to_append_value <- temp_list[!names(temp_list) %in% names(x) | is.na(names(temp_list))]
+        to_modify_index <- names(temp_list)[names(temp_list) %in% names(x) & !is.na(names(temp_list))]
+        to_modify_value <- temp_list[to_modify_index]
       }else
-      if  (class(index) %in% c("character")){
-        if (length(index) %% length(value) != 0) {
-          warning("number of items to replace is not a multiple of replacement length")
-        }
-        x_name <- names(x)
-        to_append_index = index[!(index %in% x_name)]
-        to_modify_index = index[index %in% x_name]
-        if (length(to_append_index) > 0) {
-          to_append_value_index <-  which(!(index %in% x_name)) %% length(value)
-          to_append_value_index[to_append_value_index == 0] <- length(value)
-          to_append_value <- value[to_append_value_index]
-          names(to_append_value) <- index[to_append_index]
-        }
-        if (length(to_modify_index) > 0) {
-          to_modify_value_index <- which((index %in% x_name))%% length(value)
-          to_modify_value_index[to_modify_value_index == 0] <- length(value)
-          to_modify_value <- value[to_modify_value_index]
-        }
-      }else{
+      if  (class(index) %in% c("logical")) { 
+        to_modify_index <- index
+        to_modify_value <- value
+        to_append_value <- integer(0)
+      }else {
         stop("invalid index type")
       }
-      if (length(to_append_index) > 0) { saveList(object = to_append_value, file = x$file, append = TRUE)}
+      if (length(to_append_value) > 0) { saveList(object = to_append_value, file = x$file, append = TRUE)}
       if (length(to_modify_index) > 0) { modifyInList(file = x$file, index = to_modify_index, object = to_modify_value)}
     }
   }
@@ -174,11 +164,14 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
 #' @export
 "[[<-.largeList" <- function(x, index = NULL, value){
   if (length(index) > 1) {stop("subscript out of bounds")}
-  if (is.null(index)){
+  if (is.null(index)) {
     ## vectors are transfered to list since function saveList and modifyInList only support list.
     if (class(value) != "list") {value <- as.list(value)}
     saveList(object = value, file = x$file, append = FALSE)
   }else{
+    if (class(index) %in% c("integer","numeric") && index <= 0) {
+      stop("attempt to select less than one element")
+    }
     x[index] <- value
   }
   x <- getList(x$file)
@@ -200,12 +193,12 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
 #' @export
 print.largeList <- function(x, ...) {
   x_length = length(x)
-  if (x_length <= getOption("max.print")) {
+  if (x_length <= getOption("largeList.max.print")) {
     print(x[])
   }else{
-    print(x[1:getOption("max.print")])
-    cat(sprintf("[ reached getOption(\"max.print\") -- omitted $d entries ]",
-                x_length - getOption("max.print")))
+    print(x[1:getOption("largeList.max.print")])
+    cat(sprintf("[ reached getOption(\"largeList.max.print\") -- omitted %d entries ]",
+                x_length - getOption("largeList.max.print")))
   }
 }
 
@@ -249,14 +242,21 @@ names.largeList <- function(x) {
 #' names(largelist_object) <- c("AA", "BB", "CC")
 #' @export
 "names<-.largeList" <- function(x, value) {
-  x_length <- length(x)
-  if (length(value) > x_length) {
-    stop(sprintf("'names' attribute [%d] must be the same length as the vector [%d]", length(value), x$length))  
-  }
-  if (length(value) <= x_length) {
-    modifyNameInList(file = x$file, index = seq_along(value), name = value)
+  if (is.null(value)) {
+    modifyNameInList(file = x$file, index = NULL, name = NULL)
+  }else {
+    x_length <- length(x)
+    if (length(value) > x_length) {
+      stop(sprintf("'names' attribute [%d] must be the same length as the vector [%d]", length(value), x_length))  
+    }
+    if (length(value) <= x_length) {
+      modifyNameInList(file = x$file, index = seq_along(value), name = value)
+    }    
   }
   return(getList(x$file))
 }
 
 
+.onLoad <- function(libname, pkgname) {
+  options(list(largeList.max.print = 100))
+}
