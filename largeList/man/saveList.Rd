@@ -4,7 +4,7 @@
 \alias{saveList}
 \title{Save or append elements to a list file.}
 \usage{
-saveList(object, file, append = FALSE)
+saveList(object, file, append = FALSE, compress = TRUE)
 }
 \arguments{
 \item{object}{A list object to save or append.}

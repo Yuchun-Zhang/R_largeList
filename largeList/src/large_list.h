@@ -22,6 +22,7 @@
 #undef ERROR
 #include <R.h>
 #include <Rinternals.h>
+#include <zlib.h>
 
 #define BYTE unsigned char
 #define NAMELENGTH 16
@@ -32,6 +33,7 @@
 #define MAXRETRIES 5
 #define RETRYDELAY  250
 #define HAS_NAME_POSITION 18
+#define IS_COMPRESS_POSITION 19
 
 
 namespace large_list {
@@ -39,17 +41,37 @@ namespace large_list {
 	class UnitObject;
 	class IndexObject;
 	class ListObject;
-	class NamePositionPair;
+	class NamePositionTuple;
 	class IndexWithValueObject;
 
 	class Connection {
-		virtual void create() = 0;
-		virtual void connect() = 0;
+	public:
 		virtual void write(char *data, int nbytes, int nblocks) = 0;
 		virtual void read(char *data, int nbytes, int nblocks) = 0;
+		virtual void seekRead (int64_t position, int origin) = 0;
+		virtual void seekWrite (int64_t position, int origin) = 0;
 	};
 
-	class ConnectionFile {
+	class ConnectionRaw : public Connection {
+	private:
+		char * raw_array_;
+		int64_t read_pos_;
+		int64_t write_pos_;
+		int64_t length_;
+	public:
+		ConnectionRaw(int64_t length);
+		~ConnectionRaw();
+		void write(char *data, int nbytes, int nblocks);
+		void read(char *data, int nbytes, int nblocks);
+		void seekRead (int64_t position, int origin);
+		void seekWrite (int64_t position, int origin);
+		void compress();
+		void uncompress();
+		char* getRaw();
+		int64_t getLength();
+	};
+
+	class ConnectionFile : public Connection {
 	// This class handles all the file input/output staffs.
 	private:
 		FILE * fin_;
@@ -97,20 +119,20 @@ namespace large_list {
 
 		// operations to the R object.
 		void set(SEXP r_object);
-		void write(ConnectionFile & connection_file);
-		void read(ConnectionFile & connection_file);
+		int64_t write(ConnectionFile & connection_file, bool is_compress);
+		void read(ConnectionFile & connection_file, int64_t serialized_length, bool is_compress);
 		SEXP get();
-		int64_t calculateSerializedLength();
+		int64_t calculateSerializedLength(bool is_compress);
 		void check();	
 
 		// the following functions deal with the input/output/check/serialized length of R object.
 		// they are static since they will be called recursively and it's not worthy to wrap up all r objects.
 		static void getHeadInfo(SEXP _x, int &level, int &object, SEXP &attribute, SEXP &tag);
 		static void checkSEXP(SEXP _x);
-		static void writeLength(SEXP _x, ConnectionFile & connection_file);
-		static void writeSEXP(SEXP _x, ConnectionFile & connection_file);
-		static void readLength(ConnectionFile & connection_file, int &length);
-		static SEXP readSEXP(ConnectionFile & connection_file);
+		static void writeLength(SEXP _x, Connection & connection);
+		static void writeSEXP(SEXP _x, Connection & connection);
+		static void readLength(Connection & connection, int &length);
+		static SEXP readSEXP(Connection & connection);
 		static void lengthOfSEXP(SEXP _x, int64_t & lenght);
 		static std::string charsxpToString(SEXP char_sexp);
 	};
@@ -118,6 +140,7 @@ namespace large_list {
 	class MetaListObject {
 	protected:
 		bool has_name_;
+		bool is_compress_;
 		int length_;
 	public:
 		MetaListObject();
@@ -136,6 +159,12 @@ namespace large_list {
 		void setNameBit (bool has_name);
 		bool getNameBit ();
 
+		// compress
+		void writeCompressBit (ConnectionFile & connection_file);
+		void readCompressBit (ConnectionFile & connection_file);
+		void setCompressBit (bool is_compress);
+		bool getCompressBit ();
+
 		// other
 		void writeListHead (ConnectionFile & connection_file);
 
@@ -145,13 +174,14 @@ namespace large_list {
 	// This class contains mainly a vector of UnitObject and a string vector representing the names. It models the 
 	// R list basically.
 	private:
-		std::vector<UnitObject> list_;
+		PROTECT_INDEX ipx;
+		SEXP r_list_;
 		std::vector<std::string> names_;
 		std::vector<int64_t> serialized_length_;
 	public:
 		// constructors/destructors
-		ListObject(int length);
-		ListObject (SEXP list);
+		ListObject(int length, bool is_compress = false);
+		ListObject (SEXP list, bool is_compress = false);
 		ListObject();
 		~ListObject();
 
@@ -160,12 +190,14 @@ namespace large_list {
 
 		// serialized length
 		void calculateSerializedLength();
+		void setSerializedLength(int64_t serialized_length, int index);
 		int64_t getSerializedLength(int index);
 
 		// name
 		std::string getName(int index);
 		void setName(std::string name, int index);
 		static SEXP getObjectName(SEXP x, bool & has_name);
+
 
 		// list of UnitObject
 		void check();
@@ -174,21 +206,22 @@ namespace large_list {
 		void set(SEXP r_object, int index);
 
 		// other
-		SEXP assembleRList (ConnectionFile & connection_file);
+		SEXP assembleRList ();
+		void print();
 	};
    
-	class NamePositionPair {
+	class NamePositionTuple {
 	// This is a position-name look up table.
 	private:
-		std::vector<std::pair<int64_t, std::string> > pair_;
+		std::vector<std::tuple<int64_t, int64_t, std::string> > tuple_;
 		int length_;
 		int64_t last_position_;
 	public:
 		// constructors/destructors
-		NamePositionPair();
-		NamePositionPair(int length);
-		NamePositionPair(NamePositionPair &);
-		~NamePositionPair();
+		NamePositionTuple();
+		NamePositionTuple(int length);
+		NamePositionTuple(NamePositionTuple &);
+		~NamePositionTuple();
 
 		// file read/write 
 		void read(ConnectionFile & connection_file);
@@ -196,9 +229,13 @@ namespace large_list {
 		void write(ConnectionFile & connection_file, bool write_last_position);
 
 		// position
-		void setPosition(ConnectionFile & connection_file, int i);
-		void setPosition(int64_t position, int i);
+		void setPosition(ConnectionFile & connection_file, int index);
+		void setPosition(int64_t position, int index);
 		int64_t getPosition(int index);
+
+		// length
+		int64_t getSerializedLength(int index);
+		void setSerializedLength(int64_t element_length, int index);
 
 		// last position
 		void setLastPosition(ConnectionFile & connection_file);
@@ -218,11 +255,12 @@ namespace large_list {
 		// operations to the pair vector
 		void sort();
 		void remove(IndexObject & index_object);
-		static bool cmp (std::pair<int64_t, std::string> const & a, std::pair<int64_t, std::string> const & b);
+		static bool cmp (std::tuple<int64_t, int64_t, std::string>  const & a, 
+		                 std::tuple<int64_t, int64_t, std::string>  const & b);
 
 		// other
 		void setToInvalid(int index);
-		void merge(NamePositionPair &);
+		void merge(NamePositionTuple &);
 		void print(int index);
 	};
 
@@ -231,9 +269,8 @@ namespace large_list {
 	protected:
 		int list_length_;
 		int length_;
-		NamePositionPair pair_object_;
+		NamePositionTuple tuple_object_;
 		std::vector<int> index_;
-		std::vector<int> value_index_;
 		// these two functions are called in the constructor
 		void fileBinarySearchByName(ConnectionFile &connection_file, int64_t &position, std::string name, int &index, int length);
 		void fileBinarySearchByPosition (ConnectionFile &connection_file, int64_t &position, int &index, int &length);
@@ -247,7 +284,7 @@ namespace large_list {
 		// remove invalid value of the index.
 		void removeInvalid ();
 
-		// read in the position and names, i.e. the NamePositionPair object
+		// read in the position and names, i.e. the NamePositionTuple object
 		void readPair(ConnectionFile &connection_file);
 
 		// get staffs 
@@ -255,6 +292,7 @@ namespace large_list {
 		std::string getName(int index);
 		int getIndex(int index);
 		int getLength();
+		int64_t getSerializedLength(int index);
 
 		// others
 		void sort();
@@ -289,13 +327,15 @@ namespace large_list {
 		static bool cmp (std::pair<int, int> const & a, std::pair<int, int> const & b);
 	};
 
-	extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append);
+	extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append, SEXP compress);
 	extern "C" SEXP readList(SEXP file, SEXP index);
 	extern "C" SEXP removeFromList(SEXP file, SEXP index);
 	extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object);
 	extern "C" SEXP getListLength(SEXP file);
 	extern "C" SEXP getListName(SEXP file);
 	extern "C" SEXP modifyNameInList(SEXP file, SEXP index, SEXP names);
+	extern "C" SEXP isListCompressed(SEXP file);
 	extern "C" SEXP checkFileAndVersionExternal(SEXP file);
+	extern "C" SEXP largeListTest();
 };
 #endif //LARGE_LIST

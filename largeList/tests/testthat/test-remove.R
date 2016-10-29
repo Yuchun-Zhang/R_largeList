@@ -19,11 +19,12 @@ test_that("remove from list", {
   bat <- length(data) / 5
   
   flog.info("remove from list")
-  if (!original) {lf <- getList(llo_file_name, truncate = T)}
+  if (!original) {lf <- getList(llo_file_name, truncate = T, compress = compress)}
   
   ####
   flog.info("Part 1. positive index")
-  if (original) {saveList(data,llo_file_name, append =  F)} else {lf[[]] <- data}
+  if (original) {saveList(data,llo_file_name, append =  F, compress = compress)} 
+    else {lf[[]] <- data}
   remain <- 1:length(data)
   res_real <- data
   while (length(res_real) > 0) {
@@ -45,7 +46,7 @@ test_that("remove from list", {
   
   ####
   flog.info("Part 2. negative index")
-  if (original) {saveList(data, llo_file_name, append =  F)} else {lf[[]] <- data}
+  if (original) {saveList(data, llo_file_name, append =  F, compress = compress)} else {lf[[]] <- data}
   remain <- 1:length(data)
   res_real <- data
   while (length(res_real) > 0) {
@@ -66,7 +67,7 @@ test_that("remove from list", {
   
   ####
   flog.info("Part 3. logical index")
-  if (original) {saveList(data,llo_file_name, append =  F)} else {lf[[]] <- data}
+  if (original) {saveList(data,llo_file_name, append =  F, compress = compress)} else {lf[[]] <- data}
   remain <- 1:length(data)
   res_real <- data
   while (length(res_real) > 0) {
@@ -86,7 +87,7 @@ test_that("remove from list", {
   
   ####
   flog.info("Part 4. character index")
-  if (original) {saveList(data,llo_file_name, append =  F)} else {lf[[]] <- data}
+  if (original) {saveList(data,llo_file_name, append =  F, compress = compress)} else {lf[[]] <- data}
   res_real <- data
   index_random <- sample(1:length(data),length(data))
   select_list <- split(index_random, 1:5)

@@ -25,9 +25,10 @@ test_that("modify name in list", {
   if (original) {saveList(data, llo_file_name, append =  F)} else {lf[[]] <- data}
   memData <- data
   flog.info("Part 1. positive index")
-  for (i in 1:repeat_time) {
+  for (i in 1:ceiling(repeat_time / 4)) {
     index <- sample(1:length(data), length(data) / 5)
-    new_name <- as.character((1 + length(data)):(length(data) + length(data) / 5))
+    name_max <- max(as.numeric(names(memData)))
+    new_name <- as.character((1 + name_max):(name_max + length(data) / 5))
     if (original) {modifyNameInList(llo_file_name, index, new_name)} else {names(lf)[index] <- new_name}
     names(memData)[index] <- new_name
     if (original) {res <- readList(llo_file_name)} else {res <- lf[]}
@@ -40,9 +41,10 @@ test_that("modify name in list", {
   cat("\n")
   
   flog.info("Part 2. negative index")
-  for (i in 1:repeat_time) {
+  for (i in 1:ceiling(repeat_time / 4)) {
     index <- -sample(1:length(data), length(data) - (length(data) / 5))
-    new_name <- as.character((1 + length(data)):(length(data) + length(data) / 5))
+    name_max <- max(as.numeric(names(memData)))
+    new_name <- as.character((1 + name_max):(name_max + length(data) / 5))
     if (original) {modifyNameInList(llo_file_name, index, new_name)} else {names(lf)[index] <- new_name}
     names(memData)[index] <- new_name
     if (original) {res <- readList(llo_file_name)} else {res <- lf[]}
@@ -53,9 +55,10 @@ test_that("modify name in list", {
   cat("\n")
   
   flog.info("Part 3. logical index")
-  for (i in 1:repeat_time) {
+  for (i in 1:ceiling(repeat_time / 4)) {
     index <- sample(c(T,F), length(data) / 5, replace = T)
-    new_name <- as.character((1 + length(data)):(length(data) + length(data) / 5))
+    name_max <- max(as.numeric(names(memData)))
+    new_name <- as.character((1 + name_max):(name_max + length(data) / 5))
     if (original) {modifyNameInList(llo_file_name, index, new_name)} else {names(lf)[index] <- new_name}
     names(memData)[index] <- new_name
     if (original) {res <- readList(llo_file_name)} else {res <- lf[]}
@@ -78,8 +81,12 @@ test_that("modify name in list", {
   
   flog.info("Part 5. Add Names")
   index <- sample(c(T,F), length(data) / 5, replace = T)
-  new_name <- as.character((1 + length(data)):(length(data) + length(data) / 5))
-  if (original) {modifyNameInList(llo_file_name, index, new_name)} else {names(lf)[index] <- new_name}
+  new_name <- as.character(1:length(index))
+  if (original) {
+    modifyNameInList(llo_file_name, index, new_name)
+  } else {
+    names(lf)[index] <- new_name
+  }
   names(memData)[index] <- new_name
   if (original) {res <- readList(llo_file_name)} else {res <- lf[]}
   expect_identical(res, memData)

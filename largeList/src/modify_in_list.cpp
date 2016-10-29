@@ -2,11 +2,11 @@
 
 extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
     //check parameters
-    if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("File should be a charater vector of length 1.");
-    if (TYPEOF(object) != VECSXP) error("Object is not a list.");
+    if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("file should be a charater vector of length 1.");
+    if (TYPEOF(object) != VECSXP) error("object is not a list.");
     if (Rf_length(object) == 0) error("replacement has length zero.");
     if (TYPEOF(index) != INTSXP &&  TYPEOF(index) != REALSXP && TYPEOF(index) != LGLSXP && TYPEOF(index) != STRSXP)
-        error("Index should be a NULL, an integer vector, a numeric vector, a logical vector or a character vector.");
+        error("index should be a NULL, an integer vector, a numeric vector, a logical vector or a character vector.");
     large_list::ConnectionFile connection_file(file);
     try {connection_file.connect(); } catch (std::exception &e) { connection_file.~ConnectionFile(); error(e.what());}
 
@@ -15,6 +15,8 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
     try { list_object_to_save.check(); } catch (std::exception &e){ connection_file.~ConnectionFile(); error(e.what());}
     large_list::MetaListObject list_object_origin;
     list_object_origin.readLength(connection_file);
+    list_object_origin.readCompressBit(connection_file);
+    list_object_to_save.setCompressBit(list_object_origin.getCompressBit());
     large_list::IndexWithValueObject index_object(index, list_object_origin.getLength(), connection_file);
     index_object.setValueLength(list_object_to_save.getLength());
     index_object.setValueIndex();
@@ -23,12 +25,10 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
     index_object.removeDuplicate();
     // index_object.print();
     
-
     if (index_object.getLength() == 0) { return (ScalarLogical(1)); }
 
-
     // get original pair.
-    large_list::NamePositionPair pair_origin;
+    large_list::NamePositionTuple pair_origin;
     pair_origin.resize(list_object_origin.getLength());
     pair_origin.read(connection_file);
     pair_origin.readLastPosition(connection_file);
@@ -37,7 +37,7 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
     list_object_to_save.calculateSerializedLength();
 
     // get new pair.
-    large_list::NamePositionPair pair_new(pair_origin);
+    large_list::NamePositionTuple pair_new(pair_origin);
     for (int i = 0; i < index_object.getLength(); i ++) {
         for (int j = index_object.getIndex(i) + 1; j < list_object_origin.getLength(); j++) {
             // Rprintf("i %d, j %d, \n", i, j);
@@ -99,10 +99,10 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
 
 extern "C" SEXP modifyNameInList(SEXP file, SEXP index, SEXP names) {
     //check parameters
-    if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("File should be a charater vector of length 1.");
-    if (TYPEOF(names) != STRSXP && TYPEOF(names) != NILSXP) error("Parameter names is neither a character vector nor NULL.");
+    if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("file should be a charater vector of length 1.");
+    if (TYPEOF(names) != STRSXP && TYPEOF(names) != NILSXP) error("parameter names is neither a character vector nor NULL.");
     if (index != R_NilValue && TYPEOF(index) != INTSXP &&  TYPEOF(index) != REALSXP && TYPEOF(index) != LGLSXP )
-        error("Index should be a NULL, an integer vector, a numeric vector or a logical vector.");
+        error("index should be a NULL, an integer vector, a numeric vector or a logical vector.");
     large_list::ConnectionFile connection_file(file);
     try {connection_file.connect(); } catch (std::exception &e) { connection_file.~ConnectionFile(); error(e.what());}
 
@@ -123,7 +123,7 @@ extern "C" SEXP modifyNameInList(SEXP file, SEXP index, SEXP names) {
         list_object_origin.writeNameBit(connection_file);
         return (ScalarLogical(1)); 
     }
-    large_list::NamePositionPair pair_origin;
+    large_list::NamePositionTuple pair_origin;
     pair_origin.resize(list_object_origin.getLength());
     pair_origin.read(connection_file);
     pair_origin.readLastPosition(connection_file);

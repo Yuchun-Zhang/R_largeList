@@ -2,9 +2,9 @@
 
 extern "C" SEXP removeFromList(SEXP file, SEXP index) {
 	//check parameters
-  	if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("File should be a charater vector of length 1.");
+  	if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("file should be a charater vector of length 1.");
   	if (TYPEOF(index) != INTSXP &&  TYPEOF(index) != REALSXP && TYPEOF(index) != LGLSXP && TYPEOF(index) != STRSXP)
-    	error("Index should be a NULL, an integer vector, a numeric vector, a logical vector or a character vector.");
+    	error("index should be a NULL, an integer vector, a numeric vector, a logical vector or a character vector.");
   	large_list::ConnectionFile connection_file(file);
   	try {connection_file.connect(); } catch (std::exception &e){ connection_file.~ConnectionFile(); error(e.what());}
 
@@ -19,13 +19,13 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index) {
     if (index_object.getLength() == 0) { return (ScalarLogical(1)); }
 
     // get original pair.
-    large_list::NamePositionPair pair_origin;
+    large_list::NamePositionTuple pair_origin;
     pair_origin.resize(list_object_origin.getLength());
     pair_origin.read(connection_file);
     pair_origin.readLastPosition(connection_file);
 
     // get new pair.
-    large_list::NamePositionPair pair_new(pair_origin);
+    large_list::NamePositionTuple pair_new(pair_origin);
     for (int i = 0; i < index_object.getLength(); i ++) {
       for (int j = index_object.getIndex(i) + 1; j < list_object_origin.getLength(); j++) {
         // Rprintf("i %d, j %d, \n", i, j);

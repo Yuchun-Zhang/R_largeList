@@ -4,10 +4,12 @@
 \alias{getList}
 \title{Create a R object and bind with file.}
 \usage{
-getList(file, verbose = FALSE, truncate = FALSE)
+getList(file, compress = TRUE, verbose = FALSE, truncate = FALSE)
 }
 \arguments{
 \item{file}{Name of file}
+
+\item{compress}{\code{TRUE/FALSE} Use compression for file elements or not.}
 
 \item{verbose}{\code{TRUE/FALSE} Extra info}
 

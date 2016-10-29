@@ -12,6 +12,7 @@ namespace large_list {
 		}
 		if (TYPEOF(index) == LGLSXP) {
 			length_ = extend_to_list_length ? list_length : Rf_length(index);
+			//Rprintf("length_ : %d \n", length_);
 			index_.resize(length_);
 			int value_length = Rf_length(index);
 			int count  = 0;
@@ -29,6 +30,7 @@ namespace large_list {
   				index_.assign(INTEGER(index), INTEGER(index) + length_) :
   				index_.assign(REAL(index), REAL(index) + length_);
   			try {processNumeric(); } catch (std::exception &e){ connection_file.~ConnectionFile(); error(e.what());}
+  			Rprintf("index size : %d, length_ : %d\n", index_.size(), length_);
 		}
 		if (TYPEOF(index) == STRSXP) {
 			length_ = Rf_length(index);
@@ -47,6 +49,7 @@ namespace large_list {
 				}
 			}
 		}
+		tuple_object_.resize(length_);
 	}
 
 	IndexObject::~IndexObject(){}
@@ -122,12 +125,14 @@ namespace large_list {
 		}
 
 		if (has_zero == true) {
-			int count  = 0;
+			index_.erase( std::remove(index_.begin(), index_.end(), 0), index_.end() );
+			/*int count  = 0;
 			for (int i = 0; i < length_; i ++) {
 				if (index_[i] != 0) {index_[count] = index_[i]; count ++; }
 			}
 			length_ = count;
-			index_.resize(length_);
+			index_.resize(length_);*/
+			length_ = index_.size();
 		}
 
 		if (has_positive == false && has_negative == true) {
@@ -135,38 +140,53 @@ namespace large_list {
 				index_[i] = - index_[i];
 			}
 			std::sort(index_.begin(), index_.end());
-			std::vector<int> res_num;
+			std::vector<int> res_num(list_length_);
 			int ptr_to_index_num = 0;
 			int current_number = 1;
+			int ptr_to_res_num = 0;
 			while (current_number <= list_length_) {
-				// Rprintf("%d \n", current_number);
-				if (current_number < index_[ptr_to_index_num] || ptr_to_index_num == length_) {
-					res_num.push_back(current_number);
+				//Rprintf("%d \n", current_number);
+				if (ptr_to_index_num == length_) {
+					res_num[ptr_to_res_num] = current_number;
 					current_number ++;
+					ptr_to_res_num ++;
+					continue;
+				}
+				if (current_number < index_[ptr_to_index_num]) {
+					res_num[ptr_to_res_num] = current_number;
+					current_number ++;
+					ptr_to_res_num ++;	
+					continue;				
 				}
 				if (current_number > index_[ptr_to_index_num]) {
 					while (current_number > index_[ptr_to_index_num] && ptr_to_index_num < length_) {
 						ptr_to_index_num ++;
 					}
+					continue;
 				}
 				if (current_number == index_[ptr_to_index_num]) {
 					current_number ++;
 					if (ptr_to_index_num < length_) { ptr_to_index_num ++; }
+					continue;
 				}
 			}
+			res_num.resize(ptr_to_res_num);
 			index_.assign(res_num.begin(), res_num.end());
 			length_ = index_.size();
 		}
 		// change 1..N to 0..N-1
-		for (int i = 0 ; i < length_; i++) {
-			index_[i] = index_[i] - 1;
+		for (int i = 0; i < length_; i++) {
+			if (index_[i] != R_NaInt) {
+				index_[i] = index_[i] - 1;
+			}
 		}
 		// mark numbers > list_length_ 
-		for (int i = 0 ; i < length_; i++) {
+		for (int i = 0; i < length_; i++) {
 			if (index_[i] >= list_length_) {
 				index_[i] = R_NaInt;
 			}
 		}
+		return;
 	}
 
 	void IndexObject::removeInvalid () {
@@ -184,26 +204,28 @@ namespace large_list {
 
 	// read the position-name pairs from the file.
 	void IndexObject::readPair(ConnectionFile &connection_file){
-		//Rprintf("ready to get %d\n", list_length_);
-		pair_object_.resize(length_);
 		for (int i = 0 ; i < length_; i++) {
 			// Rprintf("Index is %d \n", index_[i]);
 			if (index_[i] != R_NaInt) {
 				//Rprintf("real %lf \n", (double)(int64_t)(-2 * (8 + NAMELENGTH) * list_length_ - 8 + index_[i] * (8 + NAMELENGTH)));
 				connection_file.seekRead(-2 * (8 + NAMELENGTH) * list_length_ - 8 + index_[i] * (8 + NAMELENGTH), SEEK_END);
-				pair_object_.read(connection_file, i);
+				tuple_object_.read(connection_file, i);
 			} else {
-				pair_object_.setToInvalid(i);
+				tuple_object_.setToInvalid(i);
 			}
 		}
 	}
 
 	int64_t IndexObject::getPosition(int index) {
-		return pair_object_.getPosition(index);
+		return tuple_object_.getPosition(index);
+	}
+
+	int64_t IndexObject::getSerializedLength(int index) {
+		return tuple_object_.getSerializedLength(index);
 	}
 
 	std::string IndexObject::getName(int index) {
-		return pair_object_.getName(index);
+		return tuple_object_.getName(index);
 	}
 
 	int IndexObject::getLength(){
@@ -229,7 +251,7 @@ namespace large_list {
 		Rprintf("index contents : \n");
 		for (int i = 0; i < length_; i ++) {
 			Rprintf("Index %d  \n", index_[i]);
-			if (type >1 ) {pair_object_.print(i);}
+			if (type >1 ) {tuple_object_.print(i);}
 		}
 	}
 

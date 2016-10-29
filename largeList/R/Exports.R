@@ -11,6 +11,19 @@ getListLength <- function(file) {
     .Call('getListLength', PACKAGE = 'largeList', file)
 }
 
+#' Check if elements are compressed in the file.
+#' @param file Name of file.
+#' @return \code{TRUE/FALSE}
+#' @seealso \code{\link{largeList}}
+#' @examples 
+#' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+#' saveList(list1, "example.llo", compress = FALSE)
+#' isListCompressed("example.llo") # get FALSE
+#' @export
+isListCompressed <- function(file) {
+  .Call('isListCompressed', PACKAGE = 'largeList', file)
+}
+
 #' Get names of elements in a list file.
 #' @param file Name of file.
 #' @return A charater vector.
@@ -82,8 +95,8 @@ removeFromList <- function(file, index) {
 #' saveList(list1, "example.llo")
 #' @export
 
-saveList <- function(object, file, append = FALSE) {
-    res <- .Call('saveList', PACKAGE = 'largeList', object, file, append)
+saveList <- function(object, file, append = FALSE, compress = TRUE) {
+    res <- .Call('saveList', PACKAGE = 'largeList', object, file, append, compress)
 }
 
 #' Modify elements in a list file.
@@ -125,4 +138,9 @@ modifyNameInList <- function(file, index, name) {
   res <- .Call('modifyNameInList', PACKAGE = 'largeList', file, index, name)
 }
 
+#' Test Usage
+#' @export
+largeListTest <- function() {
+  res <- .Call('largeListTest', PACKAGE = 'largeList')
+}
 

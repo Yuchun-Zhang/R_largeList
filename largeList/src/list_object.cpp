@@ -54,6 +54,27 @@ namespace large_list {
 		return;
 	}
 
+	void MetaListObject::writeCompressBit (ConnectionFile & connection_file) {
+		connection_file.seekWrite(IS_COMPRESS_POSITION, SEEK_SET);
+		connection_file.write((char *) &(is_compress_), 1, 1);
+		return;
+	}
+
+	void MetaListObject::readCompressBit (ConnectionFile & connection_file) {
+		connection_file.seekRead(IS_COMPRESS_POSITION, SEEK_SET);
+		connection_file.read((char *) &(is_compress_), 1, 1);
+		return;
+	}
+
+	bool MetaListObject::getCompressBit () {
+		return(is_compress_);
+	}
+
+	void MetaListObject::setCompressBit (bool is_compress) {
+		is_compress_ = is_compress;
+		return;
+	}
+
 	//write list head
 	void MetaListObject::writeListHead (ConnectionFile & connection_file){
 		connection_file.seekWrite(LIST_HEAD_POSITION, SEEK_SET);
@@ -64,74 +85,89 @@ namespace large_list {
 
 	//------------------------------ ListObject ------------------------
 
-	ListObject::ListObject (){}
-
-	ListObject::ListObject (int length){
-		length_ = length;
-		list_.resize(length_);
-		names_.resize(length_, "");
-		serialized_length_.resize(length_, 0);
+	ListObject::ListObject (){
+		length_ = 0;
+		PROTECT_WITH_INDEX(r_list_=Rf_allocVector(VECSXP, length_), &ipx);
+		for (int i = 0; i < length_; i++) {
+			SET_VECTOR_ELT(r_list_, i, R_NilValue);
+		}
+		names_.resize(length_);
+		serialized_length_.resize(length_);
 		has_name_ = false;
-		return;
+		is_compress_ = false;
 	}
 
-	ListObject::ListObject (SEXP list){
+	ListObject::ListObject (int length, bool is_compress){
+		length_ = length;
+		PROTECT_WITH_INDEX(r_list_=Rf_allocVector(VECSXP, length_), &ipx);
+		for (int i = 0; i < length_; i++) {
+			SET_VECTOR_ELT(r_list_, i, R_NilValue);
+		}
+		names_.resize(length_);
+		serialized_length_.resize(length_);
+		has_name_ = false;
+		is_compress_ = is_compress;
+	}
+
+	ListObject::ListObject (SEXP list, bool is_compress){
 		length_ = Rf_xlength(list);
-		list_.resize(length_);
-		names_.resize(length_, "");
-		serialized_length_.resize(length_, 0);
+		PROTECT_WITH_INDEX(r_list_ = list, &ipx);
+		names_.resize(length_);
+		serialized_length_.resize(length_);
+		is_compress_ = is_compress;
 
 		// get the character vector name_sxp from the names of list
 		SEXP name_sxp = Rf_getAttrib(list, R_NamesSymbol);
 		if (name_sxp == R_NilValue) {
 			has_name_ = false;
-			name_sxp = PROTECT(Rf_allocVector(STRSXP, Rf_length(list)));
-			for (int i = 0 ; i < Rf_length(list); i ++) {
-				SET_STRING_ELT(name_sxp, i, NA_STRING);
+			for (int i = 0; i < length_; i++) {
+				names_[i].assign(NAMELENGTH, '\xff');
 			}
-			UNPROTECT(1);
 		} else {
 			has_name_ = true;
+			for (int i = 0; i < length_; i++) {
+      			names_[i] = UnitObject::charsxpToString(STRING_ELT(name_sxp, i));
+      		}
 		}
-
-		// assgin values
-		for (int i = 0; i < length_; i++) {
-			list_[i].set(VECTOR_ELT(list, i));
-      		names_[i] = UnitObject::charsxpToString(STRING_ELT(name_sxp, i));
-      	}
-      	return;
 	}
 
-	ListObject::~ListObject() {}
+	ListObject::~ListObject() {
+		UNPROTECT_PTR(r_list_);
+	}
 
 	// check if the objects are acceptable
 	void ListObject::check() {
 		for (int i = 0; i < length_; i++) {
-			list_[i].check();
+			UnitObject unit_object(VECTOR_ELT(r_list_, i));
+			unit_object.check();
 		}
 		return;
 	}
 
 	void ListObject::write(ConnectionFile & connection_file, int index) {
-		list_[index].write(connection_file);
+		UnitObject unit_object(VECTOR_ELT(r_list_, index));
+		serialized_length_[index] = unit_object.write(connection_file, is_compress_);
 		return;
 	}
 
 	void ListObject::read(ConnectionFile & connection_file, int index) {
-		list_[index].read(connection_file);
+		UnitObject unit_object;
+		unit_object.read(connection_file, serialized_length_[index], is_compress_);
+		SET_VECTOR_ELT(r_list_, index, unit_object.get());
 		return;
 	}
 
 	void ListObject::resize(int length) {
 		length_ = length;
-		list_.resize(length_);
-		names_.resize(length_, "");
-		serialized_length_.resize(length_, 0);
+		REPROTECT(r_list_ = Rf_lengthgets(r_list_, length_), ipx);
+		names_.resize(length_);
+		//Rprintf("length %d, original size %d\n", length_, serialized_length_.size());
+		serialized_length_.resize(length_);
 		return;
 	}
 
 	void ListObject::set (SEXP r_object, int index) {
-		list_[index].set(r_object);
+		SET_VECTOR_ELT(r_list_, index, r_object);
 		return;
 	}
 
@@ -145,41 +181,51 @@ namespace large_list {
 	};
 
 	// turn the ListObject to a list object in R.
-	SEXP ListObject::assembleRList (ConnectionFile & connection_file) {
+	SEXP ListObject::assembleRList () {
 		// Rprintf("Length %d \n", length_);
-		SEXP output_list = PROTECT(Rf_allocVector(VECSXP, length_));
+		SEXP output_list = r_list_;
 		SEXP names_sxp = PROTECT(Rf_allocVector(STRSXP, length_));
 		std::string na_string(NAMELENGTH, '\xff');
 		for (int i = 0; i < length_; i ++) {
-			SEXP temp = PROTECT(list_[i].get());
-			//Rprintf("Number %d, Type %d \n", i, TYPEOF(temp));
-			SET_VECTOR_ELT(output_list, i, temp);
-			UNPROTECT_PTR(temp);
-			//SET_VECTOR_ELT(output_list, i, R_NilValue);
-			//Rprintf("%s \n", names_[i].c_str());
 			names_[i] == na_string ?
       			SET_STRING_ELT(names_sxp, i, NA_STRING) :
       			SET_STRING_ELT(names_sxp, i, Rf_mkChar(names_[i].c_str()));
 		}
-		readNameBit(connection_file);
 		if (has_name_ == true) {
 			Rf_setAttrib(output_list, R_NamesSymbol, names_sxp);
 		}
       	UNPROTECT_PTR(names_sxp);
-      	UNPROTECT_PTR(output_list);
       	return(output_list);
 	}
 
 	// get the serialized lengths of all objects in the list.
 	void ListObject::calculateSerializedLength () {
 		for (int i = 0; i < length_; i ++){
-			serialized_length_[i] = list_[i].calculateSerializedLength();
+			UnitObject unit_object(VECTOR_ELT(r_list_, i));
+			serialized_length_[i] = unit_object.calculateSerializedLength(is_compress_);
 			// Rprintf("LENGTH %3.0ld \n", serialized_length_[i]);
 		}
 		return;
 	}
 
+	void ListObject::setSerializedLength(int64_t serialized_length, int index) {
+		serialized_length_[index] = serialized_length;
+	}
+
 	int64_t ListObject::getSerializedLength(int index) {
 		return serialized_length_[index];
+	}
+
+	void ListObject::print() {
+		Rprintf("Length %d, Has_name %s, Is_compress %s \n",
+				length_, 
+				has_name_ ? "true" : "false",
+				is_compress_ ? "true" : "false");
+		for (int i = 0; i < length_; i++) {
+			Rprintf("index %d, serialized_length_ %lf, name %s \n",
+					i,
+					(double) serialized_length_[i],
+					names_[i].c_str());
+		}
 	}
 }

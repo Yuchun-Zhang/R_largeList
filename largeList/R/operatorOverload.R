@@ -6,6 +6,7 @@
 #' If the file does not exist or \code{truncate == TRUE}, an empty list will be written into 
 #' the given file and then bind it.
 #' @param file Name of file 
+#' @param compress \code{TRUE/FALSE} Use compression for file elements or not.
 #' @param verbose \code{TRUE/FALSE} Extra info
 #' @param truncate \code{TRUE/FALSE} Truncate the file or not.
 #' @return A R object of class "largeList"
@@ -14,19 +15,19 @@
 #' largelist_object <- getList("example.llo", verbose = TRUE, truncate = TRUE)
 #' @export
 #' 
-getList <- function(file, verbose = FALSE, truncate = FALSE){
-  if (file.exists(file) && truncate == FALSE){
+getList <- function(file, compress = TRUE, verbose = FALSE, truncate = FALSE){
+  if (file.exists(file) && truncate == FALSE) {
     if (verbose == TRUE) {cat(sprintf("file exists, check file / version."))}
     .Call('checkFileAndVersionExternal', PACKAGE = 'largeList', file)
-    list_object <-list()
-    list_object$file <- file
+    list_object <- list()
+    attr(list_object, "largeList_file") <- file
     class(list_object) <- "largeList"
     return(list_object)
   }else{
     if (verbose == TRUE) {cat(sprintf("file does not exist, create an empty list and store into the file."))}
-    saveList(object = list(), file = file, append = FALSE)
-    list_object <-list()
-    list_object$file <- file
+    saveList(object = list(), file = file, append = FALSE, compress = compress)
+    list_object <- list()
+    attr(list_object, "largeList_file") <- file
     class(list_object) <- "largeList"
     return(list_object)
   }
@@ -45,7 +46,7 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
 #' largelist_object[c("A", "C")] ## get list("A" = 1, "C" = 3)
 #' @export
 "[.largeList" <- function(x, index = NULL) {
-  res <- readList(file = x$file, index = index)
+  res <- readList(file = attr(x, "largeList_file"), index = index)
   return(res)
 }
 
@@ -70,8 +71,25 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
   if (class(index) %in% c("integer","numeric") && index <= 0) {
     stop("attempt to select less than one element")
   }
-  res <- readList(file = x$file, index = index)
+  res <- readList(file = attr(x, "largeList_file"), index = index)
   return(res[[1]])
+}
+
+#' Overload of operator $.
+#' @details It behaviours different from the list object in R. Here \code{x$name} is equivalent to
+#' \code{x[["name"]]}, NO partial matching.
+#' @param x A largeList object created by \code{\link{getList}}.
+#' @param index  A numeric vector or a character vecter of length 1.
+#' @return A R object.
+#' @examples
+#' largelist_object <- getList("example.llo", truncate = TRUE)
+#' largelist_object[[]] <- list("AA" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
+#' largelist_object$B ## get 2
+#' largelist_object$A ## get NULL, not 1 from "AA" since no partial matching happens.
+#' @seealso \code{\link{largeList}} 
+#' @export
+"$.largeList" <- function(x, index = NULL) {
+  return(x[[index]])  
 }
 
 #' Overload of operator []<-.
@@ -98,12 +116,12 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
   if (is.null(index)) {
     ## vectors are transfered to list since function saveList and modifyInList only support list.
     if (class(value) != "list") {value <- as.list(value)}
-    saveList(object = value, file = x$file, append = TRUE)
+    saveList(object = value, file = attr(x, "largeList_file"), append = TRUE)
   ## if index is not null.
   }else{
     ## if value is null, remove elements.
     if (is.null(value)) {
-      removeFromList(file = x$file, index = index)
+      removeFromList(file = attr(x, "largeList_file"), index = index)
     ## if value is not null, elements are either appended or substitute the existing elements.
     }else{
       ## vectors are transfered to list since function saveList and modifyInList only supports list.
@@ -135,11 +153,19 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
       }else {
         stop("invalid index type")
       }
-      if (length(to_append_value) > 0) { saveList(object = to_append_value, file = x$file, append = TRUE)}
-      if (length(to_modify_index) > 0) { modifyInList(file = x$file, index = to_modify_index, object = to_modify_value)}
+      if (length(to_append_value) > 0) { 
+        saveList(object = to_append_value, 
+                 file = attr(x, "largeList_file"), 
+                 append = TRUE)
+      }
+      if (length(to_modify_index) > 0) { 
+        modifyInList(file = attr(x, "largeList_file"), 
+                     index = to_modify_index, 
+                     object = to_modify_value)
+      }
     }
   }
-  x <- getList(x$file)
+  x <- getList(attr(x, "largeList_file"))
   invisible(x)
 }
 
@@ -167,17 +193,27 @@ getList <- function(file, verbose = FALSE, truncate = FALSE){
   if (is.null(index)) {
     ## vectors are transfered to list since function saveList and modifyInList only support list.
     if (class(value) != "list") {value <- as.list(value)}
-    saveList(object = value, file = x$file, append = FALSE)
+    saveList(object = value, 
+             file = attr(x, "largeList_file"), 
+             append = FALSE, 
+             compress = isListCompressed(attr(x, "largeList_file")))
   }else{
     if (class(index) %in% c("integer","numeric") && index <= 0) {
       stop("attempt to select less than one element")
     }
     x[index] <- value
   }
-  x <- getList(x$file)
+  x <- getList(attr(x, "largeList_file"))
   invisible(x)
 }
 
+#' Overload of operator $<-.
+#' @details x$A <- 1 is equivalent to x[["A"]] <- 1
+#' @aliases "[[<-.largeList"
+"$<-.largeList" <- function(x, index, value){
+  x[[index]] <- value
+  return(invisible(x))
+}
 
 #' Overload of function print.
 #' @param x A largeList object created by \code{\link{getList}}.
@@ -213,7 +249,7 @@ print.largeList <- function(x, ...) {
 #' length(largelist_object) ## get 3
 #' @export
 length.largeList <- function(x) {
-  return(getListLength(x$file))
+  return(getListLength(attr(x, "largeList_file")))
 }
 
 #' Overload of function names.
@@ -227,7 +263,7 @@ length.largeList <- function(x) {
 #' names(largelist_object) ## get c("A", "B", "C")
 #' @export
 names.largeList <- function(x) {
-  return(getListName(x$file))
+  return(getListName(attr(x, "largeList_file")))
 }
 
 #' Overload of operator names<-.
@@ -243,17 +279,17 @@ names.largeList <- function(x) {
 #' @export
 "names<-.largeList" <- function(x, value) {
   if (is.null(value)) {
-    modifyNameInList(file = x$file, index = NULL, name = NULL)
+    modifyNameInList(file = attr(x, "largeList_file"), index = NULL, name = NULL)
   }else {
     x_length <- length(x)
     if (length(value) > x_length) {
       stop(sprintf("'names' attribute [%d] must be the same length as the vector [%d]", length(value), x_length))  
     }
     if (length(value) <= x_length) {
-      modifyNameInList(file = x$file, index = seq_along(value), name = value)
+      modifyNameInList(file = attr(x, "largeList_file"), index = seq_along(value), name = value)
     }    
   }
-  return(getList(x$file))
+  return(getList(attr(x, "largeList_file")))
 }
 
 

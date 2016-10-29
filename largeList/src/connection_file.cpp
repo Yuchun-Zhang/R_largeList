@@ -18,7 +18,7 @@ namespace large_list {
 	void ConnectionFile::create() {
 		fout_ = fopen(file_dir_name_, "wb");
 		if (fout_ == NULL) {
-			throw std::runtime_error("Directory does not exist.");
+			throw std::runtime_error("directory does not exist.");
 		}
 		fin_ = fopen(file_dir_name_, "rb");
 		writeVersion();
@@ -27,7 +27,7 @@ namespace large_list {
 	void ConnectionFile::connect(){
 		fout_ = fopen(file_dir_name_, "r+b");
 		if (fout_ == NULL) {
-			throw std::runtime_error("File does not exist.");
+			throw std::runtime_error("file does not exist.");
 		}
 		fin_ = fopen(file_dir_name_, "rb");
 		checkVersion();
@@ -127,7 +127,7 @@ namespace large_list {
 		fclose(fout_);
 #if defined PREDEF_PLATFORM_UNIX
 		if (truncate(file_dir_name_, file_length) != 0) {
-			throw std::runtime_error("File truncation failed (Unix).");
+			throw std::runtime_error("file truncation failed (Unix).");
 		}
 #endif
 
@@ -151,19 +151,19 @@ namespace large_list {
 					Sleep(RETRYDELAY);
 					continue;
 				} else {
-					throw std::runtime_error("File truncation failed (Windows), get file handle error. Error Code %d .", last_error);
+					throw std::runtime_error("file truncation failed (Windows), get file handle error. Error Code %d .", last_error);
 				}
 			}
 			break;
 		} while (retries < MAXRETRIES);
 		if (fh == INVALID_HANDLE_VALUE) {
-			throw std::runtime_error("Tried to trauncate file but it was already in use");
+			throw std::runtime_error("tried to trauncate file but it was already in use");
 		}
 
 		SetFilePointerEx(fh, file_length_w, NULL, 0);
 		if (SetEndOfFile(fh) == 0) {
 			DWORD last_error = GetLastError();
-			throw std::runtime_error("File truncation failed (Windows), Error Code %d .", last_error);
+			throw std::runtime_error("file truncation failed (Windows), Error Code %d .", last_error);
 		}
 		CloseHandle(fh);
 #endif

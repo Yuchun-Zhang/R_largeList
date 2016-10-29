@@ -15,10 +15,10 @@ test_that("multiplication works", {
   if (original) {
     ####
     flog.info("Test : object is not list")
-    expect_error(saveList(1, "./example.llo") , "Object is not a list.")
+    expect_error(saveList(1, "./example.llo") , "object is not a list.")
     
     saveList(list(1), "example.llo")
-    expect_error(modifyInList("./example.llo", 1, 1) , "Object is not a list.")
+    expect_error(modifyInList("./example.llo", 1, 1) , "object is not a list.")
     cat("\n")
     
     ####
@@ -35,13 +35,13 @@ test_that("multiplication works", {
     flog.info("Test : file does not exist")
     suppressWarnings(file.remove("notexist"))
     expect_error(saveList(list(1), "notexist", append = T),
-                 "File does not exist.")
+                 "file does not exist.")
     expect_error(readList("notexist"),
-                 "File does not exist.")
+                 "file does not exist.")
     expect_error(removeFromList("notexist",1),
-                 "File does not exist.")
+                 "file does not exist.")
     expect_error(modifyInList("notexist",1,list(1)),
-                 "File does not exist.")
+                 "file does not exist.")
     cat("\n")
     
     ####
@@ -62,7 +62,7 @@ test_that("multiplication works", {
     expect_error(saveList(list(1), "wrongVersion.llo", append = T), 
                  "can only read files created by version above ")
     expect_error(readList("wrongVersion.llo"), 
-                "can only read files created by version above ")
+                 "can only read files created by version above ")
     expect_error(removeFromList("wrongVersion.llo", 1), 
                  "can only read files created by version above ")
     expect_error(modifyInList("wrongVersion.llo", 1, list(1)), 

@@ -29,19 +29,45 @@ namespace large_list {
 		checkSEXP(r_object_);
 	}
 
-	void UnitObject::write (ConnectionFile & connection_file) {
-		writeSEXP(r_object_, connection_file);
+	int64_t UnitObject::write (ConnectionFile & connection_file, bool is_compress) {
+		// direct write via ConnectionFile is deprecated as it's slower in most cases.
+		// writeSEXP(r_object_, connection_file);
+		// return(calculateSerializedLength(false));
+
+		// write via ConnectionRaw
+		int64_t uncompressed_ser_len = calculateSerializedLength(false);
+		ConnectionRaw connection_raw(uncompressed_ser_len);
+		writeSEXP(r_object_, connection_raw);
+		if (is_compress) {connection_raw.compress();}
+		connection_file.write(connection_raw.getRaw(), connection_raw.getLength(), 1);
+		return(connection_raw.getLength());
 	}
 
-	void UnitObject::read (ConnectionFile & connection_file) {
+	void UnitObject::read (ConnectionFile & connection_file, int64_t serialized_length, bool is_compress) {
+		// direct read via ConnectionFile is deprecated
+		// UNPROTECT_PTR(r_object_);
+		// PROTECT(r_object_ = readSEXP(connection_file));
+
+		// read via ConnectionRaw
+		ConnectionRaw connection_raw(serialized_length);
+		connection_file.read(connection_raw.getRaw(), connection_raw.getLength(), 1);
+		if (is_compress) {connection_raw.uncompress();}
 		UNPROTECT_PTR(r_object_);
-		PROTECT(r_object_ = readSEXP(connection_file));
+		PROTECT(r_object_ = readSEXP(connection_raw));
 	}
 
-	int64_t UnitObject::calculateSerializedLength() {
-		int64_t length = 0;
-		lengthOfSEXP(r_object_, length);
-		return(length);
+	int64_t UnitObject::calculateSerializedLength(bool is_compress) {
+		if (is_compress) {
+			int64_t uncompressed_ser_len = calculateSerializedLength(false);
+			ConnectionRaw connection_raw(uncompressed_ser_len);
+			writeSEXP(r_object_, connection_raw);
+			connection_raw.compress();
+			return connection_raw.getLength();
+		} else {
+			int64_t length = 0;
+			lengthOfSEXP(r_object_, length);
+			return length;
+		}
 	}
 
 	// --------------------------- SEXP functions -------------------------------------
@@ -55,19 +81,19 @@ namespace large_list {
 	  return;
 	}
 
-	void UnitObject::writeLength(SEXP _x, ConnectionFile & connection_file) {
+	void UnitObject::writeLength(SEXP _x, Connection & connection) {
 	  	int length = LENGTH(_x);
-	  	connection_file.write((char *)&length, 4, 1);
+	  	connection.write((char *)&length, 4, 1);
 	  	return;
 	}
 
 	//read object length
-	void UnitObject::readLength(ConnectionFile & connection_file, int &length) {
-		connection_file.read((char*)(&length), 4, 1);
+	void UnitObject::readLength(Connection & connection, int &length) {
+		connection.read((char*)(&length), 4, 1);
 		return;
 	}
 
-	void UnitObject::writeSEXP(SEXP _x, ConnectionFile & connection_file) {
+	void UnitObject::writeSEXP(SEXP _x, Connection & connection) {
 		int level, object;
 		SEXP attribute, tag;
 		getHeadInfo(_x, level, object, attribute, tag);
@@ -78,90 +104,90 @@ namespace large_list {
 			((int)(attribute != R_NilValue) << 9) +
 			((int)(tag != R_NilValue) << 10) +
 			(level << 12);
-			connection_file.write((char *)(&head), 1, 4);
+			connection.write((char *)(&head), 1, 4);
 		}
 		switch (TYPEOF(_x)) {
 		case NILSXP   : { 			
 			BYTE nil[4] = {0xfe, 0x00, 0x00, 0x00};
-			connection_file.write((char *) & (nil[0]), 1, 4);  
+			connection.write((char *) & (nil[0]), 1, 4);  
 			break; 
 		}
 		case REALSXP  : {
-			writeLength(_x, connection_file);
-			connection_file.write((char *)(& REAL(_x)[0]), 8, Rf_xlength(_x));
+			writeLength(_x, connection);
+			connection.write((char *)(& REAL(_x)[0]), 8, Rf_xlength(_x));
 			break;
 		}
 		case INTSXP   : { 
-			writeLength(_x, connection_file);
-			connection_file.write((char *)(& INTEGER(_x)[0]), 4, Rf_xlength(_x));
+			writeLength(_x, connection);
+			connection.write((char *)(& INTEGER(_x)[0]), 4, Rf_xlength(_x));
 		  	break; 
 		 }
 		case CPLXSXP  : { 
-			writeLength(_x, connection_file);
-			connection_file.write((char *)(& COMPLEX(_x)[0]), 16, Rf_xlength(_x));
+			writeLength(_x, connection);
+			connection.write((char *)(& COMPLEX(_x)[0]), 16, Rf_xlength(_x));
 			break; 
 		}
 		case CHARSXP   : { 
 			if (_x == NA_STRING ) {
 				BYTE ffff[4] = {0xff, 0xff, 0xff, 0xff};
-				connection_file.write((char *) & (ffff[0]), 1, 4);
+				connection.write((char *) & (ffff[0]), 1, 4);
 			} else {
-				writeLength(_x, connection_file);
-				connection_file.write((char*)CHAR(_x), 1, Rf_xlength(_x));
+				writeLength(_x, connection);
+				connection.write((char*)CHAR(_x), 1, Rf_xlength(_x));
 			}
 		    break; 
 		}
 		case STRSXP : {
-			writeLength(_x, connection_file);
+			writeLength(_x, connection);
 			for (int64_t i = 0; i < Rf_xlength(_x); i++) {
-				writeSEXP(STRING_ELT(_x, i), connection_file);
+				writeSEXP(STRING_ELT(_x, i), connection);
 			}
 		 	break; 
 		}
 		case LGLSXP   : { 
-			writeLength(_x, connection_file);
-			connection_file.write((char *)(& LOGICAL(_x)[0]), 4, Rf_xlength(_x));
+			writeLength(_x, connection);
+			connection.write((char *)(& LOGICAL(_x)[0]), 4, Rf_xlength(_x));
 		  break; 
 		}
 		case VECSXP   : { 
-			writeLength(_x, connection_file);
+			writeLength(_x, connection);
 			for (int64_t i = 0; i < Rf_xlength(_x); i++) {
-				writeSEXP(VECTOR_ELT(_x, i), connection_file);
+				writeSEXP(VECTOR_ELT(_x, i), connection);
 			}
 		  	break; 
 		}
 		case RAWSXP   : { 
-			writeLength(_x, connection_file);
-			connection_file.write((char *)(& RAW(_x)[0]), 1, Rf_xlength(_x));
+			writeLength(_x, connection);
+			connection.write((char *)(& RAW(_x)[0]), 1, Rf_xlength(_x));
 		  	break; 
 		}
 		case SYMSXP   : { 
 			SEXP name = PRINTNAME(_x);
-			writeSEXP(name, connection_file);
+			writeSEXP(name, connection);
 		  	break; 
 		}
 		case LISTSXP  : {
 			SEXP el = CAR(_x);
 			SEXP tag = TAG(_x);
-			writeSEXP(tag, connection_file);
-			writeSEXP(el, connection_file);
+			writeSEXP(tag, connection);
+			writeSEXP(el, connection);
 			break;
 		}
 		default : {throw std::runtime_error("Data type not supported. Please check ?largeList");}
 		}
 		if (attribute != R_NilValue) {
 			for (SEXP nxt = attribute; nxt != R_NilValue; nxt = CDR(nxt)) {
-				writeSEXP(nxt, connection_file);
+				writeSEXP(nxt, connection);
 			}
 			BYTE nil[4] = {0xfe, 0x00, 0x00, 0x00};
-			connection_file.write((char *) & (nil[0]), 1, 4);  
+			connection.write((char *) & (nil[0]), 1, 4);  
 		}
 		return ;
 	}
 
-	SEXP UnitObject::readSEXP(ConnectionFile & connection_file) {
+	SEXP UnitObject::readSEXP(Connection & connection) {
 		int type, has_attr, has_tag, has_object, level, head_info;
-		connection_file.read((char*)(&head_info), 4 , 1);
+		connection.read((char*)(&head_info), 4 , 1);
 		type = head_info & 255;
 		has_object = (head_info >> 8) & 1;
 		has_attr = (head_info >> 9) & 1;
@@ -173,28 +199,28 @@ namespace large_list {
 		switch (type) {
 		case 0xfe : element = PROTECT(R_NilValue); break;
 		case REALSXP  : {
-			readLength(connection_file, length);
+			readLength(connection, length);
 			element = PROTECT(Rf_allocVector(REALSXP, length));
-			connection_file.read((char*)(&REAL(element)[0]), 8, length);
+			connection.read((char*)(&REAL(element)[0]), 8, length);
 			break;
 		}
 		case INTSXP   : {
-			readLength(connection_file, length);
+			readLength(connection, length);
 			element = PROTECT(Rf_allocVector(INTSXP, length));
-			connection_file.read((char*)(&INTEGER(element)[0]), 4, length);
+			connection.read((char*)(&INTEGER(element)[0]), 4, length);
 			break;
 		}
 		case CPLXSXP  : { 
-			readLength(connection_file, length);
+			readLength(connection, length);
 			element = PROTECT(Rf_allocVector(CPLXSXP, length));
-			connection_file.read((char*)(&COMPLEX(element)[0]), 16, length);
+			connection.read((char*)(&COMPLEX(element)[0]), 16, length);
 			break;
 		}
 		case STRSXP   : {
-			readLength(connection_file, length);
+			readLength(connection, length);
 			element = PROTECT(Rf_allocVector(STRSXP, length));
 			for (int64_t i = 0; i < length; i++) {
-				SEXP temp = PROTECT(readSEXP(connection_file));
+				SEXP temp = PROTECT(readSEXP(connection));
 				SET_STRING_ELT(element, i, temp);
 				UNPROTECT(1);
 			}
@@ -203,43 +229,43 @@ namespace large_list {
 		case CHARSXP  : { 
 			std::vector<BYTE> tempRaw(4);
 			std::vector<BYTE> naString(4, 0xff);
-			connection_file.read((char *) & (tempRaw[0]), 1, 4);
+			connection.read((char *) & (tempRaw[0]), 1, 4);
 			if (tempRaw == naString) {
 				element = PROTECT(NA_STRING);
 			} else {
 				std::string x;
-				connection_file.seekRead(-4, SEEK_CUR);
-				connection_file.read((char *) & (length), 4, 1);
+				connection.seekRead(-4, SEEK_CUR);
+				connection.read((char *) & (length), 4, 1);
 				x.resize(length);
-				connection_file.read((char*)(&x[0]), 1, length);
+				connection.read((char*)(&x[0]), 1, length);
 				element = PROTECT(Rf_mkChar(x.c_str()));
 			}
 			break;
 		}
 		case LGLSXP   : {
-			readLength(connection_file, length);
+			readLength(connection, length);
 			element = PROTECT(Rf_allocVector(LGLSXP, length));
-			connection_file.read((char*)(&LOGICAL(element)[0]), 4, length);
+			connection.read((char*)(&LOGICAL(element)[0]), 4, length);
 			break;
 		}
 		case VECSXP   : {
-			readLength(connection_file, length);
+			readLength(connection, length);
 			element = PROTECT(Rf_allocVector(VECSXP, length));
 			for (int64_t i = 0; i < length; i++) {
-				SEXP temp = PROTECT(readSEXP(connection_file));
+				SEXP temp = PROTECT(readSEXP(connection));
 				SET_VECTOR_ELT(element, i, temp);
 				UNPROTECT(1);
 			}
 			break;
 		}
 		case RAWSXP   : { 
-			readLength(connection_file, length);
+			readLength(connection, length);
 			element = PROTECT(Rf_allocVector(RAWSXP, length));
-			connection_file.read((char*)(&RAW(element)[0]), 1, length);
+			connection.read((char*)(&RAW(element)[0]), 1, length);
 			break;
 		}
 		case SYMSXP   : {
-			SEXP chars = PROTECT(readSEXP(connection_file));
+			SEXP chars = PROTECT(readSEXP(connection));
 			element = PROTECT(Rf_install(CHAR(chars)));
 			UNPROTECT_PTR(chars);
 			break;
@@ -248,9 +274,9 @@ namespace large_list {
 			SEXP tag;
 			SEXP el;
 			if (has_tag == 1) {
-				tag = PROTECT(readSEXP(connection_file));
+				tag = PROTECT(readSEXP(connection));
 			}
-			el = PROTECT(readSEXP(connection_file));
+			el = PROTECT(readSEXP(connection));
 			element = PROTECT(Rf_cons(el, R_NilValue));
 			UNPROTECT_PTR(el);
 			if (has_tag == 1) {SET_TAG(element, tag); UNPROTECT_PTR(tag);}
@@ -258,10 +284,10 @@ namespace large_list {
 		} 
 		}
 		if (has_attr == 1) {
-			SEXP parlist = PROTECT(readSEXP(connection_file));
+			SEXP parlist = PROTECT(readSEXP(connection));
 			SEXP current_chain = parlist;
 			while (true) {
-				SEXP chain = PROTECT(readSEXP(connection_file));
+				SEXP chain = PROTECT(readSEXP(connection));
 				if (chain != R_NilValue) {
 					current_chain = SETCDR(current_chain, chain);
 					UNPROTECT_PTR(chain);
