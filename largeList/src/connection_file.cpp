@@ -9,9 +9,10 @@ namespace large_list {
   		//Rprintf("%s ", file_dir_name_);
 	}
 	ConnectionFile::~ConnectionFile() {
+	  // Rprintf("Begin to destruct file connection! \n");
 		if (fin_) { fclose(fin_);}
-    	if (fout_) { fclose(fout_);}
-    	// Rprintf("FielIO object successfully destructed!");
+    if (fout_) { fclose(fout_);}
+    // Rprintf("FielIO object successfully destructed! \n");
 	}
 
 	// build a connection to the file, set fin_ and fout_.
@@ -34,6 +35,11 @@ namespace large_list {
 		return;
 	}
 
+  void ConnectionFile::disconnect(){
+    if (fin_) { fclose(fin_); fin_ = NULL;}
+    if (fout_) { fclose(fout_); fout_ = NULL;}
+    return;
+  }
 	//safe write
 	void ConnectionFile::write(char *data, int nbytes, int nblocks) {
 		int64_t initial_ptr_position = ftell(fout_);
@@ -123,12 +129,13 @@ namespace large_list {
 	//cutFile
 	void ConnectionFile::cutFile() {
 		int64_t file_length = ftell(fout_);
-		fclose(fin_);
-		fclose(fout_);
+	  disconnect();
 #if defined PREDEF_PLATFORM_UNIX
+		// Rprintf("Begin to truncate \n");
 		if (truncate(file_dir_name_, file_length) != 0) {
 			throw std::runtime_error("file truncation failed (Unix).");
 		}
+		// Rprintf("Truncate finished \n");
 #endif
 
 #if defined PREDEF_PLATFORM_WIN32

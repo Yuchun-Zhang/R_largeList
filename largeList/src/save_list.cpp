@@ -10,12 +10,12 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append, SEXP compress) {
  	large_list::ConnectionFile connection_file(file);
     // Rprintf("Turn object to list_object \n");
   	large_list::ListObject list_object_to_save(object);
-  	try { list_object_to_save.check(); } catch (std::exception &e){ connection_file.~ConnectionFile(); error(e.what());}
+  	try { list_object_to_save.check(); } catch (std::exception &e){ connection_file.disconnect(); error(e.what());}
 
     // append == false
   	if (LOGICAL(append)[0] == false) {
         // Rprintf("Connect to File \n");
-  		try {connection_file.create(); } catch (std::exception &e){ connection_file.~ConnectionFile(); error(e.what());}
+  		try {connection_file.create(); } catch (std::exception &e){ connection_file.disconnect(); error(e.what());}
       list_object_to_save.setCompressBit(LOGICAL(compress)[0]);
   		large_list::NamePositionTuple pair(list_object_to_save.getLength());
   		list_object_to_save.writeListHead(connection_file);
@@ -33,7 +33,7 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append, SEXP compress) {
       list_object_to_save.writeCompressBit(connection_file);
  	} else {
         // Rprintf("append == T \n");
- 		try {connection_file.connect(); } catch (std::exception &e){ connection_file.~ConnectionFile(); error(e.what());}
+ 		try {connection_file.connect(); } catch (std::exception &e){ connection_file.disconnect(); error(e.what());}
  		// get the original pair and length.
  		large_list::MetaListObject list_object_origin;
  		list_object_origin.readLength(connection_file);
@@ -70,4 +70,11 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append, SEXP compress) {
 		list_object_origin.writeNameBit(connection_file);
  	}
   	return (ScalarLogical(1));
+}
+
+extern "C" SEXP checkList(SEXP object) {
+  if (TYPEOF(object) != VECSXP) error("object is not a list.");
+  large_list::ListObject list_object_to_save(object);
+  try { list_object_to_save.check(); } catch (std::exception &e){error(e.what());}
+  return (ScalarLogical(1));
 }

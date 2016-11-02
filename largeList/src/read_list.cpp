@@ -6,7 +6,7 @@ extern "C" SEXP readList(SEXP file, SEXP index) {
     if (index != R_NilValue && TYPEOF(index) != INTSXP &&  TYPEOF(index) != REALSXP && TYPEOF(index) != LGLSXP && TYPEOF(index) != STRSXP)
         error("index should be a NULL, an integer vector, a numeric vector, a logical vector or a character vector.");
     large_list::ConnectionFile connection_file(file);
-    try {connection_file.connect(); } catch (std::exception &e) { connection_file.~ConnectionFile(); error(e.what());}
+    try {connection_file.connect(); } catch (std::exception &e) { connection_file.disconnect(); error(e.what());}
 
     large_list::MetaListObject list_object_in_file;
     list_object_in_file.readLength(connection_file);
@@ -14,13 +14,13 @@ extern "C" SEXP readList(SEXP file, SEXP index) {
     large_list::IndexObject index_object(index, list_object_in_file.getLength(), connection_file);
     // Rprintf("Getting Pair \n");
     index_object.readPair(connection_file);
-    index_object.print(2);
+    // index_object.print(2);
 
     large_list::ListObject list_object_to_output(index_object.getLength(), false);
     list_object_to_output.readNameBit(connection_file);
     list_object_to_output.readCompressBit(connection_file);
     
-    list_object_to_output.print();
+    // list_object_to_output.print();
 
     for (int i = 0; i < index_object.getLength(); i ++) {
         if (index_object.getIndex(i) != R_NaInt) {
@@ -34,7 +34,7 @@ extern "C" SEXP readList(SEXP file, SEXP index) {
         }
         list_object_to_output.setName(index_object.getName(i), i);
     }
-    list_object_to_output.print();
+    // list_object_to_output.print();
 
     // Rprintf("Assembling \n");
     SEXP output_list = PROTECT(list_object_to_output.assembleRList());
@@ -47,7 +47,7 @@ extern "C" SEXP getListLength(SEXP file) {
     //check parameters
     if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("file should be a charater vector of length 1.");
     large_list::ConnectionFile connection_file(file);
-    try {connection_file.connect(); } catch (std::exception &e) { connection_file.~ConnectionFile(); error(e.what());}
+    try {connection_file.connect(); } catch (std::exception &e) { connection_file.disconnect(); error(e.what());}
     large_list::MetaListObject list_object_in_file;
     list_object_in_file.readLength(connection_file);
     return(ScalarInteger(list_object_in_file.getLength()));
@@ -57,7 +57,7 @@ extern "C" SEXP getListName(SEXP file) {
     //check parameters
     if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("file should be a charater vector of length 1.");
     large_list::ConnectionFile connection_file(file);
-    try {connection_file.connect(); } catch (std::exception &e) { connection_file.~ConnectionFile(); error(e.what());}
+    try {connection_file.connect(); } catch (std::exception &e) { connection_file.disconnect(); error(e.what());}
     large_list::MetaListObject list_object_in_file;
     list_object_in_file.readLength(connection_file);
     list_object_in_file.readNameBit(connection_file);
@@ -82,7 +82,7 @@ extern "C" SEXP getListName(SEXP file) {
 extern "C" SEXP checkFileAndVersionExternal(SEXP file) {
     if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("file should be a charater vector of length 1.");
     large_list::ConnectionFile connection_file(file);
-    try {connection_file.connect(); } catch (std::exception &e) { connection_file.~ConnectionFile(); error(e.what());}
+    try {connection_file.connect(); } catch (std::exception &e) { connection_file.disconnect(); error(e.what());}
     return (ScalarLogical(1));
 }
 
@@ -90,7 +90,7 @@ extern "C" SEXP isListCompressed(SEXP file) {
     //check parameters
     if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("file should be a charater vector of length 1.");
     large_list::ConnectionFile connection_file(file);
-    try {connection_file.connect(); } catch (std::exception &e) { connection_file.~ConnectionFile(); error(e.what());}
+    try {connection_file.connect(); } catch (std::exception &e) { connection_file.disconnect(); error(e.what());}
     large_list::MetaListObject list_object_in_file;
     list_object_in_file.readCompressBit(connection_file);
     return(ScalarLogical(list_object_in_file.getCompressBit()));

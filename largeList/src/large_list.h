@@ -88,6 +88,7 @@ namespace large_list {
 		// build a connection to the file.
 		void create();
 		void connect();
+		void disconnect();
 
 		// wrapper for fwrite and fread, gets rid of warnings and handles exceptions.
 		void write(char *data, int nbytes, int nblocks);
@@ -336,6 +337,7 @@ namespace large_list {
 	extern "C" SEXP modifyNameInList(SEXP file, SEXP index, SEXP names);
 	extern "C" SEXP isListCompressed(SEXP file);
 	extern "C" SEXP checkFileAndVersionExternal(SEXP file);
+	extern "C" SEXP checkList(SEXP object);
 	extern "C" SEXP largeListTest();
 };
 #endif //LARGE_LIST

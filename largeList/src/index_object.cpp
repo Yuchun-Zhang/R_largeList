@@ -29,8 +29,8 @@ namespace large_list {
   			TYPEOF(index) == INTSXP ?
   				index_.assign(INTEGER(index), INTEGER(index) + length_) :
   				index_.assign(REAL(index), REAL(index) + length_);
-  			try {processNumeric(); } catch (std::exception &e){ connection_file.~ConnectionFile(); error(e.what());}
-  			Rprintf("index size : %d, length_ : %d\n", index_.size(), length_);
+  			try {processNumeric(); } catch (std::exception &e){ connection_file.disconnect(); error(e.what());}
+  			// Rprintf("index size : %d, length_ : %d\n", index_.size(), length_);
 		}
 		if (TYPEOF(index) == STRSXP) {
 			length_ = Rf_length(index);
@@ -267,7 +267,7 @@ namespace large_list {
 	}
 
 	void IndexWithValueObject::setValueIndex() {
-		index_pair_.resize(length_);
+	  index_pair_.resize(length_);
 		for (int i = 0; i < length_; i ++) { 
 			index_pair_[i].first = index_[i];
 			index_pair_[i].second = i;

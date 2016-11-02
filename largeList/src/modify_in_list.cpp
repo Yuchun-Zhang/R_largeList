@@ -8,11 +8,12 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
     if (TYPEOF(index) != INTSXP &&  TYPEOF(index) != REALSXP && TYPEOF(index) != LGLSXP && TYPEOF(index) != STRSXP)
         error("index should be a NULL, an integer vector, a numeric vector, a logical vector or a character vector.");
     large_list::ConnectionFile connection_file(file);
-    try {connection_file.connect(); } catch (std::exception &e) { connection_file.~ConnectionFile(); error(e.what());}
+    try {connection_file.connect(); } catch (std::exception &e) { connection_file.disconnect(); error(e.what());}
 
+    // Rprintf("Begin to deal with index \n");
     // deal with index.
     large_list::ListObject list_object_to_save(object);
-    try { list_object_to_save.check(); } catch (std::exception &e){ connection_file.~ConnectionFile(); error(e.what());}
+    try { list_object_to_save.check(); } catch (std::exception &e){ connection_file.disconnect(); error(e.what());}
     large_list::MetaListObject list_object_origin;
     list_object_origin.readLength(connection_file);
     list_object_origin.readCompressBit(connection_file);
@@ -78,22 +79,29 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
             first_move_pos = -1;
         }
     }
-
+    // Rprintf("Move Finished \n");
+    
+    
     //write Object
     for (int i = 0; i < index_object.getLength(); i ++) {
         connection_file.seekWrite(pair_new.getPosition(index_object.getIndex(i)), SEEK_SET);
         list_object_to_save.write(connection_file, index_object.getValueIndex(i));
     }
+    
+    // Rprintf("Write Object Finished \n");
 
     //write tables
     connection_file.seekWrite(pair_new.getLastPosition(), SEEK_SET);
     pair_new.write(connection_file, true);
     pair_new.sort();
     pair_new.write(connection_file, false);
+    
+    // Rprintf("Write Table Finished \n");
 
     //cut file
     connection_file.cutFile();
-
+    
+    // Rprintf("Cut file Finished \n");
     return (ScalarLogical(1));
 }
 
@@ -104,7 +112,7 @@ extern "C" SEXP modifyNameInList(SEXP file, SEXP index, SEXP names) {
     if (index != R_NilValue && TYPEOF(index) != INTSXP &&  TYPEOF(index) != REALSXP && TYPEOF(index) != LGLSXP )
         error("index should be a NULL, an integer vector, a numeric vector or a logical vector.");
     large_list::ConnectionFile connection_file(file);
-    try {connection_file.connect(); } catch (std::exception &e) { connection_file.~ConnectionFile(); error(e.what());}
+    try {connection_file.connect(); } catch (std::exception &e) { connection_file.disconnect(); error(e.what());}
 
     // deal with index.
     large_list::MetaListObject list_object_origin;

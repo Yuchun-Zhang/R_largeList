@@ -6,7 +6,7 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index) {
   	if (TYPEOF(index) != INTSXP &&  TYPEOF(index) != REALSXP && TYPEOF(index) != LGLSXP && TYPEOF(index) != STRSXP)
     	error("index should be a NULL, an integer vector, a numeric vector, a logical vector or a character vector.");
   	large_list::ConnectionFile connection_file(file);
-  	try {connection_file.connect(); } catch (std::exception &e){ connection_file.~ConnectionFile(); error(e.what());}
+  	try {connection_file.connect(); } catch (std::exception &e){ connection_file.disconnect(); error(e.what());}
 
     // deal with index.
   	large_list::MetaListObject list_object_origin;
