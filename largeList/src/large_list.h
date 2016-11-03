@@ -63,8 +63,8 @@ namespace large_list {
 		~ConnectionRaw();
 		void write(char *data, int nbytes, int nblocks);
 		void read(char *data, int nbytes, int nblocks);
-		void seekRead (int64_t position, int origin);
-		void seekWrite (int64_t position, int origin);
+		void seekRead(int64_t position, int origin);
+		void seekWrite(int64_t position, int origin);
 		void compress();
 		void uncompress();
 		char* getRaw();
@@ -74,8 +74,8 @@ namespace large_list {
 	class ConnectionFile : public Connection {
 	// This class handles all the file input/output staffs.
 	private:
-		FILE * fin_;
-		FILE * fout_;
+		std::FILE * fin_;
+	  std::FILE * fout_;
 		char * file_dir_name_;
 		// these two functions will be called in the connect function.
 		void writeVersion();
@@ -105,7 +105,7 @@ namespace large_list {
 
 		// move a data block.
 		void moveData (const int64_t &move_from_start_pos, const int64_t &move_from_end_pos,
-              const int64_t &move_to_start_pos, const int64_t &move_to_end_pos);
+                   const int64_t &move_to_start_pos, const int64_t &move_to_end_pos);
 	};
 
 	class UnitObject {

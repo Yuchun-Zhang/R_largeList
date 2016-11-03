@@ -2,14 +2,14 @@
 namespace large_list {
 
 	ConnectionRaw::ConnectionRaw(int64_t length) {
-		 raw_array_ = (char*) malloc (length);
+		 raw_array_ = (char*) std::malloc (length);
 		 length_ = length;
 		 read_pos_ = 0;
 		 write_pos_ = 0;
 	};
 	
 	ConnectionRaw::~ConnectionRaw() {
-		 free(raw_array_);
+		 std::free(raw_array_);
 	};
 
 	void ConnectionRaw::seekRead(int64_t position, int origin) {
@@ -49,7 +49,7 @@ namespace large_list {
 	void ConnectionRaw::compress() {
 		char * raw_array_compressed;
 		int64_t compress_bound = compressBound(length_);
-		raw_array_compressed = (char*) malloc (compress_bound);
+		raw_array_compressed = (char*) std::malloc (compress_bound);
 		int res;
 
 		z_stream strm;
@@ -70,7 +70,7 @@ namespace large_list {
 	    // Rprintf("After Compress %ld \n", length_after_compress);
 	    deflateEnd(&strm);
 
-	    free(raw_array_);
+	    std::free(raw_array_);
 	    raw_array_  = raw_array_compressed;
 	    length_ = length_after_compress;
 		return;
@@ -79,7 +79,7 @@ namespace large_list {
 	void ConnectionRaw::uncompress() {
 		char * raw_array_uncompressed;
 		int64_t uncompress_bound = 3 * length_;
-		raw_array_uncompressed = (char*) malloc (uncompress_bound);
+		raw_array_uncompressed = (char*) std::malloc (uncompress_bound);
 		int res;
 
 		z_stream strm;
@@ -111,7 +111,7 @@ namespace large_list {
 	    // Rprintf("After Uncompress %ld \n", length_after_uncompress);
 	    inflateEnd(&strm);
 
-	    free(raw_array_);
+	    std::free(raw_array_);
 	    raw_array_  = raw_array_uncompressed;
 	    length_ = length_after_uncompress;
 		return;

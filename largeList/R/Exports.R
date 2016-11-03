@@ -139,7 +139,6 @@ modifyNameInList <- function(file, index, name) {
 }
 
 #' Test Usage
-#' @export
 largeListTest <- function() {
   res <- .Call('largeListTest', PACKAGE = 'largeList')
 }

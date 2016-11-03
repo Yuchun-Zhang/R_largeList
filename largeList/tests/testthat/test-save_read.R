@@ -5,11 +5,10 @@ context("save_read")
 
 test_that("Append == FALSE", {
   source(paste0(path.package("largeList"), "/tests/config.R"))
-  if (Sys.info()['sysname'] == "Darwin") {
-    setwd(mac_dir)
-  } else {
-    setwd(win_dir)
-  }
+  switch(Sys.info()['sysname'],
+         "Darwin" = {setwd(mac_dir)},
+         "Windows" = {setwd(win_dir)},
+         "Linux" = {setwd(linux_dir)})
   library(futile.logger)
 
   flog.info("read random list file")
@@ -81,11 +80,10 @@ test_that("Append == FALSE", {
 
 test_that("Append == TRUE", {
   source(paste0(path.package("largeList"), "/tests/config.R"))
-  if (Sys.info()['sysname'] == "Darwin") {
-    setwd(mac_dir)
-  } else {
-    setwd(win_dir)
-  }
+  switch(Sys.info()['sysname'],
+         "Darwin" = {setwd(mac_dir)},
+         "Windows" = {setwd(win_dir)},
+         "Linux" = {setwd(linux_dir)})
   library(futile.logger)
   
   flog.info("read random list file")

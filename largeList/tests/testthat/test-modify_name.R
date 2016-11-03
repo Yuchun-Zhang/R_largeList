@@ -5,11 +5,10 @@ context("modify_name")
 
 test_that("modify name in list", {
   source(paste0(path.package("largeList"), "/tests/config.R"))
-  if (Sys.info()['sysname'] == "Darwin") {
-    setwd(mac_dir)
-  } else {
-    setwd(win_dir)
-  }
+  switch(Sys.info()['sysname'],
+         "Darwin" = {setwd(mac_dir)},
+         "Windows" = {setwd(win_dir)},
+         "Linux" = {setwd(linux_dir)})
   library(futile.logger)
   
   flog.info("read random list file")

@@ -65,10 +65,10 @@ getList <- function(file, compress = TRUE, verbose = FALSE, truncate = FALSE){
 "[[.largeList" <- function(x, index = NULL) {
   if (is.null(index)) {stop("invalid subscript type 'symbol'")}
   if (length(index) > 1) {stop("subscript out of bounds")}
-  if (class(index) %in% c("integer","numeric") && index > length(x)) {
+  if (class(index)[1] %in% c("integer","numeric") && index > length(x)) {
     stop("subscript out of bounds")
   }
-  if (class(index) %in% c("integer","numeric") && index <= 0) {
+  if (class(index)[1] %in% c("integer","numeric") && index <= 0) {
     stop("attempt to select less than one element")
   }
   res <- readList(file = attr(x, "largeList_file"), index = index)
@@ -112,10 +112,11 @@ getList <- function(file, compress = TRUE, verbose = FALSE, truncate = FALSE){
 #' largelist_object[c(4, 5)] <- list(6, 7) ## append 6, 7 to 4th, 5th position and NULL to 3rd position
 #' @export
 "[<-.largeList" <- function(x, index = NULL, value) {
+  .Call('checkList', PACKAGE = 'largeList', object = list(value))
   ## if index is null, append value to list object.
   if (is.null(index)) {
     ## vectors are transfered to list since function saveList and modifyInList only support list.
-    if (class(value) != "list") {value <- as.list(value)}
+    if (!is.list(value)) {value <- as.vector(value, mode = "list")}
     saveList(object = value, file = attr(x, "largeList_file"), append = TRUE)
   ## if index is not null.
   }else{
@@ -125,28 +126,30 @@ getList <- function(file, compress = TRUE, verbose = FALSE, truncate = FALSE){
     ## if value is not null, elements are either appended or substitute the existing elements.
     }else{
       ## vectors are transfered to list since function saveList and modifyInList only supports list.
-      if (class(value) != "list") {value <- as.list(value)}
+      if (!is.list(value)) {
+        value <- as.vector(value, mode = "list")
+      }
       x_length = length(x)
-      if (class(index) %in% c("numeric","integer") && !all(index < 0, na.rm = T)) {
+      if (class(index)[1] %in% c("numeric","integer") && !all(index < 0, na.rm = T)) {
         temp_list <- list()
         temp_list[index] <- value
         to_append_value <- temp_list[(1:length(temp_list)) > x_length]
         to_modify_index <- unique(index[index <= x_length])
         to_modify_value <- temp_list[to_modify_index]
       }else 
-      if (class(index) %in% c("numeric","integer") && all(index < 0, na.rm = T)) {
+      if (class(index)[1] %in% c("numeric","integer") && all(index < 0, na.rm = T)) {
         to_modify_index <- index
         to_modify_value <- value
         to_append_value <- integer(0)
       }else 
-      if  (class(index) %in% c("character")) {
+      if  (class(index)[1] %in% c("character")) {
         temp_list <- list()
         temp_list[index] <- value
         to_append_value <- temp_list[!names(temp_list) %in% names(x) | is.na(names(temp_list))]
         to_modify_index <- names(temp_list)[names(temp_list) %in% names(x) & !is.na(names(temp_list))]
         to_modify_value <- temp_list[to_modify_index]
       }else
-      if  (class(index) %in% c("logical")) { 
+      if  (class(index)[1] %in% c("logical")) { 
         to_modify_index <- index
         to_modify_value <- value
         to_append_value <- integer(0)
@@ -192,13 +195,13 @@ getList <- function(file, compress = TRUE, verbose = FALSE, truncate = FALSE){
   if (length(index) > 1) {stop("subscript out of bounds")}
   if (is.null(index)) {
     ## vectors are transfered to list since function saveList and modifyInList only support list.
-    if (class(value) != "list") {value <- as.list(value)}
+    if (!is.list(value)) {value <- as.vector(value, mode = "list")}
     saveList(object = value, 
              file = attr(x, "largeList_file"), 
              append = FALSE, 
              compress = isListCompressed(attr(x, "largeList_file")))
   }else{
-    if (class(index) %in% c("integer","numeric") && index <= 0) {
+    if (class(index)[1] %in% c("integer","numeric") && index <= 0) {
       stop("attempt to select less than one element")
     }
     x[index] <- value
@@ -252,6 +255,21 @@ length.largeList <- function(x) {
   return(getListLength(attr(x, "largeList_file")))
 }
 
+#' Overload of function length<-.
+#' @param x A largeList object created by \code{\link{getList}}.
+#' @param value A number
+#' @description Set the length of list stored in file.
+#' @seealso \code{\link{largeList}} 
+#' @examples
+#' largelist_object <- getList("example.llo", truncate = TRUE)
+#' largelist_object[[]] <- list("A" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
+#' length(largelist_object) <- 5 ## get list("A" = 1, "B" = 2, "C" = 3, NULL, NULL)
+#' @export
+"length<-.largeList" <- function(x, value) {
+  x[value] <- list(NULL)
+  return(x)
+}
+
 #' Overload of function names.
 #' @param x A largeList object created by \code{\link{getList}}.
 #' @return A character vector.
@@ -289,7 +307,7 @@ names.largeList <- function(x) {
       modifyNameInList(file = attr(x, "largeList_file"), index = seq_along(value), name = value)
     }    
   }
-  return(getList(attr(x, "largeList_file")))
+  return(x)
 }
 
 

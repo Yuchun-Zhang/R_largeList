@@ -6,7 +6,7 @@
 #' 
 #' @details
 #' 
-#' R objects will be serialized with an uncompressed non-ascii little-endian format, 
+#' R objects will be serialized with an uncompressed/ compressed non-ascii little-endian format, 
 #' which is similar to \code{\link{saveRDS}}. Two ordered tables are created at 
 #' the end of data for quick lookups, one for indices and one for names. Notice that, 
 #' all the names will be truncated to 16 characters. \cr
@@ -45,6 +45,7 @@
 #' \item{\code{\link{[[<-.largeList}}}  If index provided, it modifies, appends or removes the element
 #'  with given index, otherwise it saves value to list. 
 #' \item{\code{\link{length.largeList}}} Get length of list stored in file.
+#' \item{\code{\link{length<-.largeList}}} Set length of list stored in file.
 #' \item{\code{\link{names.largeList}}} Get names of elements stored in file.
 
 #' }

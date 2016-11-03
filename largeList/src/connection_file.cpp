@@ -10,42 +10,42 @@ namespace large_list {
 	}
 	ConnectionFile::~ConnectionFile() {
 	  // Rprintf("Begin to destruct file connection! \n");
-		if (fin_) { fclose(fin_);}
-    if (fout_) { fclose(fout_);}
+		if (fin_) { std::fclose(fin_);}
+    if (fout_) { std::fclose(fout_);}
     // Rprintf("FielIO object successfully destructed! \n");
 	}
 
 	// build a connection to the file, set fin_ and fout_.
 	void ConnectionFile::create() {
-		fout_ = fopen(file_dir_name_, "wb");
+		fout_ = std::fopen(file_dir_name_, "wb");
 		if (fout_ == NULL) {
 			throw std::runtime_error("directory does not exist.");
 		}
-		fin_ = fopen(file_dir_name_, "rb");
+		fin_ = std::fopen(file_dir_name_, "rb");
 		writeVersion();
 		return;
 	}
 	void ConnectionFile::connect(){
-		fout_ = fopen(file_dir_name_, "r+b");
+		fout_ = std::fopen(file_dir_name_, "r+b");
 		if (fout_ == NULL) {
 			throw std::runtime_error("file does not exist.");
 		}
-		fin_ = fopen(file_dir_name_, "rb");
+		fin_ = std::fopen(file_dir_name_, "rb");
 		checkVersion();
 		return;
 	}
 
   void ConnectionFile::disconnect(){
-    if (fin_) { fclose(fin_); fin_ = NULL;}
-    if (fout_) { fclose(fout_); fout_ = NULL;}
+    if (fin_) { std::fclose(fin_); fin_ = NULL;}
+    if (fout_) { std::fclose(fout_); fout_ = NULL;}
     return;
   }
 	//safe write
 	void ConnectionFile::write(char *data, int nbytes, int nblocks) {
-		int64_t initial_ptr_position = ftell(fout_);
+		int64_t initial_ptr_position = std::ftell(fout_);
 		int retries = 0;
-		while (((int)fwrite(data, nbytes, nblocks, fout_) != nblocks) && (retries < MAXRETRIES)) {
-			fseek(fout_, initial_ptr_position, SEEK_SET);
+		while (((int)std::fwrite(data, nbytes, nblocks, fout_) != nblocks) && (retries < MAXRETRIES)) {
+			std::fseek(fout_, initial_ptr_position, SEEK_SET);
 			retries ++;
 		}
 		if (retries == MAXRETRIES) {
@@ -57,10 +57,10 @@ namespace large_list {
 
 	//safe fread
 	void ConnectionFile::read(char *data, int nbytes, int nblocks) {
-		int64_t initial_ptr_position = ftell(fin_);
+		int64_t initial_ptr_position = std::ftell(fin_);
 		int retries = 0;
-		while (((int)fread(data, nbytes, nblocks, fin_) != nblocks) && (retries < MAXRETRIES)) {
-			fseek(fin_, initial_ptr_position, SEEK_SET);
+		while (((int)std::fread(data, nbytes, nblocks, fin_) != nblocks) && (retries < MAXRETRIES)) {
+			std::fseek(fin_, initial_ptr_position, SEEK_SET);
 			retries ++;
 		}
 		if (retries == MAXRETRIES) {
@@ -70,21 +70,21 @@ namespace large_list {
 	}
  
 	void ConnectionFile::seekRead (int64_t position, int origin) {
-		fseek(fin_, position, origin);
+		std::fseek(fin_, position, origin);
 		return;
 	}
 
 	void ConnectionFile::seekWrite (int64_t position, int origin) {
-		fseek(fout_, position, origin);
+		std::fseek(fout_, position, origin);
 		return;
 	}
 
 	int64_t ConnectionFile::tellRead() {
-		return(ftell(fin_));
+		return(std::ftell(fin_));
 	}
 
 	int64_t ConnectionFile::tellWrite() {
-		return(ftell(fout_));
+		return(std::ftell(fout_));
 	}	
 
 	//writeVersion
@@ -104,15 +104,15 @@ namespace large_list {
 
 	//CheckVersion
 	void ConnectionFile::checkVersion() {
-		fseek(fin_, 0, SEEK_END);
-		int64_t length_of_file = ftell(fin_);
+		std::fseek(fin_, 0, SEEK_END);
+		int64_t length_of_file = std::ftell(fin_);
 		if (length_of_file < 26) { throw std::runtime_error("unkown file format!"); }
 		std::string right_head("LARGELIST ");
 		std::string head(10, '\x00');
-		fseek(fin_, 0, SEEK_SET);
+		std::fseek(fin_, 0, SEEK_SET);
 		read((char *)&head[0], 1, 10);
 		if (right_head.compare(head) != 0) { throw std::runtime_error("unkown file format!"); }
-		fseek(fin_, 10, SEEK_SET);
+		std::fseek(fin_, 10, SEEK_SET);
 		int current_version;
 		read((char *)&current_version, 4, 1);
 		if (current_version < READABLE_VERSION) {
@@ -128,7 +128,7 @@ namespace large_list {
 
 	//cutFile
 	void ConnectionFile::cutFile() {
-		int64_t file_length = ftell(fout_);
+		int64_t file_length = std::ftell(fout_);
 	  disconnect();
 #if defined PREDEF_PLATFORM_UNIX
 		// Rprintf("Begin to truncate \n");
@@ -181,7 +181,7 @@ namespace large_list {
 	void ConnectionFile::moveData(const int64_t &move_from_start_pos, const int64_t &move_from_end_pos,
 	const int64_t &move_to_start_pos, const int64_t &move_to_end_pos) {
 		if (move_from_end_pos - move_from_start_pos != move_to_end_pos - move_to_start_pos) {return;}
-		BYTE *to_move_raw = (BYTE *) malloc((move_from_end_pos - move_from_start_pos) * sizeof(BYTE));
+		BYTE *to_move_raw = (BYTE *) std::malloc((move_from_end_pos - move_from_start_pos) * sizeof(BYTE));
 		// std::vector<BYTE> to_move_raw(move_from_end_pos - move_from_start_pos);
 		seekRead(move_from_start_pos, SEEK_SET);
 		// Rprintf("to read");
@@ -189,7 +189,7 @@ namespace large_list {
 		seekWrite(move_to_start_pos, SEEK_SET);
 		// Rprintf("to write");
 		write((char*) & (to_move_raw[0]), 1, move_to_end_pos - move_to_start_pos);
-		free(to_move_raw);
+		std::free(to_move_raw);
 		return;
 	}
 }
