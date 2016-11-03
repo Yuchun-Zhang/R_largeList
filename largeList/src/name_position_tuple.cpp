@@ -1,14 +1,16 @@
 #include "large_list.h"
 namespace large_list {
-	NamePositionTuple::NamePositionTuple(){}
-	NamePositionTuple::NamePositionTuple(int length){
+
+	NamePositionTuple::NamePositionTuple() {}
+
+	NamePositionTuple::NamePositionTuple(int length) {
 		length_ = length;
 		tuple_.resize(length_, std::tuple<int64_t, int64_t, std::string> (0, 0, ""));
 		last_position_ = 0;
 	}
 
 	// initialize by deep copy
-	NamePositionTuple::NamePositionTuple(NamePositionTuple &toCopyObject) {
+	NamePositionTuple::NamePositionTuple(NamePositionTuple & toCopyObject) {
 		length_ = toCopyObject.getLength();
 		tuple_.resize(length_, std::tuple<int64_t, int64_t, std::string> (0, 0, ""));
 		for (int i = 0; i < length_; i++) {
@@ -19,41 +21,41 @@ namespace large_list {
 		last_position_ = toCopyObject.getLastPosition();
 	}
 
-	NamePositionTuple::~NamePositionTuple(){}
+	NamePositionTuple::~NamePositionTuple() {}
 
 	void NamePositionTuple::resize(int length) {
 		length_ = length;
 		tuple_.resize(length_, std::tuple<int64_t, int64_t, std::string> (0, 0, ""));
 	}
 
-	// write the whole table 
-	void NamePositionTuple::write(ConnectionFile & connection_file, bool write_last_position){
+	// write the whole table
+	void NamePositionTuple::write(ConnectionFile & connection_file, bool write_last_position) {
 		for (int i = 0; i < length_; i++) {
-    		connection_file.write((char *) & (std::get<0>(tuple_[i])), 8, 1);
-    		connection_file.write((char*) std::get<2>(tuple_[i]).c_str(), NAMELENGTH, 1);
+			connection_file.write((char *) & (std::get<0>(tuple_[i])), 8, 1);
+			connection_file.write((char*) std::get<2>(tuple_[i]).c_str(), NAMELENGTH, 1);
 		}
 		if (write_last_position) {
 			connection_file.write((char *) & (last_position_), 8, 1);
 		}
-  		return;
+		return;
 	}
 
 	// read the whole table 
 	void NamePositionTuple::read(ConnectionFile & connection_file) {
 		connection_file.seekRead(-(8 + NAMELENGTH) * length_ * 2 - 8, SEEK_END);
-  		for (int i = 0; i < length_; i++) {
-    		connection_file.read((char *) & (std::get<0>(tuple_[i])), 8, 1); 
-    		std::get<2>(tuple_[i]).resize(NAMELENGTH);
-    		connection_file.read((char *) & (std::get<2>(tuple_[i])[0]), NAMELENGTH, 1);
-  		}
-  		readLastPosition(connection_file);
-  		for (int i = 0; i < length_ - 1; i++) {
-  			std::get<1>(tuple_[i]) = std::get<0>(tuple_[i + 1]) - std::get<0>(tuple_[i]);
-  		}
-  		if (length_ > 0) {
-  			std::get<1>(tuple_[length_ - 1]) = last_position_ - std::get<0>(tuple_[length_ - 1]);
-  		}
-  		return;
+		for (int i = 0; i < length_; i++) {
+			connection_file.read((char *) & (std::get<0>(tuple_[i])), 8, 1);
+			std::get<2>(tuple_[i]).resize(NAMELENGTH);
+			connection_file.read((char *) & (std::get<2>(tuple_[i])[0]), NAMELENGTH, 1);
+		}
+		readLastPosition(connection_file);
+		for (int i = 0; i < length_ - 1; i++) {
+			std::get<1>(tuple_[i]) = std::get<0>(tuple_[i + 1]) - std::get<0>(tuple_[i]);
+		}
+		if (length_ > 0) {
+			std::get<1>(tuple_[length_ - 1]) = last_position_ - std::get<0>(tuple_[length_ - 1]);
+		}
+		return;
 	}
 
 	// read one element
@@ -64,7 +66,7 @@ namespace large_list {
 		int64_t next_position;
 		connection_file.read((char *) & next_position, 8, 1);
 		std::get<1>(tuple_[index]) = next_position - std::get<0>(tuple_[index]);
-  		return;
+		return;
 	}
 
 	// sort first by name than by position
@@ -86,12 +88,12 @@ namespace large_list {
 	void NamePositionTuple::setLastPosition(ConnectionFile & connection_file) {
 		last_position_ = connection_file.tellWrite();
 		return;
-	}	
+	}
 
 	void NamePositionTuple::setLastPosition(int64_t last_position) {
 		last_position_ = last_position;
 		return;
-	}	
+	}
 
 	void NamePositionTuple::readLastPosition(ConnectionFile & connection_file) {
 		connection_file.seekRead(-(8 + NAMELENGTH) * length_ - 8, SEEK_END);
@@ -99,7 +101,7 @@ namespace large_list {
 		return;
 	}
 
-	void NamePositionTuple::setName(ListObject &list_object) {
+	void NamePositionTuple::setName(ListObject & list_object) {
 		for (int i = 0; i < length_; i++) {
 			std::get<2>(tuple_[i]) = list_object.getName(i);
 		}
@@ -133,10 +135,10 @@ namespace large_list {
 		} else {
 			return last_position_;
 		}
-		
+
 	}
 
-	int64_t NamePositionTuple::getLastPosition(){
+	int64_t NamePositionTuple::getLastPosition() {
 		return last_position_;
 	}
 
@@ -145,18 +147,18 @@ namespace large_list {
 	}
 
 	void NamePositionTuple::print(int index) {
-		Rprintf("Index %d, Position %lf, Serialized_lentth %lf, String %s \n", 
-				index, 
-				(double)std::get<0>(tuple_[index]), 
-				(double)std::get<1>(tuple_[index]), 
-				std::get<2>(tuple_[index]).c_str());
+		Rprintf("Index %d, Position %lf, Serialized_lentth %lf, String %s \n",
+		        index,
+		        (double)std::get<0>(tuple_[index]),
+		        (double)std::get<1>(tuple_[index]),
+		        std::get<2>(tuple_[index]).c_str());
 	}
 
 	// concatenate two pair vectors
 	void NamePositionTuple::merge(NamePositionTuple & secondTuple)
 	{
 		tuple_.resize(length_ + secondTuple.length_);
-		for (int i = 0; i < secondTuple.length_; i ++){
+		for (int i = 0; i < secondTuple.length_; i ++) {
 			tuple_[i + length_]  = secondTuple.tuple_[i];
 		}
 		last_position_ = secondTuple.last_position_;
@@ -185,9 +187,8 @@ namespace large_list {
 		return length_;
 	}
 
-	bool NamePositionTuple::cmp (std::tuple<int64_t, int64_t, std::string>  const & a, 
-		                         std::tuple<int64_t, int64_t, std::string>  const & b)
-	{
-		return std::get<2>(a)!= std::get<2>(b) ?  std::get<2>(a) < std::get<2>(b) : std::get<0>(a) < std::get<0>(b);
+	bool NamePositionTuple::cmp (std::tuple<int64_t, int64_t, std::string>  const & a,
+	                             std::tuple<int64_t, int64_t, std::string>  const & b) {
+		return std::get<2>(a) != std::get<2>(b) ?  std::get<2>(a) < std::get<2>(b) : std::get<0>(a) < std::get<0>(b);
 	};
 }

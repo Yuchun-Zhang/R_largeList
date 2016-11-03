@@ -1,10 +1,11 @@
 #include "large_list.h"
 namespace large_list {
 	//-------------------------- MetaListObject ------------------------
-	MetaListObject::MetaListObject (){
+	MetaListObject::MetaListObject () {
 		length_ = 0;
 		has_name_ = false;
 	}
+
 	MetaListObject::MetaListObject (int length) {
 		length_ = length;
 		has_name_ = false;
@@ -25,7 +26,7 @@ namespace large_list {
 	}
 
 	int MetaListObject::getLength() {
-		return(length_);
+		return (length_);
 	}
 
 	void MetaListObject::setLength(int length) {
@@ -35,18 +36,18 @@ namespace large_list {
 
 	void MetaListObject::writeNameBit (ConnectionFile & connection_file) {
 		connection_file.seekWrite(HAS_NAME_POSITION, SEEK_SET);
-		connection_file.write((char *) &(has_name_), 1, 1);
+		connection_file.write((char *) & (has_name_), 1, 1);
 		return;
 	}
 
 	void MetaListObject::readNameBit (ConnectionFile & connection_file) {
 		connection_file.seekRead(HAS_NAME_POSITION, SEEK_SET);
-		connection_file.read((char *) &(has_name_), 1, 1);
+		connection_file.read((char *) & (has_name_), 1, 1);
 		return;
 	}
 
 	bool MetaListObject::getNameBit () {
-		return(has_name_);
+		return (has_name_);
 	}
 
 	void MetaListObject::setNameBit (bool has_name) {
@@ -56,18 +57,18 @@ namespace large_list {
 
 	void MetaListObject::writeCompressBit (ConnectionFile & connection_file) {
 		connection_file.seekWrite(IS_COMPRESS_POSITION, SEEK_SET);
-		connection_file.write((char *) &(is_compress_), 1, 1);
+		connection_file.write((char *) & (is_compress_), 1, 1);
 		return;
 	}
 
 	void MetaListObject::readCompressBit (ConnectionFile & connection_file) {
 		connection_file.seekRead(IS_COMPRESS_POSITION, SEEK_SET);
-		connection_file.read((char *) &(is_compress_), 1, 1);
+		connection_file.read((char *) & (is_compress_), 1, 1);
 		return;
 	}
 
 	bool MetaListObject::getCompressBit () {
-		return(is_compress_);
+		return (is_compress_);
 	}
 
 	void MetaListObject::setCompressBit (bool is_compress) {
@@ -76,18 +77,18 @@ namespace large_list {
 	}
 
 	//write list head
-	void MetaListObject::writeListHead (ConnectionFile & connection_file){
+	void MetaListObject::writeListHead (ConnectionFile & connection_file) {
 		connection_file.seekWrite(LIST_HEAD_POSITION, SEEK_SET);
 		std::string list_head("\x13\x00\x00\x00");
-    	connection_file.write((char *)list_head.c_str(), 1, 4);
-    	return;
+		connection_file.write((char *)list_head.c_str(), 1, 4);
+		return;
 	}
 
 	//------------------------------ ListObject ------------------------
 
-	ListObject::ListObject (){
+	ListObject::ListObject () {
 		length_ = 0;
-		PROTECT_WITH_INDEX(r_list_=Rf_allocVector(VECSXP, length_), &ipx);
+		PROTECT_WITH_INDEX(r_list_ = Rf_allocVector(VECSXP, length_), &ipx);
 		for (int i = 0; i < length_; i++) {
 			SET_VECTOR_ELT(r_list_, i, R_NilValue);
 		}
@@ -97,9 +98,9 @@ namespace large_list {
 		is_compress_ = false;
 	}
 
-	ListObject::ListObject (int length, bool is_compress){
+	ListObject::ListObject (int length, bool is_compress) {
 		length_ = length;
-		PROTECT_WITH_INDEX(r_list_=Rf_allocVector(VECSXP, length_), &ipx);
+		PROTECT_WITH_INDEX(r_list_ = Rf_allocVector(VECSXP, length_), &ipx);
 		for (int i = 0; i < length_; i++) {
 			SET_VECTOR_ELT(r_list_, i, R_NilValue);
 		}
@@ -109,7 +110,7 @@ namespace large_list {
 		is_compress_ = is_compress;
 	}
 
-	ListObject::ListObject (SEXP list, bool is_compress){
+	ListObject::ListObject (SEXP list, bool is_compress) {
 		length_ = Rf_xlength(list);
 		PROTECT_WITH_INDEX(r_list_ = list, &ipx);
 		names_.resize(length_);
@@ -126,8 +127,8 @@ namespace large_list {
 		} else {
 			has_name_ = true;
 			for (int i = 0; i < length_; i++) {
-      			names_[i] = UnitObject::charsxpToString(STRING_ELT(name_sxp, i));
-      		}
+				names_[i] = UnitObject::charsxpToString(STRING_ELT(name_sxp, i));
+			}
 		}
 	}
 
@@ -176,8 +177,8 @@ namespace large_list {
 		return;
 	}
 
-	std::string ListObject::getName(int index){
-		return(names_[index]);
+	std::string ListObject::getName(int index) {
+		return (names_[index]);
 	};
 
 	// turn the ListObject to a list object in R.
@@ -188,19 +189,19 @@ namespace large_list {
 		std::string na_string(NAMELENGTH, '\xff');
 		for (int i = 0; i < length_; i ++) {
 			names_[i] == na_string ?
-      			SET_STRING_ELT(names_sxp, i, NA_STRING) :
-      			SET_STRING_ELT(names_sxp, i, Rf_mkChar(names_[i].c_str()));
+			SET_STRING_ELT(names_sxp, i, NA_STRING) :
+			SET_STRING_ELT(names_sxp, i, Rf_mkChar(names_[i].c_str()));
 		}
 		if (has_name_ == true) {
 			Rf_setAttrib(output_list, R_NamesSymbol, names_sxp);
 		}
-      	UNPROTECT_PTR(names_sxp);
-      	return(output_list);
+		UNPROTECT_PTR(names_sxp);
+		return (output_list);
 	}
 
 	// get the serialized lengths of all objects in the list.
 	void ListObject::calculateSerializedLength () {
-		for (int i = 0; i < length_; i ++){
+		for (int i = 0; i < length_; i ++) {
 			UnitObject unit_object(VECTOR_ELT(r_list_, i));
 			serialized_length_[i] = unit_object.calculateSerializedLength(is_compress_);
 			// Rprintf("LENGTH %3.0ld \n", serialized_length_[i]);
@@ -218,14 +219,14 @@ namespace large_list {
 
 	void ListObject::print() {
 		Rprintf("Length %d, Has_name %s, Is_compress %s \n",
-				length_, 
-				has_name_ ? "true" : "false",
-				is_compress_ ? "true" : "false");
+		        length_,
+		        has_name_ ? "true" : "false",
+		        is_compress_ ? "true" : "false");
 		for (int i = 0; i < length_; i++) {
 			Rprintf("index %d, serialized_length_ %lf, name %s \n",
-					i,
-					(double) serialized_length_[i],
-					names_[i].c_str());
+			        i,
+			        (double) serialized_length_[i],
+			        names_[i].c_str());
 		}
 	}
 }

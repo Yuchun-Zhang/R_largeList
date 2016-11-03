@@ -1,31 +1,31 @@
 #include "large_list.h"
 namespace large_list {
 
-	UnitObject::UnitObject (){
+	UnitObject::UnitObject () {
 		// Rprintf("Unit Object Initial Default \n");
 		PROTECT(r_object_ = R_NilValue);
-    }
-    UnitObject::~UnitObject() {
-    	// Rprintf("Unit Object Destruction \n");
-    	UNPROTECT_PTR(r_object_);
-    };
+	}
+	UnitObject::~UnitObject() {
+		// Rprintf("Unit Object Destruction \n");
+		UNPROTECT_PTR(r_object_);
+	};
 
-    UnitObject::UnitObject (SEXP r_object){
-    	// Rprintf("Unit Object Initial Given Value \n");
-    	PROTECT(r_object_ = r_object);
-    }
+	UnitObject::UnitObject (SEXP r_object) {
+		// Rprintf("Unit Object Initial Given Value \n");
+		PROTECT(r_object_ = r_object);
+	}
 
-    void UnitObject::set (SEXP r_object) {
-    	// Rprintf("Unit Object Set Value \n");
-    	UNPROTECT_PTR(r_object_);
-    	PROTECT(r_object_ = r_object);
-    }
+	void UnitObject::set (SEXP r_object) {
+		// Rprintf("Unit Object Set Value \n");
+		UNPROTECT_PTR(r_object_);
+		PROTECT(r_object_ = r_object);
+	}
 
-    SEXP UnitObject::get () {
-    	return(r_object_);
-    }
+	SEXP UnitObject::get () {
+		return (r_object_);
+	}
 
-	void UnitObject::check (){
+	void UnitObject::check () {
 		checkSEXP(r_object_);
 	}
 
@@ -40,7 +40,7 @@ namespace large_list {
 		writeSEXP(r_object_, connection_raw);
 		if (is_compress) {connection_raw.compress();}
 		connection_file.write(connection_raw.getRaw(), connection_raw.getLength(), 1);
-		return(connection_raw.getLength());
+		return (connection_raw.getLength());
 	}
 
 	void UnitObject::read (ConnectionFile & connection_file, int64_t serialized_length, bool is_compress) {
@@ -72,19 +72,19 @@ namespace large_list {
 
 	// --------------------------- SEXP functions -------------------------------------
 
-	//get the info of the object, e.g. level, is a object?, attribute, tag. 
-	 void UnitObject::getHeadInfo(SEXP _x, int &level, int &object, SEXP &attribute, SEXP &tag) {
-	  attribute = TYPEOF(_x) == CHARSXP ? R_NilValue : ATTRIB(_x);
-	  level = TYPEOF(_x) == CHARSXP ? LEVELS(_x) & 65502 : LEVELS(_x);
-	  tag = TYPEOF(_x) == LISTSXP ? TAG(_x) : R_NilValue;
-	  object = OBJECT(_x);
-	  return;
+	//get the info of the object, e.g. level, is a object?, attribute, tag.
+	void UnitObject::getHeadInfo(SEXP _x, int &level, int &object, SEXP & attribute, SEXP & tag) {
+		attribute = TYPEOF(_x) == CHARSXP ? R_NilValue : ATTRIB(_x);
+		level = TYPEOF(_x) == CHARSXP ? LEVELS(_x) & 65502 : LEVELS(_x);
+		tag = TYPEOF(_x) == LISTSXP ? TAG(_x) : R_NilValue;
+		object = OBJECT(_x);
+		return;
 	}
 
 	void UnitObject::writeLength(SEXP _x, Connection & connection) {
-	  	int length = LENGTH(_x);
-	  	connection.write((char *)&length, 4, 1);
-	  	return;
+		int length = LENGTH(_x);
+		connection.write((char *)&length, 4, 1);
+		return;
 	}
 
 	//read object length

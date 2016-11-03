@@ -48,13 +48,13 @@ namespace large_list {
 	public:
 		virtual void write(char *data, int nbytes, int nblocks) = 0;
 		virtual void read(char *data, int nbytes, int nblocks) = 0;
-		virtual void seekRead (int64_t position, int origin) = 0;
-		virtual void seekWrite (int64_t position, int origin) = 0;
+		virtual void seekRead(int64_t position, int origin) = 0;
+		virtual void seekWrite(int64_t position, int origin) = 0;
 	};
 
 	class ConnectionRaw : public Connection {
 	private:
-		char * raw_array_;
+		char *raw_array_;
 		int64_t read_pos_;
 		int64_t write_pos_;
 		int64_t length_;
@@ -72,17 +72,17 @@ namespace large_list {
 	};
 
 	class ConnectionFile : public Connection {
-	// This class handles all the file input/output staffs.
+		// This class handles all the file input/output staffs.
 	private:
-		std::FILE * fin_;
-	  std::FILE * fout_;
-		char * file_dir_name_;
+		std::FILE *fin_;
+		std::FILE *fout_;
+		char *file_dir_name_;
 		// these two functions will be called in the connect function.
 		void writeVersion();
 		void checkVersion();
 	public:
 		// constructors/destructors
-		ConnectionFile (SEXP file_name_sxp);
+		ConnectionFile(SEXP file_name_sxp);
 		~ConnectionFile();
 
 		// build a connection to the file.
@@ -95,17 +95,19 @@ namespace large_list {
 		void read(char *data, int nbytes, int nblocks);
 
 		// set/read the pointers.
-		void seekRead (int64_t position, int origin);
-		void seekWrite (int64_t position, int origin);
-		int64_t tellRead ();
-		int64_t tellWrite ();
+		void seekRead(int64_t position, int origin);
+		void seekWrite(int64_t position, int origin);
+		int64_t tellRead();
+		int64_t tellWrite();
 
 		// cut the file to shorter length.
 		void cutFile();
 
 		// move a data block.
-		void moveData (const int64_t &move_from_start_pos, const int64_t &move_from_end_pos,
-                   const int64_t &move_to_start_pos, const int64_t &move_to_end_pos);
+		void moveData(const int64_t &move_from_start_pos, 
+					  const int64_t &move_from_end_pos,
+		              const int64_t &move_to_start_pos, 
+		              const int64_t &move_to_end_pos);
 	};
 
 	class UnitObject {
@@ -114,8 +116,8 @@ namespace large_list {
 		SEXP r_object_;
 	public:
 		// constructors/destructors
-		UnitObject ();
-		UnitObject (SEXP r_object);
+		UnitObject();
+		UnitObject(SEXP r_object);
 		~UnitObject();	
 
 		// operations to the R object.
@@ -155,19 +157,19 @@ namespace large_list {
 		void setLength(int length);
 
 		// name bit
-		void writeNameBit (ConnectionFile & connection_file);
-		void readNameBit (ConnectionFile & connection_file);
-		void setNameBit (bool has_name);
-		bool getNameBit ();
+		void writeNameBit(ConnectionFile & connection_file);
+		void readNameBit(ConnectionFile & connection_file);
+		void setNameBit(bool has_name);
+		bool getNameBit();
 
 		// compress
-		void writeCompressBit (ConnectionFile & connection_file);
-		void readCompressBit (ConnectionFile & connection_file);
-		void setCompressBit (bool is_compress);
-		bool getCompressBit ();
+		void writeCompressBit(ConnectionFile & connection_file);
+		void readCompressBit(ConnectionFile & connection_file);
+		void setCompressBit(bool is_compress);
+		bool getCompressBit();
 
 		// other
-		void writeListHead (ConnectionFile & connection_file);
+		void writeListHead(ConnectionFile & connection_file);
 
 	};
 
@@ -182,7 +184,7 @@ namespace large_list {
 	public:
 		// constructors/destructors
 		ListObject(int length, bool is_compress = false);
-		ListObject (SEXP list, bool is_compress = false);
+		ListObject(SEXP list, bool is_compress = false);
 		ListObject();
 		~ListObject();
 
@@ -273,17 +275,26 @@ namespace large_list {
 		NamePositionTuple tuple_object_;
 		std::vector<int> index_;
 		// these two functions are called in the constructor
-		void fileBinarySearchByName(ConnectionFile &connection_file, int64_t &position, std::string name, int &index, int length);
-		void fileBinarySearchByPosition (ConnectionFile &connection_file, int64_t &position, int &index, int &length);
+		void fileBinarySearchByName(ConnectionFile &connection_file, 
+									int64_t &position, 
+									std::string name, 
+									int &index, 
+									int length);
+		void fileBinarySearchByPosition(ConnectionFile &connection_file, 
+										int64_t &position, 
+										int &index, 
+										int &length);
 		void processNumeric();
 	public:
 		// constructors/destructors
-		IndexObject(SEXP index, int list_length, ConnectionFile &connection_file, 
+		IndexObject(SEXP index, 
+					int list_length, 
+					ConnectionFile &connection_file, 
 					bool extend_to_list_length = true);
 		~IndexObject();
 
 		// remove invalid value of the index.
-		void removeInvalid ();
+		void removeInvalid();
 
 		// read in the position and names, i.e. the NamePositionTuple object
 		void readPair(ConnectionFile &connection_file);
@@ -308,7 +319,9 @@ namespace large_list {
 		int value_length_;
 	public:
 		// constructors/destructors
-		IndexWithValueObject(SEXP index, int list_length, ConnectionFile &connection_file, 
+		IndexWithValueObject(SEXP index, 
+							 int list_length, 
+							 ConnectionFile &connection_file, 
 							 bool extend_to_list_length = true);
 		~IndexWithValueObject();
 

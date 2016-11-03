@@ -1,7 +1,10 @@
 #include "large_list.h"
 namespace large_list {
 	// the constructor transfers the numeric/character R vetor to an integer vector index_.
-	IndexObject::IndexObject(SEXP index, int list_length, ConnectionFile &connection_file, bool extend_to_list_length) {
+	IndexObject::IndexObject(SEXP index, 
+							 int list_length, 
+							 ConnectionFile & connection_file, 
+							 bool extend_to_list_length) {
 		list_length_ = list_length;
 		if (TYPEOF(index) == NILSXP) {
 			length_ = list_length;
@@ -55,7 +58,11 @@ namespace large_list {
 	IndexObject::~IndexObject(){}
 
 	// search given name in the position-name pairs in the file.
-	void IndexObject::fileBinarySearchByName(ConnectionFile &connection_file, int64_t &position, std::string name, int &index, int length){
+	void IndexObject::fileBinarySearchByName(ConnectionFile & connection_file, 
+											 int64_t & position, 
+											 std::string name, 
+											 int & index, 
+											 int length){
 		int left = 0;
 		int right = length - 1;
 		int mid;
@@ -86,7 +93,10 @@ namespace large_list {
 	}
 
 	//given position, find the corresponding index.
-	void IndexObject::fileBinarySearchByPosition (ConnectionFile &connection_file, int64_t &position, int &index, int &length) {
+	void IndexObject::fileBinarySearchByPosition (ConnectionFile & connection_file,
+												  int64_t & position, 
+												  int & index, 
+												  int & length) {
 		int left = 0;
 		int right = length - 1;
 		int mid;
@@ -109,7 +119,7 @@ namespace large_list {
 	}
 
 	// deal with the given numeric index, do some preprocess.
-	void IndexObject::processNumeric(){
+	void IndexObject::processNumeric() {
 		bool has_positive = false;
 		bool has_negative = false;
 		bool has_zero = false;
@@ -155,8 +165,8 @@ namespace large_list {
 				if (current_number < index_[ptr_to_index_num]) {
 					res_num[ptr_to_res_num] = current_number;
 					current_number ++;
-					ptr_to_res_num ++;	
-					continue;				
+					ptr_to_res_num ++;
+					continue;
 				}
 				if (current_number > index_[ptr_to_index_num]) {
 					while (current_number > index_[ptr_to_index_num] && ptr_to_index_num < length_) {
@@ -180,7 +190,7 @@ namespace large_list {
 				index_[i] = index_[i] - 1;
 			}
 		}
-		// mark numbers > list_length_ 
+		// mark numbers > list_length_
 		for (int i = 0; i < length_; i++) {
 			if (index_[i] >= list_length_) {
 				index_[i] = R_NaInt;
@@ -203,7 +213,7 @@ namespace large_list {
 	}
 
 	// read the position-name pairs from the file.
-	void IndexObject::readPair(ConnectionFile &connection_file){
+	void IndexObject::readPair(ConnectionFile & connection_file) {
 		for (int i = 0 ; i < length_; i++) {
 			// Rprintf("Index is %d \n", index_[i]);
 			if (index_[i] != R_NaInt) {
@@ -247,16 +257,19 @@ namespace large_list {
 		return;
 	}
 
-	void IndexObject::print (int type){
+	void IndexObject::print (int type) {
 		Rprintf("index contents : \n");
 		for (int i = 0; i < length_; i ++) {
 			Rprintf("Index %d  \n", index_[i]);
-			if (type >1 ) {tuple_object_.print(i);}
+			if (type > 1) {tuple_object_.print(i);}
 		}
 	}
 
 	// ------------------- IndexWithValueObject --------------------
-	IndexWithValueObject::IndexWithValueObject(SEXP index, int list_length, ConnectionFile &connection_file, bool extend_to_list_length):
+	IndexWithValueObject::IndexWithValueObject (SEXP index, 
+											    int list_length, 
+											    ConnectionFile &connection_file, 
+											    bool extend_to_list_length):
 		IndexObject(index, list_length, connection_file, extend_to_list_length){}
 
 	IndexWithValueObject::~IndexWithValueObject (){}
@@ -275,8 +288,7 @@ namespace large_list {
 		return;
 	}
 
-	bool IndexWithValueObject::cmp (std::pair<int, int> const & a, std::pair<int, int> const & b)
-	{
+	bool IndexWithValueObject::cmp (std::pair<int, int> const & a, std::pair<int, int> const & b){
 		return a.first != b.first ?  a.first < b.first : a.second > b.second;
 	}
 
@@ -300,16 +312,16 @@ namespace large_list {
 
 	void IndexWithValueObject::removeDuplicate() {
 		if (length_ >= 2) {
-			for (int i = 1; i < length_; i ++) { 
-				if (index_pair_[i].first == index_pair_[i-1].first) {
-					index_pair_[i].second = index_pair_[i-1].second;
+			for (int i = 1; i < length_; i ++) {
+				if (index_pair_[i].first == index_pair_[i - 1].first) {
+					index_pair_[i].second = index_pair_[i - 1].second;
 				}
 			}
 		}
 		index_pair_.erase( std::unique( index_pair_.begin(), index_pair_.end() ), index_pair_.end() );
 		length_ = index_pair_.size();
 		index_.resize(length_);
-		for (int i = 0; i < length_; i ++) { 
+		for (int i = 0; i < length_; i ++) {
 			index_[i] = index_pair_[i].first;
 		}
 		return;
@@ -319,11 +331,11 @@ namespace large_list {
 		return index_pair_[index].second % value_length_;
 	}
 
-	int IndexWithValueObject::getIndex(int index){
+	int IndexWithValueObject::getIndex(int index) {
 		return index_pair_[index].first;
 	}
 
-	void IndexWithValueObject::print (){
+	void IndexWithValueObject::print () {
 		Rprintf("index contents : \n");
 		for (int i = 0; i < length_; i ++) {
 			Rprintf("Index %d  \n", index_pair_[i].first);
