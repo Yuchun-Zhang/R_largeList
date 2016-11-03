@@ -5,7 +5,7 @@ Functions to write or append a R list to a file, read or remove elements from it
 without restoring the whole list.
 
 ##How it works
-R objects will be serialized with an uncompressed non-ascii little-endian format, 
+R objects will be serialized with an uncompressed/ compressed non-ascii little-endian format, 
 which is similar to `saveRDS`. Two ordered tables are created at 
 the end of data for quick lookup, one for indices and one for names. Notice that, 
 all the names will be truncated to 16 characters. 
@@ -39,4 +39,5 @@ Some operators / functions are overloaded.
 * **\[<-.largeList:** If index provided, it modifies, appends or removes the elements with given indices, otherwise it appends value to list. 
 * **\[\[<-.largeList:** If index provided, it modifies, appends or removes the element with given index, otherwise it saves value to list. 
 * **length.largeList:** Get length of list stored in file.
+* **length<-.largeList:** Set length of list stored in file.
 * **names.largeList:** Get names of elements stored in file.
