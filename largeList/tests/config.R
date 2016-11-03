@@ -1,19 +1,22 @@
+library(futile.logger)
+
 mac_dir <- "~/Documents/Rtest/"
 win_dir <- "C:/Rtest"
 linux_dir <- "~/Documents/Rtest"
 
-rds_file_name <- "./ranListSmall.rds"
-llo_file_name <- "./ranListSmall.llo"
-repeat_time <- 10
+# rds_file_name <- "./ranListSmall.rds"
+# llo_file_name <- "./ranListSmall.llo"
+# repeat_time <- 10
+# original <- FALSE
+# compress <- TRUE
+
+rds_file_name <- "./ranListMid.rds"
+llo_file_name <- "./ranListMid.llo"
+repeat_time <- 50
 original <- FALSE
 compress <- TRUE
 
-# rds_file_name <- "./ranListMid.rds"
-# llo_file_name <- "./ranListMid.llo"
-# repeat_time <- 20
-# original <- TRUE
-# compress <- FALSE
-
-## TODO
-# (1) protection stack overflow if there are too many elements in the list
-# (2) 
+switch(Sys.info()['sysname'],
+       "Darwin" = {setwd(mac_dir)},
+       "Windows" = {setwd(win_dir)},
+       "Linux" = {setwd(linux_dir)})

@@ -5,12 +5,6 @@ context("error")
 
 test_that("multiplication works", {
   source(paste0(path.package("largeList"), "/tests/config.R"))
-  switch(Sys.info()['sysname'],
-         "Darwin" = {setwd(mac_dir)},
-         "Windows" = {setwd(win_dir)},
-         "Linux" = {setwd(linux_dir)})
-  library(futile.logger)
-  
   if (original) {
     ####
     flog.info("Test : object is not list")

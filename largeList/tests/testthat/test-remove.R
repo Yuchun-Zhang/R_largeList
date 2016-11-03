@@ -5,12 +5,6 @@ context("remove")
 
 test_that("remove from list", {
   source(paste0(path.package("largeList"), "/tests/config.R"))
-  switch(Sys.info()['sysname'],
-         "Darwin" = {setwd(mac_dir)},
-         "Windows" = {setwd(win_dir)},
-         "Linux" = {setwd(linux_dir)})
-  library(futile.logger)
-  
   flog.info("read random list file")
   data <- readRDS(rds_file_name)
   names(data) <- as.character(1:length(data))

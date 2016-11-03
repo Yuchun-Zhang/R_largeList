@@ -5,12 +5,6 @@ context("extrem_case")
 
 test_that("extrem cases", {
   source(paste0(path.package("largeList"), "/tests/config.R"))
-  switch(Sys.info()['sysname'],
-         "Darwin" = {setwd(mac_dir)},
-         "Windows" = {setwd(win_dir)},
-         "Linux" = {setwd(linux_dir)})
-  library(futile.logger)
-  
   flog.info("test extrem cases : read")
   l <- as.list(1:10)
   names(l) <- LETTERS[1:10]
