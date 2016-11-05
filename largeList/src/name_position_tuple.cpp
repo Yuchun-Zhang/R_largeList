@@ -190,5 +190,5 @@ namespace large_list {
 	bool NamePositionTuple::cmp (std::tuple<int64_t, int64_t, std::string>  const & a,
 	                             std::tuple<int64_t, int64_t, std::string>  const & b) {
 		return std::get<2>(a) != std::get<2>(b) ?  std::get<2>(a) < std::get<2>(b) : std::get<0>(a) < std::get<0>(b);
-	};
+	}
 }

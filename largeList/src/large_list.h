@@ -354,5 +354,5 @@ namespace large_list {
 	extern "C" SEXP checkFileAndVersionExternal(SEXP file);
 	extern "C" SEXP checkList(SEXP object);
 	extern "C" SEXP largeListTest();
-};
+}
 #endif //LARGE_LIST

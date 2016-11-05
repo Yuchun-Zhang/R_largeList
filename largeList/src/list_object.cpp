@@ -179,7 +179,7 @@ namespace large_list {
 
 	std::string ListObject::getName(int index) {
 		return (names_[index]);
-	};
+	}
 
 	// turn the ListObject to a list object in R.
 	SEXP ListObject::assembleRList () {

@@ -214,11 +214,11 @@ namespace large_list {
 		length_ = length;
 		read_pos_ = 0;
 		write_pos_ = 0;
-	};
+	}
 	
 	ConnectionRaw::~ConnectionRaw() {
 		std::free(raw_array_);
-	};
+	}
 
 	void ConnectionRaw::seekRead(int64_t position, int origin) {
 		int64_t origin_position;
@@ -332,7 +332,8 @@ namespace large_list {
 	char* ConnectionRaw::getRaw() {
 		return raw_array_;
 	}
+
 	int64_t ConnectionRaw::getLength() {
 		return length_;
-	};
+	}
 }

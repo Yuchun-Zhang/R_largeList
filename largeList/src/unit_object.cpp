@@ -5,10 +5,11 @@ namespace large_list {
 		// Rprintf("Unit Object Initial Default \n");
 		PROTECT(r_object_ = R_NilValue);
 	}
+
 	UnitObject::~UnitObject() {
 		// Rprintf("Unit Object Destruction \n");
 		UNPROTECT_PTR(r_object_);
-	};
+	}
 
 	UnitObject::UnitObject (SEXP r_object) {
 		// Rprintf("Unit Object Initial Given Value \n");
