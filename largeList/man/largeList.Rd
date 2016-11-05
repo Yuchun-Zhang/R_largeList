@@ -6,14 +6,14 @@
 \alias{largeList-package}
 \title{largeList: Serialization Interface for Large List Objects}
 \description{
-Functions to write or append a R list to a file, read or remove elements from it 
+Functions to write or append a R list to a file, read, modify or remove elements from it 
 without restoring the whole list.
 }
 \details{
-R objects will be serialized with an uncompressed non-ascii little-endian format, 
-which is similar to \code{\link{saveRDS}}. Two ordered tables are created at 
-the end of data for quick lookups, one for indices and one for names. Notice that, 
-all the names will be truncated to 16 characters. \cr
+R objects will be serialized with an uncompressed/ compressed (zlib, default level) 
+non-ascii little-endian format, which is similar to \code{\link{saveRDS}}. 
+Two ordered tables are created at the end of data for quick lookups, one for indices 
+and one for element names. Notice that, all the names will be truncated to 16 characters. \cr
 
 Given indices or names of elements, positions will be directly extracted or extracted 
 via binary search within the name-position table. Then required elements are located and 
@@ -26,7 +26,7 @@ In the current version, only basic data types are supported, including NULL, int
 numeric, character, complex, raw, logic, factor, list, matrix, array and data.frame. 
 Types like function, data.table are not supported. \cr
 
-The supported maximum size of R objects is \code{2^31 -1}, the supported maximum file 
+Supported maximum size of R objects is \code{2^31 -1}, supported maximum file 
 size is \code{2^63 -1} bytes. \cr
 
 Following functions are provided: 
@@ -44,12 +44,16 @@ Some operators / functions are overloaded.
 \item{\code{\link{getList}}} Bind a R object with a list file.
 \item{\code{\link{[.largeList}}} Get elements.
 \item{\code{\link{[[.largeList}}} Get element.
+\item{\code{\link{$.largeList}}} Get element, same as \code{\link{[[.largeList}}, no partial matching.
 \item{\code{\link{[<-.largeList}}} If index provided, it modifies, appends or removes the elements
  with given indices, otherwise it appends value to list. 
 \item{\code{\link{[[<-.largeList}}}  If index provided, it modifies, appends or removes the element
  with given index, otherwise it saves value to list. 
+\item{\code{\link{$<-.largeList}}} Same as \code{\link{[[<-.largeList}}, no partial matching.
 \item{\code{\link{length.largeList}}} Get length of list stored in file.
+\item{\code{\link{length<-.largeList}}} Set length of list stored in file.
 \item{\code{\link{names.largeList}}} Get names of elements stored in file.
+\item{\code{\link{names<-.largeList}}} Set names of elements stored in file.
 }
 }
 

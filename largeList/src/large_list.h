@@ -14,8 +14,10 @@
 #endif
 
 #include <stdint.h>
+#include <stdexcept>
 #include <math.h>
 #include <fstream>
+#include <tuple>
 #include <vector>
 #include <algorithm>
 #include <sstream>

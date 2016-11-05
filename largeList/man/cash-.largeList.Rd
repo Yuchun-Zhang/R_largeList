@@ -4,12 +4,12 @@
 \alias{$.largeList}
 \title{Overload of operator $.}
 \usage{
-\method{$}{largeList}(x, index = NULL)
+\method{$}{largeList}(x, index)
 }
 \arguments{
 \item{x}{A largeList object created by \code{\link{getList}}.}
 
-\item{index}{A numeric vector or a character vecter of length 1.}
+\item{index}{A character vector of length 1.}
 }
 \value{
 A R object.
@@ -19,7 +19,7 @@ Overload of operator $.
 }
 \details{
 It behaviours different from the list object in R. Here \code{x$name} is equivalent to
-\code{x[["name"]]}, NO partial matching.
+\code{x[["name"]]}, \strong{no partial matching}.
 }
 \examples{
 largelist_object <- getList("example.llo", truncate = TRUE)
@@ -28,6 +28,6 @@ largelist_object$B ## get 2
 largelist_object$A ## get NULL, not 1 from "AA" since no partial matching happens.
 }
 \seealso{
-\code{\link{largeList}}
+\code{\link{[[.largeList}} \code{\link{largeList}}
 }
 

@@ -9,12 +9,12 @@ modifyNameInList(file, index, name)
 \arguments{
 \item{file}{Name of file.}
 
-\item{index}{A numeric vector.}
+\item{index}{A numeric or logical vector.}
 
 \item{name}{A character vector consisting replacement names.}
 }
 \value{
-\code{TRUE} if no error occurs.
+invisible \code{TRUE} if no error occurs.
 }
 \description{
 Modify names of elements in a list file.

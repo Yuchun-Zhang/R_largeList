@@ -1,11 +1,11 @@
 Package: largeList
 Type: Package
 Title: Serialization Interface for Large List Objects
-Version: 0.4.0
-Date: 2016-10-30
+Version: 0.3.0
+Date: 2016-11-05
 Author: Yuchun Zhang 
 Maintainer: Yuchun Zhang <yczhangvrc@gmail.com>
-Depends: R (>= 3.2.0), utils
+Depends: R (>= 3.2.0)
 Description: Functions to write or append a R list to a file, as well as read, remove, modify elements from it without restoring the whole list.
 License: GPL (>= 2)
 RoxygenNote: 5.0.1

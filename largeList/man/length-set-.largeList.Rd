@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{A largeList object created by \code{\link{getList}}.}
 
-\item{value}{A number}
+\item{value}{An integer number}
 }
 \description{
 Set the length of list stored in file.

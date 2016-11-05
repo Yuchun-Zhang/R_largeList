@@ -9,19 +9,19 @@ modifyInList(file, index, object)
 \arguments{
 \item{file}{Name of file.}
 
-\item{index}{A numeric vector or a character vecter.}
+\item{index}{A numeric, logical or character vector.}
 
 \item{object}{A list consisting of replacement values.}
 }
 \value{
-\code{TRUE} if no error occurs.
+invisible \code{TRUE} if no error occurs.
 }
 \description{
 Modify elements in a list file.
 }
 \details{
-It modifies elements with given indices by replacement values provided in parameter object. If the length 
-of replacement values is shorter than the length of indices, values will be used circularly. This function may 
+It modifies elements with given indices by replacement values provided in parameter object. If length 
+of replacement values is shorter than length of indices, values will be used circularly. This function may 
 relocate all the data in the stored file, thus can be very slow! Please consider to call this
 function batchwise instead of one by one.
 }

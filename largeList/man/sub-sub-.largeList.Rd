@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{A largeList object created by \code{\link{getList}}.}
 
-\item{index}{A numeric vector or a character vecter of length 1.}
+\item{index}{A numeric or character vector of length 1.}
 }
 \value{
 A R object.

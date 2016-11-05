@@ -73,7 +73,6 @@ test_that("Append == FALSE", {
 
 
 test_that("Append == TRUE", {
-  
   flog.info("read random list file")
   data <- readRDS(rds_file_name)
   names(data) <- as.character(1:length(data))

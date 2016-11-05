@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{A largeList object created by \code{\link{getList}}.}
 
-\item{index}{\code{NULL}, a numeric vector or a character vecter.}
+\item{index}{\code{NULL} or a numeric, character vector with length 1.}
 
 \item{value}{\code{NULL}, a vector or a list.}
 }

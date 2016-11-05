@@ -9,10 +9,10 @@ removeFromList(file, index)
 \arguments{
 \item{file}{Name of file.}
 
-\item{index}{A numeric vector or a character vecter.}
+\item{index}{A numeric, logical or character vector.}
 }
 \value{
-\code{TRUE} if no error occurs.
+invisible \code{TRUE} if no error occurs.
 }
 \description{
 Remove elements from a list file.
@@ -20,7 +20,7 @@ Remove elements from a list file.
 \details{
 It removes elements with given indices or names. This function may relocate all the data 
 in the stored file, thus can be very slow! Please consider to call this function 
-batchwise instead of one by one.
+batchwise instead of one index by one index.
 }
 \examples{
 list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))

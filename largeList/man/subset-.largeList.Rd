@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{A largeList object created by \code{\link{getList}}.}
 
-\item{index}{\code{NULL}, a numeric vector or a character vecter.}
+\item{index}{\code{NULL} or a numeric, logical, character vector.}
 
 \item{value}{\code{NULL}, a vector or a list.}
 }
@@ -17,8 +17,8 @@
 Overload of operator []<-.
 }
 \details{
-It behaviours the same as a normal list object. If index is not provided, elements in
-value will be appended to the list file. If value is \code{NULL}, elements with given indices 
+It behaviours the same as a normal list object. If \code{index} is not provided, elements in
+value will be appended to the list file. If \code{value} is \code{NULL}, elements with given indices 
 will be removed.
 }
 \examples{

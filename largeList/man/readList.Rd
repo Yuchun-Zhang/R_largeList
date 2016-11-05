@@ -9,7 +9,7 @@ readList(file, index = NULL)
 \arguments{
 \item{file}{Name of file.}
 
-\item{index}{\code{NULL}, a numeric vector or a character vecter.}
+\item{index}{\code{NULL} or a numeric, character, logical vector.}
 }
 \value{
 A list object.
@@ -18,10 +18,10 @@ A list object.
 Get elements from a list file.
 }
 \details{
-If no index provided, the whole list will be read. Given index could be a numeric (integer) 
-vector or a character vector representing the names. If there exist more then one elements 
-corresponding to a given name, , the first matched one will be returned. If there are no elements 
-with given name, \code{NULL} will be returned. \cr
+If no indices provided, the whole list will be read. Given index could be a numeric (integer) 
+vector, a logical vector or a character vector representing the names. If there exist more then one elements 
+corresponding to a given name, the first matched will be returned (not necessary to be the first
+one in index order). If there are no elements with given name, \code{NULL} will be returned. \cr
 Files created by \code{\link{saveRDS}} can't be read.
 }
 \examples{

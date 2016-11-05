@@ -4,10 +4,11 @@
 #' Create a R object of class "largeList" and bind it with a file.
 #' If the file exists, the R object will be bound to the file.
 #' If the file does not exist or \code{truncate == TRUE}, an empty list will be written into 
-#' the given file and then bind it.
+#' the given file and then bind it with R object. Later the R object can be used as a normal
+#' list and all the manipulation will be done within the file binding to it.
 #' @param file Name of file 
-#' @param compress \code{TRUE/FALSE} Use compression for file elements or not.
-#' @param verbose \code{TRUE/FALSE} Extra info
+#' @param compress \code{TRUE/FALSE} Use compression for elements or not.
+#' @param verbose \code{TRUE/FALSE} Print extra info
 #' @param truncate \code{TRUE/FALSE} Truncate the file or not.
 #' @return A R object of class "largeList"
 #' @seealso \code{\link{largeList}}
@@ -36,13 +37,14 @@ getList <- function(file, compress = TRUE, verbose = FALSE, truncate = FALSE){
 #' Overload of operator [].
 #' @details It behaviours the same as a normal list object.
 #' @param x A largeList object created by \code{\link{getList}}.
-#' @param index  A numeric vector or a character vecter.
+#' @param index  A numeric, logical or character vector.
 #' @return A list
 #' @seealso \code{\link{largeList}} 
 #' @examples
 #' largelist_object <- getList("example.llo", truncate = TRUE)
 #' largelist_object[[]] <- list("A" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
 #' largelist_object[c(1, 2)] ## get list("A" = 1, "B" = 2)
+#' largelist_object[c(TRUE, FALSE, TRUE)] ## get list("A" = 1, "C" = 3)
 #' largelist_object[c("A", "C")] ## get list("A" = 1, "C" = 3)
 #' @export
 "[.largeList" <- function(x, index = NULL) {
@@ -53,7 +55,7 @@ getList <- function(file, compress = TRUE, verbose = FALSE, truncate = FALSE){
 #' Overload of operator [[]].
 #' @details It behaviours the same as a normal list object.
 #' @param x A largeList object created by \code{\link{getList}}.
-#' @param index  A numeric vector or a character vecter of length 1.
+#' @param index  A numeric or character vector of length 1.
 #' @return A R object.
 #' @examples
 #' largelist_object <- getList("example.llo", truncate = TRUE)
@@ -77,28 +79,28 @@ getList <- function(file, compress = TRUE, verbose = FALSE, truncate = FALSE){
 
 #' Overload of operator $.
 #' @details It behaviours different from the list object in R. Here \code{x$name} is equivalent to
-#' \code{x[["name"]]}, NO partial matching.
+#' \code{x[["name"]]}, \strong{no partial matching}.
 #' @param x A largeList object created by \code{\link{getList}}.
-#' @param index  A numeric vector or a character vecter of length 1.
+#' @param index A character vector of length 1.
 #' @return A R object.
 #' @examples
 #' largelist_object <- getList("example.llo", truncate = TRUE)
 #' largelist_object[[]] <- list("AA" = 1, "B" = 2, "C" = 3)  ## assign list to the list file
 #' largelist_object$B ## get 2
 #' largelist_object$A ## get NULL, not 1 from "AA" since no partial matching happens.
-#' @seealso \code{\link{largeList}} 
+#' @seealso \code{\link{[[.largeList}} \code{\link{largeList}} 
 #' @export
-"$.largeList" <- function(x, index = NULL) {
+"$.largeList" <- function(x, index) {
   return(x[[index]])  
 }
 
 #' Overload of operator []<-.
-#' @details It behaviours the same as a normal list object. If index is not provided, elements in
-#' value will be appended to the list file. If value is \code{NULL}, elements with given indices 
+#' @details It behaviours the same as a normal list object. If \code{index} is not provided, elements in
+#' value will be appended to the list file. If \code{value} is \code{NULL}, elements with given indices 
 #' will be removed.
 #' 
 #' @param x A largeList object created by \code{\link{getList}}.
-#' @param index  \code{NULL}, a numeric vector or a character vecter.
+#' @param index  \code{NULL} or a numeric, logical, character vector.
 #' @param value \code{NULL}, a vector or a list.
 #' @seealso \code{\link{largeList}}
 #' @examples
@@ -179,7 +181,7 @@ getList <- function(file, compress = TRUE, verbose = FALSE, truncate = FALSE){
 #' will be removed.
 #' 
 #' @param x A largeList object created by \code{\link{getList}}.
-#' @param index  \code{NULL}, a numeric vector or a character vecter.
+#' @param index  \code{NULL} or a numeric, character vector with length 1.
 #' @param value \code{NULL}, a vector or a list.
 #' @seealso \code{\link{largeList}} 
 #' @examples
@@ -212,7 +214,11 @@ getList <- function(file, compress = TRUE, verbose = FALSE, truncate = FALSE){
 
 #' Overload of operator $<-.
 #' @details x$A <- 1 is equivalent to x[["A"]] <- 1
-#' @aliases "[[<-.largeList"
+#' @param x A largeList object created by \code{\link{getList}}.
+#' @param index  \code{NULL}, a numeric or character vector with lenght 1.
+#' @param value \code{NULL}, a vector or a list.
+#' @seealso  \code{\link{[[<-.largeList}} \code{\link{largeList}} 
+#' @export
 "$<-.largeList" <- function(x, index, value){
   x[[index]] <- value
   return(invisible(x))
@@ -257,7 +263,7 @@ length.largeList <- function(x) {
 
 #' Overload of function length<-.
 #' @param x A largeList object created by \code{\link{getList}}.
-#' @param value A number
+#' @param value An integer number
 #' @description Set the length of list stored in file.
 #' @seealso \code{\link{largeList}} 
 #' @examples

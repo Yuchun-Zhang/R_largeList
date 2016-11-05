@@ -163,7 +163,11 @@ namespace large_list {
 					Sleep(RETRYDELAY);
 					continue;
 				} else {
-					throw std::runtime_error("file truncation failed (Windows), get file handle error. Error Code %d .", last_error);
+				  char error_info[200];
+				  sprintf(error_info, 
+                  "file truncation failed (Windows), get file handle error. Error Code %ld .", 
+                  last_error);
+					throw std::runtime_error(error_info);
 				}
 			}
 			break;
@@ -175,7 +179,11 @@ namespace large_list {
 		SetFilePointerEx(fh, file_length_w, NULL, 0);
 		if (SetEndOfFile(fh) == 0) {
 			DWORD last_error = GetLastError();
-			throw std::runtime_error("file truncation failed (Windows), Error Code %d .", last_error);
+		  char error_info[200];
+		  sprintf(error_info, 
+            "file truncation failed (Windows), Error Code %ld .", 
+            last_error);
+		  throw std::runtime_error(error_info);
 		}
 		CloseHandle(fh);
 #endif
@@ -214,10 +222,12 @@ namespace large_list {
 
 	void ConnectionRaw::seekRead(int64_t position, int origin) {
 		int64_t origin_position;
+	  origin_position = 0;
 		switch (origin) {
 			case SEEK_SET : {origin_position = 0; break;}
 			case SEEK_END : {origin_position = length_; break;}
 			case SEEK_CUR : {origin_position = read_pos_; break;}
+		  default : {origin_position = 0; break;}
 		}
 		read_pos_ = origin_position + position;
 		return;
@@ -225,10 +235,12 @@ namespace large_list {
 
 	void ConnectionRaw::seekWrite(int64_t position, int origin) {
 		int64_t origin_position;
+	  origin_position = 0;
 		switch (origin) {
 			case SEEK_SET : {origin_position = 0; break;}
 			case SEEK_END : {origin_position = length_; break;}
 			case SEEK_CUR : {origin_position = write_pos_; break;}
+		  default : {origin_position = 0; break;}
 		}
 		write_pos_ = origin_position + position;
 		return;

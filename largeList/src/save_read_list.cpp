@@ -179,10 +179,10 @@ extern "C" SEXP checkList(SEXP object) {
 }
 
 extern "C" SEXP largeListTest() {
-    int a[2] = {1, 0};
-    int index = 2;
-    int b = a[index];
-    Rprintf("wrong: %d", b);
+    // int a[2] = {1, 0};
+    // int index = 2;
+    // int b = a[index];
+    // Rprintf("wrong: %d", b);
     return (ScalarLogical(1));
 }
 
