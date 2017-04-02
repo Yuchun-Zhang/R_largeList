@@ -103,6 +103,8 @@ extern "C" SEXP readList(SEXP file, SEXP index) {
         if (index_object.getLength() > 1000) {
             if ((int)(i*100/index_object.getLength()) != (int)((i+1)*100/index_object.getLength())) {
                 Rprintf("\rReading Data %d%% ", (int)(i*100/index_object.getLength()) + 1);
+                R_FlushConsole(); 
+                R_CheckUserInterrupt();
             }
         }
 
