@@ -96,8 +96,16 @@ extern "C" SEXP readList(SEXP file, SEXP index) {
     list_object_to_output.readCompressBit(connection_file);
 
     // list_object_to_output.print();
+    clock_t clock_begin = clock();
 
     for (int i = 0; i < index_object.getLength(); i ++) {
+        // Print progress to console
+        if (index_object.getLength() > 1000) {
+            if ((int)(i*100/index_object.getLength()) != (int)((i+1)*100/index_object.getLength())) {
+                Rprintf("\rReading Data %d%% ", (int)(i*100/index_object.getLength()) + 1);
+            }
+        }
+
         if (index_object.getIndex(i) != R_NaInt) {
             connection_file.seekRead(index_object.getPosition(i), SEEK_SET);
             // Rprintf("Reading Object %d \n", i);
@@ -110,6 +118,12 @@ extern "C" SEXP readList(SEXP file, SEXP index) {
         list_object_to_output.setName(index_object.getName(i), i);
     }
     // list_object_to_output.print();
+
+    // Print progress to console
+    clock_t clock_end = clock();
+    if (index_object.getLength() > 1000) {
+        Rprintf("\rReading Data Finished in %f Seconds!\n", (double)(clock_end - clock_begin) / CLOCKS_PER_SEC);
+    }
 
     // Rprintf("Assembling \n");
     SEXP output_list = PROTECT(list_object_to_output.assembleRList());

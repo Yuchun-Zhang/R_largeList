@@ -14,6 +14,7 @@
 #endif
 
 #include <stdint.h>
+#include <time.h>
 #include <stdexcept>
 #include <math.h>
 #include <fstream>
@@ -28,7 +29,7 @@
 
 #define BYTE unsigned char
 #define NAMELENGTH 16
-#define CURRENT_VERSION ((0<<8) + (3<<4) + 0)
+#define CURRENT_VERSION ((0<<8) + (3<<4) + 1)
 #define READABLE_VERSION ((0<<8) + (2<<4) + 1)
 #define LIST_HEAD_POSITION 26
 #define LENGTH_POSITION 30
