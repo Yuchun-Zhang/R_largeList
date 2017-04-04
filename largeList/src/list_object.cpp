@@ -201,10 +201,13 @@ namespace large_list {
 
 	// get the serialized lengths of all objects in the list.
 	void ListObject::calculateSerializedLength () {
+		large_list::progressReporter calculate_reporter;
 		for (int i = 0; i < length_; i ++) {
 			UnitObject unit_object(VECTOR_ELT(r_list_, i));
 			serialized_length_[i] = unit_object.calculateSerializedLength(is_compress_);
 			// Rprintf("LENGTH %3.0ld \n", serialized_length_[i]);
+			// Print progress to console
+        	calculate_reporter.reportProgress(i, length_, "Calculate Serialized Length");
 		}
 		return;
 	}

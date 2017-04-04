@@ -15,6 +15,7 @@
 
 #include <stdint.h>
 #include <time.h>
+#include <cstring>
 #include <stdexcept>
 #include <math.h>
 #include <fstream>
@@ -342,6 +343,19 @@ namespace large_list {
 		int getIndex(int index);
 		void print();
 		static bool cmp (std::pair<int, int> const & a, std::pair<int, int> const & b);
+	};
+
+	class progressReporter{
+	private:
+		clock_t clock_begin_;
+		clock_t clock_end_;
+		int estimated_sec_times_;
+	public:
+		bool is_long_time_;
+		progressReporter();
+		void reportProgress(int, int, std::string);
+		void reportFinish(std::string);
+		void clearLine();
 	};
 
 	extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append, SEXP compress);

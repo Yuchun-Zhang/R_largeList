@@ -38,3 +38,10 @@ With overloads of operators, list objects stored in files can be manipulated as 
 * **length<-.largeList:** Set length of list stored in file.
 * **names.largeList:** Get names of elements stored in file.
 * **names<-.largeList:** Set names of elements stored in file.
+
+# Change Log
+
+## v0.3.1
+* [u] Improve algorithm for new position calculations in function removeFromList and modifyInList.
+* [+] Add progress output to console if estimated processing time > 5s in function saveList, readList, removeFromList and modifyInList.
+* [f] Add #include <cstring> to largeList.h for function std::memcpy in old environments.

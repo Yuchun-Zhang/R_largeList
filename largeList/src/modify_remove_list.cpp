@@ -1,6 +1,9 @@
 #include "large_list.h"
 
 extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
+
+    large_list::progressReporter general_reporter;
+
     //check parameters
     if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("file should be a charater vector of length 1.");
     if (TYPEOF(object) != VECSXP) error("object is not a list.");
@@ -39,26 +42,44 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
 
     // get new pair.
     large_list::NamePositionTuple pair_new(pair_origin);
-    for (int i = 0; i < index_object.getLength(); i ++) {
-        for (int j = index_object.getIndex(i) + 1; j < list_object_origin.getLength(); j++) {
-            // Rprintf("i %d, j %d, \n", i, j);
-            // pair_new.print(j);
-            // pair_origin.print(index_object.getIndex(i));
-            // pair_origin.print(index_object.getIndex(i) +1);
-            pair_new.setPosition(pair_new.getPosition(j) + pair_origin.getPosition(index_object.getIndex(i)) -
-                                 pair_origin.getPosition(index_object.getIndex(i) + 1) +
-                                 list_object_to_save.getSerializedLength(index_object.getValueIndex(i)), j);
-            //new_positions[j] += pair[index_num[i]].second - pair[index_num[i] + 1].second;
+    int i = 0;
+    int j = 0;
+    int64_t offset = 0;
+    for(j = 0; j < list_object_origin.getLength() - 1; j++) {
+        if (j == index_object.getIndex(i)) {
+            offset += pair_origin.getPosition(index_object.getIndex(i)) - 
+                pair_origin.getPosition(index_object.getIndex(i) + 1) + 
+                list_object_to_save.getSerializedLength(index_object.getValueIndex(i));
+            if (i < index_object.getLength()) i++;
         }
-        pair_new.setLastPosition(pair_new.getLastPosition() + pair_origin.getPosition(index_object.getIndex(i)) -
-                                 pair_origin.getPosition(index_object.getIndex(i) + 1) +
-                                 list_object_to_save.getSerializedLength(index_object.getValueIndex(i)));
+        if (offset != 0) {
+            pair_new.setPosition(pair_new.getPosition(j + 1) + offset, j + 1);
+        }
     }
+    pair_new.setLastPosition(pair_new.getLastPosition() + offset);    
+
+    // deprecated new position caculation due to very low efficiency.
+    // for (int i = 0; i < index_object.getLength(); i ++) {
+    //     for (int j = index_object.getIndex(i) + 1; j < list_object_origin.getLength(); j++) {
+    //         // Rprintf("i %d, j %d, \n", i, j);
+    //         // pair_new.print(j);
+    //         // pair_origin.print(index_object.getIndex(i));
+    //         // pair_origin.print(index_object.getIndex(i) +1);
+    //         pair_new.setPosition(pair_new.getPosition(j) + pair_origin.getPosition(index_object.getIndex(i)) -
+    //                              pair_origin.getPosition(index_object.getIndex(i) + 1) +
+    //                              list_object_to_save.getSerializedLength(index_object.getValueIndex(i)), j);
+    //         //new_positions[j] += pair[index_num[i]].second - pair[index_num[i] + 1].second;
+    //     }
+    //     pair_new.setLastPosition(pair_new.getLastPosition() + pair_origin.getPosition(index_object.getIndex(i)) -
+    //                              pair_origin.getPosition(index_object.getIndex(i) + 1) +
+    //                              list_object_to_save.getSerializedLength(index_object.getValueIndex(i)));      
+    // }
 
     // move the date
+    large_list::progressReporter moving_reporter;
     int64_t first_move_pos = -1;
     for (int i = 0; i < list_object_origin.getLength(); i ++) {
-        //Rprintf("index %d first_move_pos %3.0lf \n",i, (double)first_move_pos);
+        // Rprintf("index %d first_move_pos %3.0lf \n",i, (double)first_move_pos);
         if (pair_new.getPosition(i) == pair_origin.getPosition(i) && first_move_pos == -1) continue;
         if (pair_new.getPosition(i) < pair_origin.getPosition(i)) {
             connection_file.moveData(pair_origin.getPosition(i), pair_origin.getPosition(i + 1),
@@ -78,14 +99,21 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
             }
             first_move_pos = -1;
         }
+
+        // Print progress to console
+        moving_reporter.reportProgress(i, list_object_origin.getLength(), "Moving Data");
     }
     // Rprintf("Move Finished \n");
 
 
     //write Object
+    large_list::progressReporter writing_reporter;
     for (int i = 0; i < index_object.getLength(); i ++) {
         connection_file.seekWrite(pair_new.getPosition(index_object.getIndex(i)), SEEK_SET);
         list_object_to_save.write(connection_file, index_object.getValueIndex(i));
+
+        // Print progress to console
+        writing_reporter.reportProgress(i, index_object.getLength(), "Writing Data");
     }
 
     // Rprintf("Write Object Finished \n");
@@ -100,6 +128,10 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
 
     //cut file
     connection_file.cutFile();
+
+    // Print progress to console
+    general_reporter.is_long_time_ = TRUE;
+    general_reporter.reportFinish("Modifying Data");
 
     // Rprintf("Cut file Finished \n");
     return (ScalarLogical(1));
@@ -172,6 +204,7 @@ extern "C" SEXP modifyNameInList(SEXP file, SEXP index, SEXP names) {
 }
 
 extern "C" SEXP removeFromList(SEXP file, SEXP index) {
+
     //check parameters
     if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("file should be a charater vector of length 1.");
     if (TYPEOF(index) != INTSXP &&  TYPEOF(index) != REALSXP && TYPEOF(index) != LGLSXP && TYPEOF(index) != STRSXP)
@@ -195,23 +228,43 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index) {
     pair_origin.read(connection_file);
     pair_origin.readLastPosition(connection_file);
 
+    //Rprintf("get new pair started!\n");
     // get new pair.
     large_list::NamePositionTuple pair_new(pair_origin);
-    for (int i = 0; i < index_object.getLength(); i ++) {
-        for (int j = index_object.getIndex(i) + 1; j < list_object_origin.getLength(); j++) {
-            // Rprintf("i %d, j %d, \n", i, j);
-            // pair_new.print(j);
-            // pair_origin.print(index_object.getIndex(i));
-            // pair_origin.print(index_object.getIndex(i) +1);
-            pair_new.setPosition(pair_new.getPosition(j) + pair_origin.getPosition(index_object.getIndex(i)) -
-                                 pair_origin.getPosition(index_object.getIndex(i) + 1), j);
-            //new_positions[j] += pair[index_num[i]].second - pair[index_num[i] + 1].second;
+    int i = 0;
+    int j = 0;
+    int64_t offset = 0;
+    for(j = 0; j < list_object_origin.getLength() - 1; j++) {
+        if (j == index_object.getIndex(i)) {
+            offset += pair_origin.getPosition(index_object.getIndex(i)) - 
+                pair_origin.getPosition(index_object.getIndex(i) + 1);
+            if (i < index_object.getLength()) i++;
         }
-        pair_new.setLastPosition(pair_new.getLastPosition() + pair_origin.getPosition(index_object.getIndex(i)) -
-                                 pair_origin.getPosition(index_object.getIndex(i) + 1));
+        if (offset != 0) {
+            pair_new.setPosition(pair_new.getPosition(j + 1) + offset, j + 1);
+        }
     }
+    pair_new.setLastPosition(pair_new.getLastPosition() + offset);    
 
+
+    // deprecated new position caculation due to very low efficiency.
+    // for (int i = 0; i < index_object.getLength(); i ++) {
+    //     for (int j = index_object.getIndex(i) + 1; j < list_object_origin.getLength(); j++) {
+    //         Rprintf("i %d, j %d, \n", i, j);
+    //         // pair_new.print(j);
+    //         // pair_origin.print(index_object.getIndex(i));
+    //         // pair_origin.print(index_object.getIndex(i) +1);
+    //         pair_new.setPosition(pair_new.getPosition(j) + pair_origin.getPosition(index_object.getIndex(i)) -
+    //                              pair_origin.getPosition(index_object.getIndex(i) + 1), j);
+    //         //new_positions[j] += pair[index_num[i]].second - pair[index_num[i] + 1].second;
+    //     }
+    //     pair_new.setLastPosition(pair_new.getLastPosition() + pair_origin.getPosition(index_object.getIndex(i)) -
+    //                              pair_origin.getPosition(index_object.getIndex(i) + 1));
+    // }
+
+    //Rprintf("moving data started!\n");
     //move the data
+    large_list::progressReporter removing_reporter;
     for (int i = 0; i < list_object_origin.getLength(); i ++) {
         if (pair_new.getPosition(i) < pair_origin.getPosition(i)) {
             connection_file.moveData(pair_origin.getPosition(i), pair_origin.getPosition(i + 1),
@@ -219,7 +272,11 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index) {
             //Rprintf("MOVE %3.0ld,%3.0ld,%3.0ld,%3.0ld \n", pair_origin.getPosition(i), pair_origin.getPosition(i + 1),
             //                 pair_new.getPosition(i), pair_new.getPosition(i + 1));
         }
+
+        // Print progress to console
+        removing_reporter.reportProgress(i, list_object_origin.getLength(), "Removing Data");
     }
+    //Rprintf("moving data finished!\n");
 
     //write length and name bit
     list_object_origin.setLength(list_object_origin.getLength() - index_object.getLength());
@@ -234,6 +291,10 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index) {
 
     //cut file
     connection_file.cutFile();
+
+    // Print progress to console
+    removing_reporter.reportFinish("Removing Data");
+
     return (ScalarLogical(1));
 }
 
