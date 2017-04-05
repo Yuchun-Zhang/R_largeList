@@ -145,15 +145,15 @@ namespace large_list {
 		return;
 	}
 
-	void ListObject::write(ConnectionFile & connection_file, int index) {
+	void ListObject::write(ConnectionFile & connection_file, MemorySlot & memory_slot, int index) {
 		UnitObject unit_object(VECTOR_ELT(r_list_, index));
-		serialized_length_[index] = unit_object.write(connection_file, is_compress_);
+		serialized_length_[index] = unit_object.write(connection_file, memory_slot, is_compress_);
 		return;
 	}
 
-	void ListObject::read(ConnectionFile & connection_file, int index) {
+	void ListObject::read(ConnectionFile & connection_file, MemorySlot & memory_slot, int index) {
 		UnitObject unit_object;
-		unit_object.read(connection_file, serialized_length_[index], is_compress_);
+		unit_object.read(connection_file, memory_slot, serialized_length_[index], is_compress_);
 		SET_VECTOR_ELT(r_list_, index, unit_object.get());
 		return;
 	}
@@ -200,11 +200,11 @@ namespace large_list {
 	}
 
 	// get the serialized lengths of all objects in the list.
-	void ListObject::calculateSerializedLength () {
-		large_list::progressReporter calculate_reporter;
+	void ListObject::calculateSerializedLength (MemorySlot & memoryslot) {
+		large_list::ProgressReporter calculate_reporter;
 		for (int i = 0; i < length_; i ++) {
 			UnitObject unit_object(VECTOR_ELT(r_list_, i));
-			serialized_length_[i] = unit_object.calculateSerializedLength(is_compress_);
+			serialized_length_[i] = unit_object.calculateSerializedLength(memoryslot, is_compress_);
 			// Rprintf("LENGTH %3.0ld \n", serialized_length_[i]);
 			// Print progress to console
         	calculate_reporter.reportProgress(i, length_, "Calculate Serialized Length");

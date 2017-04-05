@@ -209,15 +209,18 @@ namespace large_list {
 
 //-----------------------------------------  Connection Raw ---------------------------------//
 
-	ConnectionRaw::ConnectionRaw(int64_t length) {
-		raw_array_ = (char*) std::malloc (length);
+	ConnectionRaw::ConnectionRaw(MemorySlot & memory_slot, int64_t length) {
+		raw_array_ = memory_slot.slot_malloc(length);
 		length_ = length;
 		read_pos_ = 0;
 		write_pos_ = 0;
 	}
 	
 	ConnectionRaw::~ConnectionRaw() {
-		std::free(raw_array_);
+	}
+
+	void ConnectionRaw::free(MemorySlot & memory_slot) {
+		memory_slot.slot_free(raw_array_);
 	}
 
 	void ConnectionRaw::seekRead(int64_t position, int origin) {
@@ -258,10 +261,10 @@ namespace large_list {
 		return;
 	}
 
-	void ConnectionRaw::compress() {
+	void ConnectionRaw::compress(MemorySlot & memory_slot) {
 		char * raw_array_compressed;
 		int64_t compress_bound = compressBound(length_);
-		raw_array_compressed = (char*) std::malloc (compress_bound);
+		raw_array_compressed = memory_slot.slot_malloc(compress_bound);
 		int res;
 
 		z_stream strm;
@@ -282,16 +285,16 @@ namespace large_list {
 		// Rprintf("After Compress %ld \n", length_after_compress);
 		deflateEnd(&strm);
 
-		std::free(raw_array_);
+		memory_slot.slot_free(raw_array_);
 		raw_array_  = raw_array_compressed;
 		length_ = length_after_compress;
 		return;
 	}
 
-	void ConnectionRaw::uncompress() {
+	void ConnectionRaw::uncompress(MemorySlot & memory_slot) {
 		char * raw_array_uncompressed;
 		int64_t uncompress_bound = 3 * length_;
-		raw_array_uncompressed = (char*) std::malloc (uncompress_bound);
+		raw_array_uncompressed = memory_slot.slot_malloc(uncompress_bound);
 		int res;
 
 		z_stream strm;
@@ -312,7 +315,7 @@ namespace large_list {
 			if (res == Z_BUF_ERROR) {
 				// Rprintf("uncompress_bound %ld \n", uncompress_bound);
 				uncompress_bound *= 2;
-				raw_array_uncompressed = (char *) realloc(raw_array_uncompressed, uncompress_bound);
+				raw_array_uncompressed = memory_slot.slot_realloc(raw_array_uncompressed, uncompress_bound);
 				continue;
 			}
 			if (res == Z_STREAM_END) {break;}
@@ -323,7 +326,7 @@ namespace large_list {
 		// Rprintf("After Uncompress %ld \n", length_after_uncompress);
 		inflateEnd(&strm);
 
-		std::free(raw_array_);
+		memory_slot.slot_free(raw_array_);
 		raw_array_  = raw_array_uncompressed;
 		length_ = length_after_uncompress;
 		return;

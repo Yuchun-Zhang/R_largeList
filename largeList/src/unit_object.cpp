@@ -30,40 +30,45 @@ namespace large_list {
 		checkSEXP(r_object_);
 	}
 
-	int64_t UnitObject::write (ConnectionFile & connection_file, bool is_compress) {
+	int64_t UnitObject::write (ConnectionFile & connection_file, MemorySlot & memory_slot, bool is_compress) {
 		// direct write via ConnectionFile is deprecated as it's slower in most cases.
 		// writeSEXP(r_object_, connection_file);
 		// return(calculateSerializedLength(false));
 
 		// write via ConnectionRaw
-		int64_t uncompressed_ser_len = calculateSerializedLength(false);
-		ConnectionRaw connection_raw(uncompressed_ser_len);
+		int64_t uncompressed_ser_len = calculateSerializedLength(memory_slot, false);
+		ConnectionRaw connection_raw(memory_slot, uncompressed_ser_len);
 		writeSEXP(r_object_, connection_raw);
-		if (is_compress) {connection_raw.compress();}
+		if (is_compress) {connection_raw.compress(memory_slot);}
 		connection_file.write(connection_raw.getRaw(), connection_raw.getLength(), 1);
-		return (connection_raw.getLength());
+		int64_t connection_raw_length = connection_raw.getLength();
+		connection_raw.free(memory_slot);
+		return (connection_raw_length);
 	}
 
-	void UnitObject::read (ConnectionFile & connection_file, int64_t serialized_length, bool is_compress) {
+	void UnitObject::read (ConnectionFile & connection_file, MemorySlot & memory_slot, int64_t serialized_length, bool is_compress) {
 		// direct read via ConnectionFile is deprecated
 		// UNPROTECT_PTR(r_object_);
 		// PROTECT(r_object_ = readSEXP(connection_file));
 
 		// read via ConnectionRaw
-		ConnectionRaw connection_raw(serialized_length);
+		ConnectionRaw connection_raw(memory_slot, serialized_length);
 		connection_file.read(connection_raw.getRaw(), connection_raw.getLength(), 1);
-		if (is_compress) {connection_raw.uncompress();}
+		if (is_compress) {connection_raw.uncompress(memory_slot);}
 		UNPROTECT_PTR(r_object_);
 		PROTECT(r_object_ = readSEXP(connection_raw));
+		connection_raw.free(memory_slot);
 	}
 
-	int64_t UnitObject::calculateSerializedLength(bool is_compress) {
+	int64_t UnitObject::calculateSerializedLength(MemorySlot & memory_slot, bool is_compress) {
 		if (is_compress) {
-			int64_t uncompressed_ser_len = calculateSerializedLength(false);
-			ConnectionRaw connection_raw(uncompressed_ser_len);
+			int64_t uncompressed_ser_len = calculateSerializedLength(memory_slot, false);
+			ConnectionRaw connection_raw(memory_slot, uncompressed_ser_len);
 			writeSEXP(r_object_, connection_raw);
-			connection_raw.compress();
-			return connection_raw.getLength();
+			connection_raw.compress(memory_slot);
+			int64_t connection_raw_length = connection_raw.getLength();
+			connection_raw.free(memory_slot);
+			return connection_raw_length;
 		} else {
 			int64_t length = 0;
 			lengthOfSEXP(r_object_, length);

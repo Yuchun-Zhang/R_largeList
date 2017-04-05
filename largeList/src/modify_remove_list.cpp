@@ -2,7 +2,7 @@
 
 extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
 
-    large_list::progressReporter general_reporter;
+    large_list::ProgressReporter general_reporter;
 
     //check parameters
     if (TYPEOF(file) != STRSXP || Rf_length(file) > 1) error("file should be a charater vector of length 1.");
@@ -11,6 +11,7 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
     if (TYPEOF(index) != INTSXP &&  TYPEOF(index) != REALSXP && TYPEOF(index) != LGLSXP && TYPEOF(index) != STRSXP)
         error("index should be a NULL, an integer vector, a numeric vector, a logical vector or a character vector.");
     large_list::ConnectionFile connection_file(file);
+    large_list::MemorySlot memory_slot;
     try {connection_file.connect(); } catch (std::exception &e) { connection_file.disconnect(); error(e.what());}
 
     // Rprintf("Begin to deal with index \n");
@@ -38,7 +39,7 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
     pair_origin.readLastPosition(connection_file);
 
     // get new object length.
-    list_object_to_save.calculateSerializedLength();
+    list_object_to_save.calculateSerializedLength(memory_slot);
 
     // get new pair.
     large_list::NamePositionTuple pair_new(pair_origin);
@@ -76,7 +77,7 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
     // }
 
     // move the date
-    large_list::progressReporter moving_reporter;
+    large_list::ProgressReporter moving_reporter;
     int64_t first_move_pos = -1;
     for (int i = 0; i < list_object_origin.getLength(); i ++) {
         // Rprintf("index %d first_move_pos %3.0lf \n",i, (double)first_move_pos);
@@ -107,10 +108,10 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
 
 
     //write Object
-    large_list::progressReporter writing_reporter;
+    large_list::ProgressReporter writing_reporter;
     for (int i = 0; i < index_object.getLength(); i ++) {
         connection_file.seekWrite(pair_new.getPosition(index_object.getIndex(i)), SEEK_SET);
-        list_object_to_save.write(connection_file, index_object.getValueIndex(i));
+        list_object_to_save.write(connection_file, memory_slot, index_object.getValueIndex(i));
 
         // Print progress to console
         writing_reporter.reportProgress(i, index_object.getLength(), "Writing Data");
@@ -264,7 +265,7 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index) {
 
     //Rprintf("moving data started!\n");
     //move the data
-    large_list::progressReporter removing_reporter;
+    large_list::ProgressReporter removing_reporter;
     for (int i = 0; i < list_object_origin.getLength(); i ++) {
         if (pair_new.getPosition(i) < pair_origin.getPosition(i)) {
             connection_file.moveData(pair_origin.getPosition(i), pair_origin.getPosition(i + 1),

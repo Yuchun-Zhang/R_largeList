@@ -38,6 +38,7 @@
 #define RETRYDELAY  250
 #define HAS_NAME_POSITION 18
 #define IS_COMPRESS_POSITION 19
+#define NUMBER_OF_MEM_SLOTS 100
 
 
 namespace large_list {
@@ -47,6 +48,7 @@ namespace large_list {
 	class ListObject;
 	class NamePositionTuple;
 	class IndexWithValueObject;
+	class MemorySlot;
 
 	class Connection {
 	public:
@@ -63,14 +65,15 @@ namespace large_list {
 		int64_t write_pos_;
 		int64_t length_;
 	public:
-		ConnectionRaw(int64_t length);
+		ConnectionRaw(MemorySlot &, int64_t length);
 		~ConnectionRaw();
 		void write(char *data, int nbytes, int nblocks);
 		void read(char *data, int nbytes, int nblocks);
 		void seekRead(int64_t position, int origin);
 		void seekWrite(int64_t position, int origin);
-		void compress();
-		void uncompress();
+		void compress(MemorySlot &);
+		void uncompress(MemorySlot &);
+		void free(MemorySlot &);
 		char* getRaw();
 		int64_t getLength();
 	};
@@ -126,10 +129,10 @@ namespace large_list {
 
 		// operations to the R object.
 		void set(SEXP r_object);
-		int64_t write(ConnectionFile & connection_file, bool is_compress);
-		void read(ConnectionFile & connection_file, int64_t serialized_length, bool is_compress);
+		int64_t write(ConnectionFile & connection_file, MemorySlot &, bool is_compress);
+		void read(ConnectionFile & connection_file, MemorySlot &, int64_t serialized_length, bool is_compress);
 		SEXP get();
-		int64_t calculateSerializedLength(bool is_compress);
+		int64_t calculateSerializedLength(MemorySlot &, bool is_compress);
 		void check();	
 
 		// the following functions deal with the input/output/check/serialized length of R object.
@@ -196,7 +199,7 @@ namespace large_list {
 		void resize(int length);
 
 		// serialized length
-		void calculateSerializedLength();
+		void calculateSerializedLength(MemorySlot & memoryslot);
 		void setSerializedLength(int64_t serialized_length, int index);
 		int64_t getSerializedLength(int index);
 
@@ -208,8 +211,8 @@ namespace large_list {
 
 		// list of UnitObject
 		void check();
-		void write(ConnectionFile & connection_file, int index);
-		void read(ConnectionFile & connection_file, int index);
+		void write(ConnectionFile &, MemorySlot &, int index);
+		void read(ConnectionFile &, MemorySlot &, int index);
 		void set(SEXP r_object, int index);
 
 		// other
@@ -345,17 +348,31 @@ namespace large_list {
 		static bool cmp (std::pair<int, int> const & a, std::pair<int, int> const & b);
 	};
 
-	class progressReporter{
+	class ProgressReporter{
 	private:
 		clock_t clock_begin_;
 		clock_t clock_end_;
 		int estimated_sec_times_;
 	public:
 		bool is_long_time_;
-		progressReporter();
+		ProgressReporter();
 		void reportProgress(int, int, std::string);
 		void reportFinish(std::string);
 		void clearLine();
+	};
+
+	class MemorySlot{
+	private:
+		bool is_slot_in_use[NUMBER_OF_MEM_SLOTS];
+		bool is_slot_initialized[NUMBER_OF_MEM_SLOTS];
+		int64_t slot_size[NUMBER_OF_MEM_SLOTS];
+		char *slot[NUMBER_OF_MEM_SLOTS];
+	public:
+		MemorySlot();
+		~MemorySlot();
+		char* slot_malloc(int64_t);
+		void slot_free(char *);
+		char* slot_realloc(char*, int64_t);
 	};
 
 	extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append, SEXP compress);

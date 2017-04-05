@@ -9,6 +9,7 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append, SEXP compress) {
     if (TYPEOF(compress) != LGLSXP) error("compress should be logical TRUE/FALSE");
 
     large_list::ConnectionFile connection_file(file);
+    large_list::MemorySlot memory_slot;
     // Rprintf("Turn object to list_object \n");
     large_list::ListObject list_object_to_save(object);
     try { list_object_to_save.check(); } catch (std::exception &e) { connection_file.disconnect(); error(e.what());}
@@ -21,10 +22,10 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append, SEXP compress) {
         large_list::NamePositionTuple pair(list_object_to_save.getLength());
         list_object_to_save.writeListHead(connection_file);
         list_object_to_save.writeLength(connection_file);
-        large_list::progressReporter writing_reporter;
+        large_list::ProgressReporter writing_reporter;
         for (int i = 0; i < list_object_to_save.getLength(); i ++) {
             pair.setPosition(connection_file, i);
-            list_object_to_save.write(connection_file, i);
+            list_object_to_save.write(connection_file, memory_slot, i);
             // Print progress to console
             writing_reporter.reportProgress(i, list_object_to_save.getLength(), "Writing Data");
         }
@@ -60,11 +61,11 @@ extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append, SEXP compress) {
         // save the new objects.
         large_list::NamePositionTuple pair_to_save(list_object_to_save.getLength());
         connection_file.seekWrite(pair_origin.getLastPosition(), SEEK_SET);
-        large_list::progressReporter appending_reporter;
+        large_list::ProgressReporter appending_reporter;
         for (int i = 0; i < list_object_to_save.getLength(); i ++) {
             // Rprintf("Save New Object %d \n", i);
             pair_to_save.setPosition(connection_file, i);
-            list_object_to_save.write(connection_file, i);
+            list_object_to_save.write(connection_file, memory_slot, i);
             // Print progress to console
             appending_reporter.reportProgress(i, list_object_to_save.getLength(), "Appending Data");
         }
@@ -98,6 +99,7 @@ extern "C" SEXP readList(SEXP file, SEXP index) {
         TYPEOF(index) != STRSXP)
         error("index should be a NULL, an integer vector, a numeric vector, a logical vector or a character vector.");
     large_list::ConnectionFile connection_file(file);
+    large_list::MemorySlot memory_slot;
     try {connection_file.connect(); } catch (std::exception &e) { connection_file.disconnect(); error(e.what());}
 
     large_list::MetaListObject list_object_in_file;
@@ -112,7 +114,7 @@ extern "C" SEXP readList(SEXP file, SEXP index) {
     list_object_to_output.readNameBit(connection_file);
     list_object_to_output.readCompressBit(connection_file);
 
-    large_list::progressReporter reading_reporter;
+    large_list::ProgressReporter reading_reporter;
 
     // list_object_to_output.print();
     for (int i = 0; i < index_object.getLength(); i ++) {
@@ -121,7 +123,7 @@ extern "C" SEXP readList(SEXP file, SEXP index) {
             // Rprintf("Reading Object %d \n", i);
             list_object_to_output.setSerializedLength(index_object.getSerializedLength(i), i);
             //Rprintf("Get Serialized Length %lf \n", (double)list_object_to_output.getSerializedLength(i));
-            list_object_to_output.read(connection_file, i);
+            list_object_to_output.read(connection_file, memory_slot, i);
         } else {
             list_object_to_output.set(R_NilValue, i);
         }

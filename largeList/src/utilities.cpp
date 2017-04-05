@@ -1,12 +1,12 @@
 #include "large_list.h"
 namespace large_list {
-	progressReporter::progressReporter() {
+	ProgressReporter::ProgressReporter() {
 		clock_begin_ = clock();
 		estimated_sec_times_ = 1000;
 		is_long_time_ = FALSE;
 	}
 
-	void progressReporter::reportProgress(int i, int length, std::string progress_name) {
+	void ProgressReporter::reportProgress(int i, int length, std::string progress_name) {
 		clock_t clock_current = clock();
 		if (is_long_time_ == FALSE) {
 			double one_loop_time = (double)(clock_current - clock_begin_) / CLOCKS_PER_SEC / (i+1);
@@ -27,7 +27,7 @@ namespace large_list {
 		return;
 	}
 
-	void progressReporter::reportFinish(std::string progress_name) {
+	void ProgressReporter::reportFinish(std::string progress_name) {
 		clock_end_ = clock();
 		if (is_long_time_ == TRUE) {
 			Rprintf("\r                                    ");
@@ -36,5 +36,77 @@ namespace large_list {
 					(double)(clock_end_ - clock_begin_) / CLOCKS_PER_SEC);
 		}
 		return;
+	}
+
+	MemorySlot::MemorySlot() {
+		for(int i = 0; i < NUMBER_OF_MEM_SLOTS; i++) {
+			is_slot_in_use[i] = FALSE;
+			is_slot_initialized[i] = FALSE;
+			slot_size[i] = FALSE;
+		}
+	}
+	char* MemorySlot::slot_malloc(int64_t length) {
+		int i = 0;
+		for (i = 0; is_slot_in_use[i] == TRUE; i++) {};
+		if (is_slot_initialized[i] == FALSE) {
+			is_slot_initialized[i] = TRUE;
+			slot_size[i] = length;
+			slot[i] = (char*) std::malloc (slot_size[i]);
+			// Rprintf("Initialize slot %d with length %.0lf\n", i, (double)slot_size[i]);
+		} else {
+			if (length > slot_size[i]) {
+				std::free(slot[i]);
+				slot_size[i] = slot_size[i]*2 > length ? slot_size[i]*2 : length;
+				slot[i] = (char*) std::malloc (slot_size[i]);
+				// Rprintf("Change slot %d to length %.0lf\n", i, (double)slot_size[i]);
+			}
+			// Rprintf("Alloc slot %d to length %.0lf\n", i, (double)slot_size[i]);
+		}
+		is_slot_in_use[i] = TRUE;
+		return(slot[i]);
+	}
+	void MemorySlot::slot_free(char * char_pointer) {
+		int i = 0;
+		while (TRUE) {
+			if (is_slot_initialized[i] && is_slot_in_use[i]) {
+				if (char_pointer == slot[i]) {
+					break;
+				} 
+			}
+			i++;
+		}
+		is_slot_in_use[i] = FALSE;
+		// Rprintf("Clear slot %d with length %.0lf\n", i, (double)slot_size[i]);
+		return;
+	}
+	char * MemorySlot::slot_realloc(char * char_pointer, int64_t length) {
+		int i = 0;
+		while (TRUE) {
+			if (is_slot_initialized[i] && is_slot_in_use[i]) {
+				if (char_pointer == slot[i]) {
+					break;
+				} 
+			}
+			i++;
+		}
+		if (length <= slot_size[i]) {
+			// Rprintf("Realloc slot %d to length %.0lf\n within slot\n", i, (double)slot_size[i]);
+			return(char_pointer);
+		} else {
+			std::free (slot[i]);
+			slot_size[i] = slot_size[i]*2 > length ? slot_size[i]*2 : length;
+			slot[i] = (char*) std::malloc (slot_size[i]);
+			// Rprintf("Realloc slot %d to length %.0lf\n", i, (double)slot_size[i]);
+			return(slot[i]);
+		}
+	}
+
+	MemorySlot::~MemorySlot() {
+		for (int i = 0; i < NUMBER_OF_MEM_SLOTS; i++) {
+			if (is_slot_initialized[i]) {
+				std::free (slot[i]);
+				// Rprintf("Free meomory slot %d\n", i);
+			}
+		}
 	}
 }
