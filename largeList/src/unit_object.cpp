@@ -239,12 +239,13 @@ namespace large_list {
 			if (tempRaw == naString) {
 				element = PROTECT(NA_STRING);
 			} else {
-				std::string x;
 				connection.seekRead(-4, SEEK_CUR);
 				connection.read((char *) & (length), 4, 1);
-				x.resize(length);
+				char *x = (char*) std::malloc(length + 1);
 				connection.read((char*)(&x[0]), 1, length);
-				element = PROTECT(Rf_mkChar(x.c_str()));
+				x[length] = '\0';
+				element = PROTECT(Rf_mkChar(x));
+				std::free(x);
 			}
 			break;
 		}
