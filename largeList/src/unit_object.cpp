@@ -233,10 +233,8 @@ namespace large_list {
 			break;
 		}
 		case CHARSXP  : { 
-			std::vector<BYTE> tempRaw(4);
-			std::vector<BYTE> naString(4, 0xff);
-			connection.read((char *) & (tempRaw[0]), 1, 4);
-			if (tempRaw == naString) {
+			readLength(connection, length);
+			if (length == -1) {
 				element = PROTECT(NA_STRING);
 			} else {
 				connection.seekRead(-4, SEEK_CUR);
@@ -244,7 +242,11 @@ namespace large_list {
 				char *x = (char*) std::malloc(length + 1);
 				connection.read((char*)(&x[0]), 1, length);
 				x[length] = '\0';
-				element = PROTECT(Rf_mkChar(x));
+				int enc = CE_NATIVE;
+				if (level & UTF8_MASK) enc = CE_UTF8;
+				else if (level & LATIN1_MASK) enc = CE_LATIN1;
+				else if (level & BYTES_MASK) enc = CE_BYTES;
+				element = PROTECT(mkCharLenCE(x, length, (cetype_t)enc));
 				std::free(x);
 			}
 			break;

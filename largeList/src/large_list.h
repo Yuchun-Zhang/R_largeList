@@ -28,6 +28,10 @@
 #include <Rinternals.h>
 #include <zlib.h>
 
+#define BYTES_MASK (1<<1)
+#define LATIN1_MASK (1<<2)
+#define UTF8_MASK (1<<3)
+
 #define BYTE unsigned char
 #define NAMELENGTH 16
 #define CURRENT_VERSION ((0<<8) + (3<<4) + 1)
