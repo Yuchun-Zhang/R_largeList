@@ -46,18 +46,20 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
     int i = 0;
     int j = 0;
     int64_t offset = 0;
-    for(j = 0; j < list_object_origin.getLength() - 1; j++) {
+    for(j = 0; j < list_object_origin.getLength(); j++) {
+        if (offset != 0) {
+            // Rprintf("change position %3.0ld to %3.0ld \n", pair_new.getPosition(j), pair_new.getPosition(j) + offset);
+            pair_new.setPosition(pair_new.getPosition(j) + offset, j);
+        }
         if (j == index_object.getIndex(i)) {
             offset += pair_origin.getPosition(index_object.getIndex(i)) - 
                 pair_origin.getPosition(index_object.getIndex(i) + 1) + 
                 list_object_to_save.getSerializedLength(index_object.getValueIndex(i));
-            if (i < index_object.getLength()) i++;
-        }
-        if (offset != 0) {
-            pair_new.setPosition(pair_new.getPosition(j + 1) + offset, j + 1);
+            if (i < (index_object.getLength() - 1)) i++;
         }
     }
     pair_new.setLastPosition(pair_new.getLastPosition() + offset);    
+    // Rprintf("Calculation Finished \n");
 
     // deprecated new position caculation due to very low efficiency.
     // for (int i = 0; i < index_object.getLength(); i ++) {
@@ -102,7 +104,7 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
         }
 
         // Print progress to console
-        moving_reporter.reportProgress(i, list_object_origin.getLength(), "Moving Data");
+        moving_reporter.reportProgress(i, list_object_origin.getLength(), "Step1 : Moving Data");
     }
     // Rprintf("Move Finished \n");
 
@@ -114,7 +116,7 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
         list_object_to_save.write(connection_file, memory_slot, index_object.getValueIndex(i));
 
         // Print progress to console
-        writing_reporter.reportProgress(i, index_object.getLength(), "Writing Data");
+        writing_reporter.reportProgress(i, index_object.getLength(), "Step2 : Writing Data");
     }
 
     // Rprintf("Write Object Finished \n");
@@ -131,7 +133,7 @@ extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object) {
     connection_file.cutFile();
 
     // Print progress to console
-    general_reporter.is_long_time_ = TRUE;
+    general_reporter.is_long_time_ = moving_reporter.is_long_time_ || writing_reporter.is_long_time_;
     general_reporter.reportFinish("Modifying Data");
 
     // Rprintf("Cut file Finished \n");
@@ -235,14 +237,14 @@ extern "C" SEXP removeFromList(SEXP file, SEXP index) {
     int i = 0;
     int j = 0;
     int64_t offset = 0;
-    for(j = 0; j < list_object_origin.getLength() - 1; j++) {
+    for(j = 0; j < list_object_origin.getLength(); j++) {
+        if (offset != 0) {
+            pair_new.setPosition(pair_new.getPosition(j) + offset, j);
+        }
         if (j == index_object.getIndex(i)) {
             offset += pair_origin.getPosition(index_object.getIndex(i)) - 
                 pair_origin.getPosition(index_object.getIndex(i) + 1);
-            if (i < index_object.getLength()) i++;
-        }
-        if (offset != 0) {
-            pair_new.setPosition(pair_new.getPosition(j + 1) + offset, j + 1);
+            if (i < (index_object.getLength() - 1)) i++;
         }
     }
     pair_new.setLastPosition(pair_new.getLastPosition() + offset);    

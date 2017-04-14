@@ -31,7 +31,7 @@ namespace large_list {
 	void ConnectionFile::connect() {
 		fout_ = std::fopen(file_dir_name_, "r+b");
 		if (fout_ == NULL) {
-			throw std::runtime_error("file does not exist.");
+			throw std::runtime_error("file does not exist or insufficient privilege.");
 		}
 		fin_ = std::fopen(file_dir_name_, "rb");
 		checkVersion();
@@ -54,7 +54,8 @@ namespace large_list {
 			retries ++;
 		}
 		if (retries == MAXRETRIES) {
-			throw std::runtime_error("fwrite failed!");
+			disconnect();
+			error("fwrite failed, file might be broken!");
 		}
 		return;
 	}
@@ -69,7 +70,8 @@ namespace large_list {
 			retries ++;
 		}
 		if (retries == MAXRETRIES) {
-			throw std::runtime_error("fread failed!");
+			disconnect();
+			error("fread failed, file might be broken!");
 		}
 		return;
 	}
@@ -138,7 +140,8 @@ namespace large_list {
 #if defined PREDEF_PLATFORM_UNIX
 		// Rprintf("Begin to truncate \n");
 		if (truncate(file_dir_name_, file_length) != 0) {
-			throw std::runtime_error("file truncation failed (Unix).");
+			disconnect();
+			error("file truncation failed (Unix).");
 		}
 		// Rprintf("Truncate finished \n");
 #endif
@@ -163,11 +166,12 @@ namespace large_list {
 					Sleep(RETRYDELAY);
 					continue;
 				} else {
-				  char error_info[200];
-				  sprintf(error_info, 
-                  "file truncation failed (Windows), get file handle error. Error Code %ld .", 
-                  last_error);
-					throw std::runtime_error(error_info);
+				  	char error_info[200];
+				  	sprintf(error_info, 
+                  	"file truncation failed (Windows), get file handle error. Error Code %ld .", 
+                  	last_error);
+                  	disconnect();
+				  	error(error_info);
 				}
 			}
 			break;
@@ -179,11 +183,12 @@ namespace large_list {
 		SetFilePointerEx(fh, file_length_w, NULL, 0);
 		if (SetEndOfFile(fh) == 0) {
 			DWORD last_error = GetLastError();
-		  char error_info[200];
-		  sprintf(error_info, 
-            "file truncation failed (Windows), Error Code %ld .", 
-            last_error);
-		  throw std::runtime_error(error_info);
+		 	char error_info[200];
+		 	sprintf(error_info, 
+        			"file truncation failed (Windows), Error Code %ld .", 
+            		last_error);
+		 	disconnect();
+		  	error(error_info);
 		}
 		CloseHandle(fh);
 #endif
@@ -280,7 +285,7 @@ namespace large_list {
 		// Rprintf("Before Compress %ld \n", length_);
 		deflateInit(&strm, Z_DEFAULT_COMPRESSION);
 		res = deflate(&strm, Z_FINISH);
-		if (res != Z_STREAM_END) {throw std::runtime_error("internal error in compress");}
+		if (res != Z_STREAM_END) {error("internal error in compress");}
 		int64_t length_after_compress = compress_bound - strm.avail_out;
 		// Rprintf("After Compress %ld \n", length_after_compress);
 		deflateEnd(&strm);

@@ -22,6 +22,9 @@ namespace large_list {
 	void MetaListObject::readLength (ConnectionFile & connection_file) {
 		connection_file.seekRead(LENGTH_POSITION, SEEK_SET);
 		connection_file.read((char *) & (length_), 4, 1);
+		if (length_ < 0) {
+			error("unkown file format!");
+		}		
 		return;
 	}
 
