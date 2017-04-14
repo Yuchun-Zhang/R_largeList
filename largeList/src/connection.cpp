@@ -46,7 +46,7 @@ namespace large_list {
 	}
 	
 	//safe write
-	void ConnectionFile::write(char *data, int nbytes, int nblocks) {
+	void ConnectionFile::write(const void *data, int nbytes, int nblocks) {
 		int64_t initial_ptr_position = std::ftell(fout_);
 		int retries = 0;
 		while (((int)std::fwrite(data, nbytes, nblocks, fout_) != nblocks) && (retries < MAXRETRIES)) {
@@ -62,7 +62,7 @@ namespace large_list {
 
 
 	//safe fread
-	void ConnectionFile::read(char *data, int nbytes, int nblocks) {
+	void ConnectionFile::read(void *data, int nbytes, int nblocks) {
 		int64_t initial_ptr_position = std::ftell(fin_);
 		int retries = 0;
 		while (((int)std::fread(data, nbytes, nblocks, fin_) != nblocks) && (retries < MAXRETRIES)) {
@@ -92,20 +92,20 @@ namespace large_list {
 
 	int64_t ConnectionFile::tellWrite() {
 		return(std::ftell(fout_));
-	}	
+	}
 
 	//writeVersion
 	void ConnectionFile::writeVersion () {
-		std::string head("LARGELIST ");
-		write((char*)head.c_str(), 1, 10);
+		char head[11] = "LARGELIST ";
+		write(&head[0], 1, 10);
 		int current_version = CURRENT_VERSION;
 		int readable_version = READABLE_VERSION;
-		write((char *)&current_version, 1, 4);
-		write((char *)&readable_version, 1, 4);
-		int has_name = 0;
-		write((char *)&has_name, 1, 1);
-		std::string reserved_string(7, '\x00');
-		write((char*)reserved_string.c_str(), 1, 7);
+		write(&current_version, 4, 1);
+		write(&readable_version, 4, 1);
+		bool has_name = false;
+		write(&has_name, 1, 1);
+		char reserved_string[8] = "\x00\x00\x00\x00\x00\x00\x00";
+		write(&reserved_string[0], 1, 7);
 		return;
 	}
 
@@ -114,14 +114,14 @@ namespace large_list {
 		std::fseek(fin_, 0, SEEK_END);
 		int64_t length_of_file = std::ftell(fin_);
 		if (length_of_file < 26) { throw std::runtime_error("unkown file format!"); }
-		std::string right_head("LARGELIST ");
-		std::string head(10, '\x00');
+		char right_head[11] = "LARGELIST ";
+		char head[11];
 		std::fseek(fin_, 0, SEEK_SET);
-		read((char *)&head[0], 1, 10);
-		if (right_head.compare(head) != 0) { throw std::runtime_error("unkown file format!"); }
+		read(&head[0], 1, 10); head[10] = '\0';
+		if (strcmp(head, right_head) != 0) { throw std::runtime_error("unkown file format!"); }
 		std::fseek(fin_, 10, SEEK_SET);
 		int current_version;
-		read((char *)&current_version, 4, 1);
+		read(&current_version, 4, 1);
 		if (current_version < READABLE_VERSION) {
 			std::ostringstream msg;
 			msg << "can only read files created by version above " 
@@ -199,14 +199,13 @@ namespace large_list {
 	void ConnectionFile::moveData(const int64_t &move_from_start_pos, const int64_t &move_from_end_pos,
 	const int64_t &move_to_start_pos, const int64_t &move_to_end_pos) {
 		if (move_from_end_pos - move_from_start_pos != move_to_end_pos - move_to_start_pos) {return;}
-		BYTE *to_move_raw = (BYTE *) std::malloc((move_from_end_pos - move_from_start_pos) * sizeof(BYTE));
-		// std::vector<BYTE> to_move_raw(move_from_end_pos - move_from_start_pos);
+		void *to_move_raw = (void *) std::malloc((move_from_end_pos - move_from_start_pos));
 		seekRead(move_from_start_pos, SEEK_SET);
 		// Rprintf("to read");
-		read((char*) & (to_move_raw[0]), 1, move_from_end_pos - move_from_start_pos);
+		read(to_move_raw, 1, move_from_end_pos - move_from_start_pos);
 		seekWrite(move_to_start_pos, SEEK_SET);
 		// Rprintf("to write");
-		write((char*) & (to_move_raw[0]), 1, move_to_end_pos - move_to_start_pos);
+		write(to_move_raw, 1, move_to_end_pos - move_to_start_pos);
 		std::free(to_move_raw);
 		return;
 	}
@@ -254,20 +253,20 @@ namespace large_list {
 		return;
 	}
 
-	void ConnectionRaw::read(char *data, int nbytes, int nblocks) {
-		std::memcpy(data, &raw_array_[read_pos_], nbytes * nblocks);
+	void ConnectionRaw::read(void *data, int nbytes, int nblocks) {
+		std::memcpy(data, (char*)raw_array_ + read_pos_, nbytes * nblocks);
 		read_pos_ += nbytes * nblocks;
 		return;
 	}
 
-	void ConnectionRaw::write(char *data, int nbytes, int nblocks) {
-		std::memcpy(&raw_array_[write_pos_], data, nbytes * nblocks);
+	void ConnectionRaw::write(const void *data, int nbytes, int nblocks) {
+		std::memcpy((char*)raw_array_ + write_pos_, data, nbytes * nblocks);
 		write_pos_ += nbytes * nblocks;
 		return;
 	}
 
 	void ConnectionRaw::compress(MemorySlot & memory_slot) {
-		char * raw_array_compressed;
+		void * raw_array_compressed;
 		int64_t compress_bound = compressBound(length_);
 		raw_array_compressed = memory_slot.slot_malloc(compress_bound);
 		int res;
@@ -297,7 +296,7 @@ namespace large_list {
 	}
 
 	void ConnectionRaw::uncompress(MemorySlot & memory_slot) {
-		char * raw_array_uncompressed;
+		void * raw_array_uncompressed;
 		int64_t uncompress_bound = 3 * length_;
 		raw_array_uncompressed = memory_slot.slot_malloc(uncompress_bound);
 		int res;
@@ -337,7 +336,7 @@ namespace large_list {
 		return;
 	}
 
-	char* ConnectionRaw::getRaw() {
+	void* ConnectionRaw::getRaw() {
 		return raw_array_;
 	}
 

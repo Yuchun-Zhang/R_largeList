@@ -15,13 +15,13 @@ namespace large_list {
 
 	void MetaListObject::writeLength (ConnectionFile & connection_file) {
 		connection_file.seekWrite(LENGTH_POSITION, SEEK_SET);
-		connection_file.write((char *) & (length_), 4, 1);
+		connection_file.write(&length_, 4, 1);
 		return;
 	}
 
 	void MetaListObject::readLength (ConnectionFile & connection_file) {
 		connection_file.seekRead(LENGTH_POSITION, SEEK_SET);
-		connection_file.read((char *) & (length_), 4, 1);
+		connection_file.read(&length_, 4, 1);
 		if (length_ < 0) {
 			error("unkown file format!");
 		}		
@@ -39,13 +39,13 @@ namespace large_list {
 
 	void MetaListObject::writeNameBit (ConnectionFile & connection_file) {
 		connection_file.seekWrite(HAS_NAME_POSITION, SEEK_SET);
-		connection_file.write((char *) & (has_name_), 1, 1);
+		connection_file.write(&has_name_, 1, 1);
 		return;
 	}
 
 	void MetaListObject::readNameBit (ConnectionFile & connection_file) {
 		connection_file.seekRead(HAS_NAME_POSITION, SEEK_SET);
-		connection_file.read((char *) & (has_name_), 1, 1);
+		connection_file.read(&has_name_, 1, 1);
 		return;
 	}
 
@@ -60,13 +60,13 @@ namespace large_list {
 
 	void MetaListObject::writeCompressBit (ConnectionFile & connection_file) {
 		connection_file.seekWrite(IS_COMPRESS_POSITION, SEEK_SET);
-		connection_file.write((char *) & (is_compress_), 1, 1);
+		connection_file.write(&is_compress_, 1, 1);
 		return;
 	}
 
 	void MetaListObject::readCompressBit (ConnectionFile & connection_file) {
 		connection_file.seekRead(IS_COMPRESS_POSITION, SEEK_SET);
-		connection_file.read((char *) & (is_compress_), 1, 1);
+		connection_file.read(&is_compress_, 1, 1);
 		return;
 	}
 
@@ -82,8 +82,8 @@ namespace large_list {
 	//write list head
 	void MetaListObject::writeListHead (ConnectionFile & connection_file) {
 		connection_file.seekWrite(LIST_HEAD_POSITION, SEEK_SET);
-		std::string list_head("\x13\x00\x00\x00");
-		connection_file.write((char *)list_head.c_str(), 1, 4);
+		char list_head[5] ="\x13\x00\x00\x00";
+		connection_file.write(&list_head[0], sizeof(char), 4);
 		return;
 	}
 

@@ -45,19 +45,19 @@ namespace large_list {
 			slot_size[i] = FALSE;
 		}
 	}
-	char* MemorySlot::slot_malloc(int64_t length) {
+	void* MemorySlot::slot_malloc(int64_t length) {
 		int i = 0;
 		for (i = 0; is_slot_in_use[i] == TRUE; i++) {};
 		if (is_slot_initialized[i] == FALSE) {
 			is_slot_initialized[i] = TRUE;
 			slot_size[i] = length;
-			slot[i] = (char*) std::malloc (slot_size[i]);
+			slot[i] = (void*) std::malloc (slot_size[i]);
 			// Rprintf("Initialize slot %d with length %.0lf\n", i, (double)slot_size[i]);
 		} else {
 			if (length > slot_size[i]) {
 				std::free(slot[i]);
 				slot_size[i] = slot_size[i]*2 > length ? slot_size[i]*2 : length;
-				slot[i] = (char*) std::malloc (slot_size[i]);
+				slot[i] = (void*) std::malloc (slot_size[i]);
 				// Rprintf("Change slot %d to length %.0lf\n", i, (double)slot_size[i]);
 			}
 			// Rprintf("Alloc slot %d to length %.0lf\n", i, (double)slot_size[i]);
@@ -65,7 +65,7 @@ namespace large_list {
 		is_slot_in_use[i] = TRUE;
 		return(slot[i]);
 	}
-	void MemorySlot::slot_free(char * char_pointer) {
+	void MemorySlot::slot_free(void * char_pointer) {
 		int i = 0;
 		while (TRUE) {
 			if (is_slot_initialized[i] && is_slot_in_use[i]) {
@@ -79,7 +79,7 @@ namespace large_list {
 		// Rprintf("Clear slot %d with length %.0lf\n", i, (double)slot_size[i]);
 		return;
 	}
-	char * MemorySlot::slot_realloc(char * char_pointer, int64_t length) {
+	void * MemorySlot::slot_realloc(void * char_pointer, int64_t length) {
 		int i = 0;
 		while (TRUE) {
 			if (is_slot_initialized[i] && is_slot_in_use[i]) {
@@ -95,7 +95,7 @@ namespace large_list {
 		} else {
 			std::free (slot[i]);
 			slot_size[i] = slot_size[i]*2 > length ? slot_size[i]*2 : length;
-			slot[i] = (char*) std::malloc (slot_size[i]);
+			slot[i] = (void*) std::malloc (slot_size[i]);
 			// Rprintf("Realloc slot %d to length %.0lf\n", i, (double)slot_size[i]);
 			return(slot[i]);
 		}

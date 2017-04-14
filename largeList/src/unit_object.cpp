@@ -89,13 +89,13 @@ namespace large_list {
 
 	void UnitObject::writeLength(SEXP _x, Connection & connection) {
 		int length = LENGTH(_x);
-		connection.write((char *)&length, 4, 1);
+		connection.write(&length, 4, 1);
 		return;
 	}
 
 	//read object length
 	void UnitObject::readLength(Connection & connection, int &length) {
-		connection.read((char*)(&length), 4, 1);
+		connection.read(&length, 4, 1);
 		return;
 	}
 
@@ -110,36 +110,36 @@ namespace large_list {
 			((int)(attribute != R_NilValue) << 9) +
 			((int)(tag != R_NilValue) << 10) +
 			(level << 12);
-			connection.write((char *)(&head), 1, 4);
+			connection.write(&head, 1, 4);
 		}
 		switch (TYPEOF(_x)) {
 		case NILSXP   : { 			
-			BYTE nil[4] = {0xfe, 0x00, 0x00, 0x00};
-			connection.write((char *) & (nil[0]), 1, 4);  
+			unsigned char nil[5] = "\xfe\x00\x00\x00";
+			connection.write(&nil[0], 1, 4);  
 			break; 
 		}
 		case REALSXP  : {
 			writeLength(_x, connection);
-			connection.write((char *)(& REAL(_x)[0]), 8, Rf_xlength(_x));
+			connection.write(&REAL(_x)[0], 8, Rf_xlength(_x));
 			break;
 		}
 		case INTSXP   : { 
 			writeLength(_x, connection);
-			connection.write((char *)(& INTEGER(_x)[0]), 4, Rf_xlength(_x));
+			connection.write(&INTEGER(_x)[0], 4, Rf_xlength(_x));
 		  	break; 
 		 }
 		case CPLXSXP  : { 
 			writeLength(_x, connection);
-			connection.write((char *)(& COMPLEX(_x)[0]), 16, Rf_xlength(_x));
+			connection.write(&COMPLEX(_x)[0], 16, Rf_xlength(_x));
 			break; 
 		}
 		case CHARSXP   : { 
 			if (_x == NA_STRING ) {
-				BYTE ffff[4] = {0xff, 0xff, 0xff, 0xff};
-				connection.write((char *) & (ffff[0]), 1, 4);
+				unsigned char ffff[5] = "\xff\xff\xff\xff";
+				connection.write(&ffff[0], 1, 4);
 			} else {
 				writeLength(_x, connection);
-				connection.write((char*)CHAR(_x), 1, Rf_xlength(_x));
+				connection.write(CHAR(_x), 1, Rf_xlength(_x));
 			}
 		    break; 
 		}
@@ -152,7 +152,7 @@ namespace large_list {
 		}
 		case LGLSXP   : { 
 			writeLength(_x, connection);
-			connection.write((char *)(& LOGICAL(_x)[0]), 4, Rf_xlength(_x));
+			connection.write(&LOGICAL(_x)[0], 4, Rf_xlength(_x));
 		  break; 
 		}
 		case VECSXP   : { 
@@ -164,7 +164,7 @@ namespace large_list {
 		}
 		case RAWSXP   : { 
 			writeLength(_x, connection);
-			connection.write((char *)(& RAW(_x)[0]), 1, Rf_xlength(_x));
+			connection.write(&RAW(_x)[0], 1, Rf_xlength(_x));
 		  	break; 
 		}
 		case SYMSXP   : { 
@@ -185,15 +185,15 @@ namespace large_list {
 			for (SEXP nxt = attribute; nxt != R_NilValue; nxt = CDR(nxt)) {
 				writeSEXP(nxt, connection);
 			}
-			BYTE nil[4] = {0xfe, 0x00, 0x00, 0x00};
-			connection.write((char *) & (nil[0]), 1, 4);  
+			unsigned char nil[5] = "\xfe\x00\x00\x00";
+			connection.write(&nil[0], 1, 4);  
 		}
 		return ;
 	}
 
 	SEXP UnitObject::readSEXP(Connection & connection) {
 		int type, has_attr, has_tag, has_object, level, head_info;
-		connection.read((char*)(&head_info), 4 , 1);
+		connection.read(&head_info, 4 , 1);
 		type = head_info & 255;
 		has_object = (head_info >> 8) & 1;
 		has_attr = (head_info >> 9) & 1;
@@ -207,19 +207,19 @@ namespace large_list {
 		case REALSXP  : {
 			readLength(connection, length);
 			element = PROTECT(Rf_allocVector(REALSXP, length));
-			connection.read((char*)(&REAL(element)[0]), 8, length);
+			connection.read(&REAL(element)[0], 8, length);
 			break;
 		}
 		case INTSXP   : {
 			readLength(connection, length);
 			element = PROTECT(Rf_allocVector(INTSXP, length));
-			connection.read((char*)(&INTEGER(element)[0]), 4, length);
+			connection.read(&INTEGER(element)[0], 4, length);
 			break;
 		}
 		case CPLXSXP  : { 
 			readLength(connection, length);
 			element = PROTECT(Rf_allocVector(CPLXSXP, length));
-			connection.read((char*)(&COMPLEX(element)[0]), 16, length);
+			connection.read(&COMPLEX(element)[0], 16, length);
 			break;
 		}
 		case STRSXP   : {
@@ -238,9 +238,9 @@ namespace large_list {
 				element = PROTECT(NA_STRING);
 			} else {
 				connection.seekRead(-4, SEEK_CUR);
-				connection.read((char *) & (length), 4, 1);
+				connection.read(&length, 4, 1);
 				char *x = (char*) std::malloc(length + 1);
-				connection.read((char*)(&x[0]), 1, length);
+				connection.read(&x[0], 1, length);
 				x[length] = '\0';
 				int enc = CE_NATIVE;
 				if (level & UTF8_MASK) enc = CE_UTF8;
@@ -254,7 +254,7 @@ namespace large_list {
 		case LGLSXP   : {
 			readLength(connection, length);
 			element = PROTECT(Rf_allocVector(LGLSXP, length));
-			connection.read((char*)(&LOGICAL(element)[0]), 4, length);
+			connection.read(&LOGICAL(element)[0], 4, length);
 			break;
 		}
 		case VECSXP   : {
@@ -270,7 +270,7 @@ namespace large_list {
 		case RAWSXP   : { 
 			readLength(connection, length);
 			element = PROTECT(Rf_allocVector(RAWSXP, length));
-			connection.read((char*)(&RAW(element)[0]), 1, length);
+			connection.read(&RAW(element)[0], 1, length);
 			break;
 		}
 		case SYMSXP   : {

@@ -31,11 +31,11 @@ namespace large_list {
 	// write the whole table
 	void NamePositionTuple::write(ConnectionFile & connection_file, bool write_last_position) {
 		for (int i = 0; i < length_; i++) {
-			connection_file.write((char *) & (std::get<0>(tuple_[i])), 8, 1);
-			connection_file.write((char*) std::get<2>(tuple_[i]).c_str(), NAMELENGTH, 1);
+			connection_file.write(&(std::get<0>(tuple_[i])), 8, 1);
+			connection_file.write((void*)std::get<2>(tuple_[i]).c_str(), NAMELENGTH, 1);
 		}
 		if (write_last_position) {
-			connection_file.write((char *) & (last_position_), 8, 1);
+			connection_file.write(&last_position_, 8, 1);
 		}
 		return;
 	}
@@ -44,9 +44,9 @@ namespace large_list {
 	void NamePositionTuple::read(ConnectionFile & connection_file) {
 		connection_file.seekRead(-(8 + NAMELENGTH) * length_ * 2 - 8, SEEK_END);
 		for (int i = 0; i < length_; i++) {
-			connection_file.read((char *) & (std::get<0>(tuple_[i])), 8, 1);
+			connection_file.read(& (std::get<0>(tuple_[i])), 8, 1);
 			std::get<2>(tuple_[i]).resize(NAMELENGTH);
-			connection_file.read((char *) & (std::get<2>(tuple_[i])[0]), NAMELENGTH, 1);
+			connection_file.read(& (std::get<2>(tuple_[i])[0]), NAMELENGTH, 1);
 		}
 		readLastPosition(connection_file);
 		for (int i = 0; i < length_ - 1; i++) {
@@ -60,11 +60,11 @@ namespace large_list {
 
 	// read one element
 	void NamePositionTuple::read(ConnectionFile & connection_file, int index) {
-		connection_file.read((char *) & std::get<0>(tuple_[index]), 8, 1);
+		connection_file.read(&std::get<0>(tuple_[index]), 8, 1);
 		std::get<2>(tuple_[index]).resize(NAMELENGTH);
-		connection_file.read((char *) & (std::get<2>(tuple_[index])[0]), NAMELENGTH, 1);
+		connection_file.read(&std::get<2>(tuple_[index])[0], NAMELENGTH, 1);
 		int64_t next_position;
-		connection_file.read((char *) & next_position, 8, 1);
+		connection_file.read(&next_position, 8, 1);
 		std::get<1>(tuple_[index]) = next_position - std::get<0>(tuple_[index]);
 		return;
 	}
@@ -97,7 +97,7 @@ namespace large_list {
 
 	void NamePositionTuple::readLastPosition(ConnectionFile & connection_file) {
 		connection_file.seekRead(-(8 + NAMELENGTH) * length_ - 8, SEEK_END);
-		connection_file.read((char *) & (last_position_), 8, 1);
+		connection_file.read(&last_position_, 8, 1);
 		return;
 	}
 

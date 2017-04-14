@@ -32,7 +32,6 @@
 #define LATIN1_MASK (1<<2)
 #define UTF8_MASK (1<<3)
 
-#define BYTE unsigned char
 #define NAMELENGTH 16
 #define CURRENT_VERSION ((0<<8) + (3<<4) + 1)
 #define READABLE_VERSION ((0<<8) + (2<<4) + 1)
@@ -56,29 +55,29 @@ namespace large_list {
 
 	class Connection {
 	public:
-		virtual void write(char *data, int nbytes, int nblocks) = 0;
-		virtual void read(char *data, int nbytes, int nblocks) = 0;
+		virtual void write(const void *data, int nbytes, int nblocks) = 0;
+		virtual void read(void *data, int nbytes, int nblocks) = 0;
 		virtual void seekRead(int64_t position, int origin) = 0;
 		virtual void seekWrite(int64_t position, int origin) = 0;
 	};
 
 	class ConnectionRaw : public Connection {
 	private:
-		char *raw_array_;
+		void* raw_array_;
 		int64_t read_pos_;
 		int64_t write_pos_;
 		int64_t length_;
 	public:
 		ConnectionRaw(MemorySlot &, int64_t length);
 		~ConnectionRaw();
-		void write(char *data, int nbytes, int nblocks);
-		void read(char *data, int nbytes, int nblocks);
+		void write(const void *data, int nbytes, int nblocks);
+		void read(void *data, int nbytes, int nblocks);
 		void seekRead(int64_t position, int origin);
 		void seekWrite(int64_t position, int origin);
 		void compress(MemorySlot &);
 		void uncompress(MemorySlot &);
 		void free(MemorySlot &);
-		char* getRaw();
+		void* getRaw();
 		int64_t getLength();
 	};
 
@@ -102,8 +101,8 @@ namespace large_list {
 		void disconnect();
 
 		// wrapper for fwrite and fread, gets rid of warnings and handles exceptions.
-		void write(char *data, int nbytes, int nblocks);
-		void read(char *data, int nbytes, int nblocks);
+		void write(const void *data, int nbytes, int nblocks);
+		void read(void *data, int nbytes, int nblocks);
 
 		// set/read the pointers.
 		void seekRead(int64_t position, int origin);
@@ -370,13 +369,13 @@ namespace large_list {
 		bool is_slot_in_use[NUMBER_OF_MEM_SLOTS];
 		bool is_slot_initialized[NUMBER_OF_MEM_SLOTS];
 		int64_t slot_size[NUMBER_OF_MEM_SLOTS];
-		char *slot[NUMBER_OF_MEM_SLOTS];
+		void *slot[NUMBER_OF_MEM_SLOTS];
 	public:
 		MemorySlot();
 		~MemorySlot();
-		char* slot_malloc(int64_t);
-		void slot_free(char *);
-		char* slot_realloc(char*, int64_t);
+		void* slot_malloc(int64_t);
+		void slot_free(void *);
+		void* slot_realloc(void*, int64_t);
 	};
 
 	extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append, SEXP compress);
