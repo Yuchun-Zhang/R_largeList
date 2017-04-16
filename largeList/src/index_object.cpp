@@ -28,12 +28,12 @@ namespace large_list {
 		}
 		if (TYPEOF(index) == INTSXP ||  TYPEOF(index) == REALSXP) {
 			length_ = Rf_length(index);
-  			index_.resize(length_);
-  			TYPEOF(index) == INTSXP ?
-  				index_.assign(INTEGER(index), INTEGER(index) + length_) :
-  				index_.assign(REAL(index), REAL(index) + length_);
-  			try {processNumeric(); } catch (std::exception &e){ connection_file.disconnect(); error(e.what());}
-  			// Rprintf("index size : %d, length_ : %d\n", index_.size(), length_);
+			index_.resize(length_);
+			TYPEOF(index) == INTSXP ?
+				index_.assign(INTEGER(index), INTEGER(index) + length_) :
+				index_.assign(REAL(index), REAL(index) + length_);
+			try {processNumeric(); } catch (std::exception &e){ connection_file.disconnect(); error(e.what());}
+			// Rprintf("index size : %d, length_ : %d\n", index_.size(), length_);
 		}
 		if (TYPEOF(index) == STRSXP) {
 			length_ = Rf_length(index);

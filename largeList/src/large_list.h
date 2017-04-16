@@ -116,8 +116,8 @@ namespace large_list {
 		// move a data block.
 		void moveData(const int64_t &move_from_start_pos, 
 					  const int64_t &move_from_end_pos,
-		              const int64_t &move_to_start_pos, 
-		              const int64_t &move_to_end_pos);
+					  const int64_t &move_to_start_pos, 
+					  const int64_t &move_to_end_pos);
 	};
 
 	class UnitObject {
@@ -269,7 +269,7 @@ namespace large_list {
 		void sort();
 		void remove(IndexObject & index_object);
 		static bool cmp (std::tuple<int64_t, int64_t, std::string>  const & a, 
-		                 std::tuple<int64_t, int64_t, std::string>  const & b);
+						 std::tuple<int64_t, int64_t, std::string>  const & b);
 
 		// other
 		void setToInvalid(int index);
@@ -378,10 +378,10 @@ namespace large_list {
 		void* slot_realloc(void*, int64_t);
 	};
 
-	extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append, SEXP compress);
-	extern "C" SEXP readList(SEXP file, SEXP index);
-	extern "C" SEXP removeFromList(SEXP file, SEXP index);
-	extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object);
+	extern "C" SEXP saveList(SEXP object, SEXP file, SEXP append, SEXP compress, SEXP verbose);
+	extern "C" SEXP readList(SEXP file, SEXP index, SEXP verbose);
+	extern "C" SEXP removeFromList(SEXP file, SEXP index, SEXP verbose);
+	extern "C" SEXP modifyInList(SEXP file, SEXP index, SEXP object, SEXP verbose);
 	extern "C" SEXP getListLength(SEXP file);
 	extern "C" SEXP getListName(SEXP file);
 	extern "C" SEXP modifyNameInList(SEXP file, SEXP index, SEXP names);

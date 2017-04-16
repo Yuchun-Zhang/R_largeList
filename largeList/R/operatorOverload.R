@@ -19,7 +19,7 @@
 getList <- function(file, compress = TRUE, verbose = FALSE, truncate = FALSE){
   if (file.exists(file) && truncate == FALSE) {
     if (verbose == TRUE) {cat(sprintf("file exists, check file / version."))}
-    .Call('checkFileAndVersionExternal', PACKAGE = 'largeList', file)
+    .Call(C_checkFileAndVersionExternal, file)
     list_object <- list()
     attr(list_object, "largeList_file") <- file
     class(list_object) <- "largeList"
@@ -114,7 +114,7 @@ getList <- function(file, compress = TRUE, verbose = FALSE, truncate = FALSE){
 #' largelist_object[c(4, 5)] <- list(6, 7) ## append 6, 7 to 4th, 5th position and NULL to 3rd position
 #' @export
 "[<-.largeList" <- function(x, index = NULL, value) {
-  .Call('checkList', PACKAGE = 'largeList', object = list(value))
+  .Call(C_checkList, object = list(value))
   ## if index is null, append value to list object.
   if (is.null(index)) {
     ## vectors are transfered to list since function saveList and modifyInList only support list.
@@ -318,5 +318,5 @@ names.largeList <- function(x) {
 
 
 .onLoad <- function(libname, pkgname) {
-  options(list(largeList.max.print = 100))
+  options(list(largeList.max.print = 100, largeList.report.progress = TRUE))
 }

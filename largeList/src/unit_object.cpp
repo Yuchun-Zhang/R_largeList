@@ -126,8 +126,8 @@ namespace large_list {
 		case INTSXP   : { 
 			writeLength(_x, connection);
 			connection.write(&INTEGER(_x)[0], 4, Rf_xlength(_x));
-		  	break; 
-		 }
+			break; 
+		}
 		case CPLXSXP  : { 
 			writeLength(_x, connection);
 			connection.write(&COMPLEX(_x)[0], 16, Rf_xlength(_x));
@@ -141,36 +141,36 @@ namespace large_list {
 				writeLength(_x, connection);
 				connection.write(CHAR(_x), 1, Rf_xlength(_x));
 			}
-		    break; 
+			break; 
 		}
 		case STRSXP : {
 			writeLength(_x, connection);
 			for (int64_t i = 0; i < Rf_xlength(_x); i++) {
 				writeSEXP(STRING_ELT(_x, i), connection);
 			}
-		 	break; 
+			break; 
 		}
 		case LGLSXP   : { 
 			writeLength(_x, connection);
 			connection.write(&LOGICAL(_x)[0], 4, Rf_xlength(_x));
-		  break; 
+			break; 
 		}
 		case VECSXP   : { 
 			writeLength(_x, connection);
 			for (int64_t i = 0; i < Rf_xlength(_x); i++) {
 				writeSEXP(VECTOR_ELT(_x, i), connection);
 			}
-		  	break; 
+			break; 
 		}
 		case RAWSXP   : { 
 			writeLength(_x, connection);
 			connection.write(&RAW(_x)[0], 1, Rf_xlength(_x));
-		  	break; 
+			break; 
 		}
 		case SYMSXP   : { 
 			SEXP name = PRINTNAME(_x);
 			writeSEXP(name, connection);
-		  	break; 
+			break; 
 		}
 		case LISTSXP  : {
 			SEXP el = CAR(_x);
@@ -290,7 +290,7 @@ namespace large_list {
 			UNPROTECT_PTR(el);
 			if (has_tag == 1) {SET_TAG(element, tag); UNPROTECT_PTR(tag);}
 			break;
-		} 
+		}
 		}
 		if (has_attr == 1) {
 			SEXP parlist = PROTECT(readSEXP(connection));

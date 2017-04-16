@@ -8,7 +8,7 @@
 #' getListLength("example.llo")
 #' @export
 getListLength <- function(file) {
-    .Call('getListLength', PACKAGE = 'largeList', file)
+    .Call(C_getListLength, file)
 }
 
 #' Check if elements are compressed in the file.
@@ -21,7 +21,7 @@ getListLength <- function(file) {
 #' isListCompressed("example.llo") # get FALSE
 #' @export
 isListCompressed <- function(file) {
-  .Call('isListCompressed', PACKAGE = 'largeList', file)
+  .Call(C_isListCompressed, file)
 }
 
 #' Get names of elements in a list file.
@@ -34,7 +34,7 @@ isListCompressed <- function(file) {
 #' getListName("example.llo")
 #' @export
 getListName <- function(file) {
-    .Call('getListName', PACKAGE = 'largeList', file)
+    .Call(C_getListName, file)
 }
 
 #' Get elements from a list file.
@@ -56,7 +56,7 @@ getListName <- function(file) {
 #' readList("example.llo",c("A", "B"))
 #' @export
 readList <- function(file, index = NULL) {
-    .Call('readList', PACKAGE = 'largeList', file, index)
+    .Call(C_readList, file, index, getOption("largeList.report.progress"))
 }
 
 #' Remove elements from a list file.
@@ -75,7 +75,7 @@ readList <- function(file, index = NULL) {
 #' removeFromList("example.llo", c(2))
 #' @export
 removeFromList <- function(file, index) {
-    res <- .Call('removeFromList', PACKAGE = 'largeList', file, index)
+    res <- .Call(C_removeFromList, file, index, getOption("largeList.report.progress"))
 }
 
 #' Save or append elements to a list file.
@@ -97,7 +97,7 @@ removeFromList <- function(file, index) {
 #' @export
 
 saveList <- function(object, file, append = FALSE, compress = TRUE) {
-    res <- .Call('saveList', PACKAGE = 'largeList', object, file, append, compress)
+    res <- .Call(C_saveList, object, file, append, compress, getOption("largeList.report.progress"))
 }
 
 #' Modify elements in a list file.
@@ -118,7 +118,7 @@ saveList <- function(object, file, append = FALSE, compress = TRUE) {
 #' modifyInList("example.llo", c("AA","BB"), list("A","B"))
 #' @export
 modifyInList <- function(file, index, object) {
-  res <- .Call('modifyInList', PACKAGE = 'largeList', file, index, object)
+  res <- .Call(C_modifyInList, file, index, object, getOption("largeList.report.progress"))
 }
 
 #' Modify names of elements in a list file.
@@ -136,7 +136,7 @@ modifyInList <- function(file, index, object) {
 #' modifyNameInList("example.llo", c(1,2), c("AA","BB"))
 #' @export
 modifyNameInList <- function(file, index, name) {
-  res <- .Call('modifyNameInList', PACKAGE = 'largeList', file, index, name)
+  res <- .Call(C_modifyNameInList, file, index, name)
 }
 
 

@@ -19,10 +19,10 @@ namespace large_list {
 		if (is_long_time_ == TRUE) {
 			if ((int)(i/estimated_sec_times_) != (int)((i+1)/estimated_sec_times_)) {
 				Rprintf("\r                                    ");
-                Rprintf("\r%s %2.2lf%% ", progress_name.c_str(), ((double)i*100/length));
-                R_FlushConsole(); 
-                R_CheckUserInterrupt();
-            }
+				Rprintf("\r%s %2.2lf%% ", progress_name.c_str(), ((double)i*100/length));
+				R_FlushConsole(); 
+				R_CheckUserInterrupt();
+			}
 		}
 		return;
 	}

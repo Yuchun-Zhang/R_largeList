@@ -21,7 +21,7 @@ namespace large_list {
 		last_position_ = toCopyObject.getLastPosition();
 	}
 
-	NamePositionTuple::~NamePositionTuple() {}
+	NamePositionTuple::~NamePositionTuple() { }
 
 	void NamePositionTuple::resize(int length) {
 		length_ = length;
@@ -147,7 +147,7 @@ namespace large_list {
 	}
 
 	void NamePositionTuple::print(int index) {
-		Rprintf("Index %d, Position %lf, Serialized_lentth %lf, String %s \n",
+		Rprintf("Index %d, Position %lf, Serialized_length %lf, String %s \n",
 		        index,
 		        (double)std::get<0>(tuple_[index]),
 		        (double)std::get<1>(tuple_[index]),

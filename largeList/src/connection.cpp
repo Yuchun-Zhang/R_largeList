@@ -153,12 +153,12 @@ namespace large_list {
 		HANDLE fh;
 		do {
 			fh = CreateFile((LPCTSTR)file_dir_name_,
-			                GENERIC_WRITE, // open for write
-			                0,
-			                NULL, // default security
-			                OPEN_EXISTING, // existing file only
-			                FILE_ATTRIBUTE_NORMAL, // normal file
-			                NULL);
+							GENERIC_WRITE, // open for write
+							0,
+							NULL, // default security
+							OPEN_EXISTING, // existing file only
+							FILE_ATTRIBUTE_NORMAL, // normal file
+							NULL);
 			if (fh == INVALID_HANDLE_VALUE) {
 				DWORD last_error = GetLastError();
 				if (ERROR_SHARING_VIOLATION == last_error) {
@@ -166,12 +166,12 @@ namespace large_list {
 					Sleep(RETRYDELAY);
 					continue;
 				} else {
-				  	char error_info[200];
-				  	sprintf(error_info, 
-                  	"file truncation failed (Windows), get file handle error. Error Code %ld .", 
-                  	last_error);
-                  	disconnect();
-				  	error(error_info);
+					char error_info[200];
+					sprintf(error_info, 
+					"file truncation failed (Windows), get file handle error. Error Code %ld .", 
+					last_error);
+					disconnect();
+					error(error_info);
 				}
 			}
 			break;
@@ -183,12 +183,12 @@ namespace large_list {
 		SetFilePointerEx(fh, file_length_w, NULL, 0);
 		if (SetEndOfFile(fh) == 0) {
 			DWORD last_error = GetLastError();
-		 	char error_info[200];
-		 	sprintf(error_info, 
-        			"file truncation failed (Windows), Error Code %ld .", 
-            		last_error);
-		 	disconnect();
-		  	error(error_info);
+			char error_info[200];
+			sprintf(error_info, 
+					"file truncation failed (Windows), Error Code %ld .", 
+					last_error);
+			disconnect();
+			error(error_info);
 		}
 		CloseHandle(fh);
 #endif

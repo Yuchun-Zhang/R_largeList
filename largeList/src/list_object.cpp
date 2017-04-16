@@ -125,6 +125,7 @@ namespace large_list {
 		if (name_sxp == R_NilValue) {
 			has_name_ = false;
 			for (int i = 0; i < length_; i++) {
+				names_[i].resize(NAMELENGTH);
 				names_[i].assign(NAMELENGTH, '\xff');
 			}
 		} else {
@@ -210,7 +211,7 @@ namespace large_list {
 			serialized_length_[i] = unit_object.calculateSerializedLength(memoryslot, is_compress_);
 			// Rprintf("LENGTH %3.0ld \n", serialized_length_[i]);
 			// Print progress to console
-        	calculate_reporter.reportProgress(i, length_, "Calculate Serialized Length");
+			calculate_reporter.reportProgress(i, length_, "Calculate Serialized Length");
 		}
 		return;
 	}
@@ -225,14 +226,14 @@ namespace large_list {
 
 	void ListObject::print() {
 		Rprintf("Length %d, Has_name %s, Is_compress %s \n",
-		        length_,
-		        has_name_ ? "true" : "false",
-		        is_compress_ ? "true" : "false");
+				length_,
+				has_name_ ? "true" : "false",
+				is_compress_ ? "true" : "false");
 		for (int i = 0; i < length_; i++) {
 			Rprintf("index %d, serialized_length_ %lf, name %s \n",
-			        i,
-			        (double) serialized_length_[i],
-			        names_[i].c_str());
+					 i,
+					(double) serialized_length_[i],
+					names_[i].c_str());
 		}
 	}
 }
