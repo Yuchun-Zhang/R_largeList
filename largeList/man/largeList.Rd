@@ -56,4 +56,3 @@ Some operators / functions are overloaded.
 \item{\code{\link{names<-.largeList}}} Set names of elements stored in file.
 }
 }
-

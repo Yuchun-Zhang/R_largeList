@@ -30,4 +30,3 @@ largelist_object$A ## get NULL, not 1 from "AA" since no partial matching happen
 \seealso{
 \code{\link{[[.largeList}} \code{\link{largeList}}
 }
-

@@ -23,4 +23,3 @@ isListCompressed("example.llo") # get FALSE
 \seealso{
 \code{\link{largeList}}
 }
-

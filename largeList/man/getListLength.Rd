@@ -23,4 +23,3 @@ getListLength("example.llo")
 \seealso{
 \code{\link{largeList}}
 }
-

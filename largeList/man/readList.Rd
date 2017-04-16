@@ -22,7 +22,9 @@ If no indices provided, the whole list will be read. Given index could be a nume
 vector, a logical vector or a character vector representing the names. If there exist more then one elements 
 corresponding to a given name, the first matched will be returned (not necessary to be the first
 one in index order). If there are no elements with given name, \code{NULL} will be returned. \cr
-Files created by \code{\link{saveRDS}} can't be read.
+Files created by \code{\link{saveRDS}} can't be read. \cr
+When it takes long time to process, some verbose info will be printed to console, 
+which can be switched off by setting \code{options(list(largeList.report.progress = FALSE))}.
 }
 \examples{
 list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
@@ -34,4 +36,3 @@ readList("example.llo",c("A", "B"))
 \seealso{
 \code{\link{largeList}}
 }
-

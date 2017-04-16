@@ -7,4 +7,6 @@
 /**/*.Rhistory
 /**/*.RData
 /**/*.Rbuildignore
+/**/*.Rproj
+/**/*.Rd
 .Rproj.user

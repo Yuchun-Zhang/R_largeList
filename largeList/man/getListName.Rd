@@ -23,4 +23,3 @@ getListName("example.llo")
 \seealso{
 \code{\link{largeList}}
 }
-

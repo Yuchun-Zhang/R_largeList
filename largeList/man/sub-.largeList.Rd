@@ -30,4 +30,3 @@ largelist_object[c("A", "C")] ## get list("A" = 1, "C" = 3)
 \seealso{
 \code{\link{largeList}}
 }
-

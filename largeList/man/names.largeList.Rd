@@ -23,4 +23,3 @@ names(largelist_object) ## get c("A", "B", "C")
 \seealso{
 \code{\link{largeList}}
 }
-

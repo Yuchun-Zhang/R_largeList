@@ -31,4 +31,3 @@ modifyNameInList("example.llo", c(1,2), c("AA","BB"))
 \seealso{
 \code{\link{largeList}}
 }
-

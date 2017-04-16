@@ -53,5 +53,5 @@
 #' }
 #' @docType package
 #' @name largeList
-#' @useDynLib largeList
+#' @useDynLib largeList, .registration=TRUE, .fixes = "C_"
 NULL

@@ -34,4 +34,3 @@ largelist_object <- getList("example.llo", verbose = TRUE, truncate = TRUE)
 \seealso{
 \code{\link{largeList}}
 }
-

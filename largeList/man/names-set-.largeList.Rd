@@ -25,4 +25,3 @@ names(largelist_object) <- c("AA", "BB", "CC")
 \seealso{
 \code{\link{largeList}}
 }
-

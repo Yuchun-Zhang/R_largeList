@@ -23,4 +23,3 @@ length(largelist_object) ## get 3
 \seealso{
 \code{\link{largeList}}
 }
-

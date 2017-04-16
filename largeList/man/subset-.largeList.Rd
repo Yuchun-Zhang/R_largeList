@@ -34,4 +34,3 @@ largelist_object[c(4, 5)] <- list(6, 7) ## append 6, 7 to 4th, 5th position and 
 \seealso{
 \code{\link{largeList}}
 }
-

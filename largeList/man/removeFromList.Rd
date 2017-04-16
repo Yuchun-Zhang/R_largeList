@@ -20,7 +20,9 @@ Remove elements from a list file.
 \details{
 It removes elements with given indices or names. This function may relocate all the data 
 in the stored file, thus can be very slow! Please consider to call this function 
-batchwise instead of one index by one index.
+batchwise instead of one index by one index. \cr
+When it takes long time to process, some verbose info will be printed to console, 
+which can be switched off by setting \code{options(list(largeList.report.progress = FALSE))}.
 }
 \examples{
 list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
@@ -31,4 +33,3 @@ removeFromList("example.llo", c(2))
 \seealso{
 \code{\link{largeList}}
 }
-

@@ -22,4 +22,3 @@ length(largelist_object) <- 5 ## get list("A" = 1, "B" = 2, "C" = 3, NULL, NULL)
 \seealso{
 \code{\link{largeList}}
 }
-

@@ -34,4 +34,3 @@ largelist_object[[4]] <- 6 ## append 6 to 4th and NULL to 3rd position
 \seealso{
 \code{\link{largeList}}
 }
-

@@ -24,4 +24,3 @@ largelist_object ## print to screen
 \seealso{
 \code{\link{largeList}}
 }
-

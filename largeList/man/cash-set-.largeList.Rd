@@ -22,4 +22,3 @@ x$A <- 1 is equivalent to x[["A"]] <- 1
 \seealso{
 \code{\link{[[<-.largeList}} \code{\link{largeList}}
 }
-

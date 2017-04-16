@@ -29,4 +29,3 @@ largelist_object[["B"]] ## get 2
 \seealso{
 \code{\link{largeList}}
 }
-
