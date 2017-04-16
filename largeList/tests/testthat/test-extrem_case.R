@@ -5,6 +5,7 @@ context("extrem_case")
 
 test_that("extrem cases", {
   source(paste0(path.package("largeList"), "/tests/config.R"))
+  if (!ready_to_test) return(invisible(TRUE))
   flog.info("test extrem cases : read")
   l <- as.list(1:10)
   names(l) <- LETTERS[1:10]

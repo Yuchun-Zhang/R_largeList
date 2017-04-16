@@ -1,8 +1,11 @@
-library(futile.logger)
-
 mac_dir <- "~/Documents/Rtest/"
 win_dir <- "C:/Rtest"
 linux_dir <- "~/Documents/Rtest"
+
+switch(Sys.info()['sysname'],
+       "Darwin" = {working_dir <- mac_dir},
+       "Windows" = {working_dir <- win_dir},
+       "Linux" = {working_dir <- linux_dir})
 
 rds_file_name <- "./ranListSmall.rds"
 llo_file_name <- "./ranListSmall.llo"
@@ -16,7 +19,20 @@ compress <- TRUE
 # original <- FALSE
 # compress <- TRUE
 
-switch(Sys.info()['sysname'],
-       "Darwin" = {setwd(mac_dir)},
-       "Windows" = {setwd(win_dir)},
-       "Linux" = {setwd(linux_dir)})
+options(list(largeList.report.progress = FALSE))
+
+if (dir.exists(working_dir)) {
+  setwd(working_dir)
+  if (file.exists(rds_file_name)) {
+    library(futile.logger)
+    ready_to_test <- TRUE
+  } else {
+    ready_to_test <- FALSE
+  }
+} else {
+  ready_to_test <- FALSE
+}
+
+
+
+

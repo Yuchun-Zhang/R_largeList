@@ -5,6 +5,7 @@ context("error")
 
 test_that("multiplication works", {
   source(paste0(path.package("largeList"), "/tests/config.R"))
+  if (!ready_to_test) return(invisible(TRUE))
   if (original) {
     ####
     flog.info("Test : object is not list")

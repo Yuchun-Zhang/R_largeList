@@ -5,6 +5,7 @@ context("modify_name")
 
 test_that("modify name in list", {
   source(paste0(path.package("largeList"), "/tests/config.R"))
+  if (!ready_to_test) return(invisible(TRUE))
   flog.info("read random list file")
   data <- readRDS(rds_file_name)
   names(data) <- as.character(1:length(data))

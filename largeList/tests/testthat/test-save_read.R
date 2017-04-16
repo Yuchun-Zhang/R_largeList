@@ -5,6 +5,7 @@ context("save_read")
 
 test_that("Append == FALSE", {
   source(paste0(path.package("largeList"), "/tests/config.R"))
+  if (!ready_to_test) return(invisible(TRUE))
   flog.info("read random list file")
   data <- readRDS(rds_file_name)
   names(data) <- as.character(1:length(data))
@@ -73,6 +74,7 @@ test_that("Append == FALSE", {
 
 
 test_that("Append == TRUE", {
+  if (!ready_to_test) return(invisible(TRUE))
   flog.info("read random list file")
   data <- readRDS(rds_file_name)
   names(data) <- as.character(1:length(data))
