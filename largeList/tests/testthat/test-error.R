@@ -4,6 +4,8 @@ context("error")
 ## TODO: Add more tests
 
 test_that("multiplication works", {
+  skip_on_cran()
+  skip_on_travis()
   source(paste0(path.package("largeList"), "/tests/config.R"))
   if (!ready_to_test) return(invisible(TRUE))
   if (original) {
