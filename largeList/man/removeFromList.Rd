@@ -25,10 +25,15 @@ When it takes long time to process, some verbose info will be printed to console
 which can be switched off by setting \code{options(list(largeList.report.progress = FALSE))}.
 }
 \examples{
-list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-saveList(list1, "example.llo")
-removeFromList("example.llo", c("A"))
-removeFromList("example.llo", c(2))
+list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+saveList(object = list_1, file = "example.llo")
+# by numeric indices
+removeFromList(file = "example.llo", index = c(2))
+# by name
+removeFromList(file = "example.llo", index = c("A"))
+# by logical indices
+removeFromList(file = "example.llo", index = c(T))
+
 }
 \seealso{
 \code{\link{largeList}}

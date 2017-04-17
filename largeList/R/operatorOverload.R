@@ -18,7 +18,7 @@
 #' 
 getList <- function(file, compress = TRUE, verbose = FALSE, truncate = FALSE){
   if (file.exists(file) && truncate == FALSE) {
-    if (verbose == TRUE) {cat(sprintf("file exists, check file / version."))}
+    if (verbose == TRUE) {cat(sprintf("file exists, file head and version will be examed."))}
     .Call(C_checkFileAndVersionExternal, file)
     list_object <- list()
     attr(list_object, "largeList_file") <- file

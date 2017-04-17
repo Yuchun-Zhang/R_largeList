@@ -1,0 +1,253 @@
+---
+title: "Introduction to largeList"
+author: Yuchun Zhang
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to data.table}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r, echo = FALSE, message = FALSE}
+library(largeList)
+knitr::opts_chunk$set(
+  comment = "#",
+    error = FALSE,
+     tidy = FALSE,
+    cache = FALSE,
+ collapse = TRUE)
+```
+
+## Introduction
+
+The package **largeList** is designed to handle large list objects in R. In many business and engineering scenarios, huge among of unstructured data needs to be stored into list objects, which causes both RAM consumption and running time problems. This package enables serializing, compressing and saving elements in list separately, therefore provides the possibility to randomly access elements stored in files. 
+
+## How it works
+
+R objects will be serialized with an uncompressed/ compressed (zlib, default level) non-ascii little-endian format, which is similar to saveRDS. Two ordered tables are created at the end of data for quick lookups, one for indices and one for element names. Notice that, all the names will be truncated to 16 characters. 
+
+Given indices or names of elements, positions will be directly extracted or extracted via binary search within the name-position table. Then required elements are located and unserialized. Therefore it will not restore the whole list into memory. 
+
+## Limits of current version
+In the current version, only basic data types are supported, including NULL, integer, numeric, character, complex, raw, logic, factor, list, matrix, array and data.frame. Types like function, data.table are not supported. 
+
+The supported maximum size of each R object stored in list is $2^{31} -1$ bytes.
+
+## Examples Part One : Original Functions
+There're basically two ways to use the package: via original functions or use operator overloadings.
+
+Basic functions include:
+
+* **saveList:**   Save or append elements to a list file.
+* **readList:**  Get elements from a list file.
+* **removeFromList:** Remove elements from a list file.
+* **modifyInList:** Modify elements in a list file.
+* **modifyNameInList:** Modify names of elements in a list file.
+* **getListName:** Get number of elements in a list file.
+* **getListLength:** Get names of elements in a list file.
+
+### Save / append list to file.
+If parameter `append` is `TRUE`, file will be created if not exists, or truncated if already exists. If `append = FALSE`, list object will be appended to the file using the same compression setting.
+```{r}
+# save list_1 to a new file called example.llo using compression.
+list_1 <- list("A" = c(1,2),
+               "B" = "abc", 
+               list(1, 2))
+saveList(object = list_1, file = "example.llo", append = FALSE, compress = TRUE)
+
+# append list_2 to the existing file example.llo, compress option will be extracted from the file.
+list_2 <-  list("C" = data.frame(col_1 = 1:2, col_2 = 3:4),
+                "D" = matrix(0, nrow = 2, ncol = 2))
+saveList(object = list_2, file = "example.llo", append = TRUE)
+```
+
+### Read list from file
+Different kinds of indices can be used in **readList** to access data.
+```{r}
+# all elements
+list_read <- readList(file = "example.llo")
+
+# by numeric indices
+list_read <- readList(file = "example.llo", index = c(1, 3))
+
+# by names
+list_read <- readList(file = "example.llo", index = c("A", "B"))
+
+# by logical indices
+list_read <- readList(file = "example.llo", index = c(T, F, T, F, T))
+```
+
+### Remove elements from file
+Removing can also be done using different indices. This function may relocate all the data in the stored file, thus can be very slow! Please consider to call this function batchwise instead of index one by one.
+```{r}
+# copy the file
+file.copy(from = "example.llo", to = "example_remove.llo")
+
+# by numeric indices
+removeFromList(file = "example_remove.llo", index = c(2))
+
+# by names
+removeFromList(file = "example_remove.llo", index = c("A", "D"))
+
+# by logical indices
+removeFromList(file = "example_remove.llo", index = c(T, F))
+
+# remove file
+file.remove("example_remove.llo")
+```
+
+### Modify elements in list 
+**modifyInList** modifies elements with given indices by replacement values provided in parameter object. If length of replacement values is shorter than length of indices, values will be used circularly. This function may relocate all the data in the stored file, thus can be very slow! Please consider to call this function batchwise instead of one by one.
+```{r}
+# copy the file
+file.copy(from = "example.llo", to = "example_modify.llo")
+
+# by numeric indices
+modifyInList(file = "example_modify.llo", index = c(1, 2), object = list("AA", "BB"))
+
+# by names
+modifyInList(file = "example_modify.llo", index = c("C","D"), object = list("C","D"))
+
+# by logical indices
+modifyInList(file = "example_modify.llo", index = c(T, F), object = list(1, 2))
+
+# remove file
+file.remove("example_modify.llo")
+```
+
+### Modify names in list
+**modifyNameInList** modifies names of elements with given indices by replacement values provided in parameter `name`. If the length of replacement values is shorter than the length of indices, values will be used circularly.
+```{r}
+# copy the file
+file.copy(from = "example.llo", to = "example_modify_name.llo")
+
+# by numeric indices
+modifyNameInList(file = "example_modify_name.llo", index = c(1, 2), name = c("new_name_A", "new_name_B"))
+
+# by logical indices
+modifyNameInList(file = "example_modify_name.llo", index = c(T, F), name = c("new_name_C", "new_name_D"))
+
+# remove file
+file.remove("example_modify_name.llo")
+```
+
+### Get names in list
+```{r}
+getListName("example.llo")
+```
+
+### Get length of list
+```{r}
+getListLength("example.llo")
+
+# remove file
+file.remove("example.llo")
+```
+
+## Examples Part Two : Operator Overloadings
+Through operator overloadings, list objects stored in file can be manipulated pretty similar to basic R list objects.
+
+### Bind large list file to R handle
+**getList** creates a R object of class "largeList" and bind it with a file. 
+```{r}
+# by setting truncate == TRUE, file will be trauncated if exists.
+largelist_object <- getList("example.llo", verbose = TRUE, truncate = TRUE)
+
+# by setting truncate == FALSE, it will bind to existing file.
+largelist_object <- getList("example.llo", verbose = TRUE, truncate = FALSE)
+```
+
+### Save / append list to file
+Save and append syntaxes are a little bit different from basic list type.
+```{r}
+# save list
+largelist_object[[]] <- list("A" = 1, "B" = 2)
+
+# append list
+largelist_object[] <- list("C" = 3, "D" = 4)
+```
+
+### Read list from file
+The same as list type, `[]` for getting sublist, `[[]]` for getting one element.
+```{r}
+# For print just use largelist_object, for assignment, use largelist_object[]
+largelist_object
+object_copy <- largelist_object[]
+
+# by numeric indices
+largelist_object[c(1,2)]
+largelist_object[[1]]
+
+# by names
+largelist_object[c("A", "E")]
+largelist_object[["A"]]
+
+# by logical indices
+largelist_object[c(T, F)]
+```
+
+### Remove elements from list
+The same as list type, assign `NULL` to values.
+```{r}
+# by numeric indices
+largelist_object[1] <- NULL
+
+# by names
+largelist_object["B"] <- NULL
+
+# by logical indices
+largelist_object[c(T,F)] <- NULL
+```
+
+### Modify elements in list
+The same as list type. Depends on indices, elements will be changed or appended. 
+```{r}
+largelist_object[[]] <- list("A" = 1, "B" = 2, "C" = 3, "D" = 4)
+
+# by numeric indices
+largelist_object[c(1, 5)] <- list(1, "E" = 5)
+
+# by names
+largelist_object[c("C","F")] <- c(5, 7)
+
+# by logical indices
+largelist_object[c(T, F)] <- c(8)
+
+print(largelist_object)
+```
+
+### Get / modify names in list
+```{r}
+largelist_object[[]] <- list("A" = 1, "B" = 2)
+# get names 
+names(largelist_object)
+
+# modify names
+names(largelist_object)[c(1, 2)] <- c("AA", "BB")
+names(largelist_object)[c(F, T)] <- c("DD")
+
+print(largelist_object)
+```
+
+### Other operators 
+Other operators like `print`, `length`, `head`, `tail` are also avaliable.
+```{r}
+largelist_object[[]] <- list("A" = 1, "B" = 2)
+# maximal number to print can be changed by setting option largeList.max.print.
+print(largelist_object)
+
+length(largelist_object)
+
+head(largelist_object)
+
+tail(largelist_object)
+
+# remove file
+file.remove("example.llo")
+```
+
+## Miscellaneous
+Processing progress will be output to console if operations take too long, it can be switched off by setting option `largeList.report.progress` to `FALSE`. (`options(list(largeList.report.progress = FALSE))`)
+

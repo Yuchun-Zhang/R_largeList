@@ -3,45 +3,81 @@
 ## Description
 Functions to write or append a R list to a file, read, modify or remove elements from it without restoring the whole list.
 
-## How it works
-R objects will be serialized with an uncompressed/ compressed (zlib, default level) non-ascii little-endian format, which is similar to saveRDS. Two ordered tables are created at the end of data for quick lookups, one for indices and one for element names. Notice that, all the names will be truncated to 16 characters. 
+## Installation of CRAN Version
 
-Given indices or names of elements, positions will be directly extracted or extracted via binary search within the name-position table. Then required elements are located and unserialized. Therefore it will not restore the whole list into memory. 
+[![CRAN_Status_Badge][cran_version_badges]][cran_link]
+[![Build Status][build_status_badges]][build_status_link]
+[![Downloads from the RStudio CRAN mirror][cran_download_badges]][cran_link]
 
-## Limits of current version
-In the current version, only basic data types are supported, including NULL, integer, 
-numeric, character, complex, raw, logic, factor, list, matrix, array and data.frame. 
-Types like function, data.table are not supported. 
 
-The supported maximum size of R objects is 2^31 -1, the supported maximum file 
-size is 2^63 -1 bytes. 
+You can install the released version from [CRAN][cran_link].
 
-# Functions
-* **saveList:**   Save or append elements to a list file.
-* **readList:**  Get elements from a list file.
-* **removeFromList:** Remove elements from a list file.
-* **modifyInList:** Modify elements in a list file.
-* **modifyNameInList:** Modify names of elements in a list file.
-* **getListName:** Get number of elements in a list file.
-* **getListLength:** Get names of elements in a list file.
+```R
+install.packages("largeList")
+```
 
-With overloads of operators, list objects stored in files can be manipulated as simply as the normal list objects in R.
+## Development
 
-* **getList:** Bind a R object with a list file.
-* **\[.largeList:** Get elements.
-* **\[\[.largeList:** Get element.
-* **$.largeList:** Get element, same as **\[\[.largeList**, no partial matching.
-* **\[<-.largeList:** If index provided, it modifies, appends or removes the elements with given indices, otherwise it appends value to list. 
-* **\[\[<-.largeList:** If index provided, it modifies, appends or removes the element with given index, otherwise it saves value to list. 
-* **$<-.largeList:** Same as **\[\[<-.largeList**, no partial matching.
-* **length.largeList:** Get length of list stored in file.
-* **length<-.largeList:** Set length of list stored in file.
-* **names.largeList:** Get names of elements stored in file.
-* **names<-.largeList:** Set names of elements stored in file.
+[![Build Status][build_status_badges_dev]][build_status_link]
+
+
+The latest version of package is under development at [GitHub][github_dev] in branch
+'v0.3.1'. You may install it with **devtools** by
+
+```R
+devtools::install_github("Yuchun-Zhang/R_largeList", ref = "v0.3.1", subdir = "largeList")
+```
+
+## Get Started
+
+[Package vignettes][largeList_vignettes]
+provides a quick demonstration for the basic usage of main functions.
+
 
 # Change Log
 
-## v0.3.1
+### v0.3.1
 * [u] Improve algorithm for new position calculations in function removeFromList and modifyInList.
 * [+] Add progress output to console if estimated processing time > 5s in function saveList, readList, removeFromList and modifyInList.
+* [+] Add user interrupt detection.
 * [f] Add include cstring library to largeList.h for function std::memcpy in old environments.
+* [+] Implemented memory slots to avoid frequent malloc and free.
+* [f] Fix problem of slow performance of mkChar.
+* [u] Rewrite error handling parts.
+
+### v0.3.0
+* [u] Refactor code into OOP.
+* [f] Fix memory leak.
+* [+] Add compression options.
+* [+] Add random list generator for testing.
+* [f] Fix library problems for windows. 
+* [u] Change serialization head, not compatible with v0.2.0
+
+### v0.2.0
+* [+] Add functions modifyInList, modifyNameInList.
+* [+] Add operator overloadings, which provide similar syntax as manipulating normal list objects in R.
+* [f] Fix problem with empty names.
+* [f] Fix fclose bug in modifyInList.
+* [u] Change serialization format, not compatible with v0.1.0
+
+### v0.1.0
+* [+] First version, including saveList, readList, removeFromList, getListLength and getListName functions.
+
+
+## License
+
+The R package **largeList** is free software and comes with ABSOLUTELY NO WARRANTY.
+You can redistribute it and/or modify it under the terms of the GNU General Public License 
+as published by the Free Software Foundation, either version 3 of the License, or any later version
+(at your option).  See the [GNU General Public License][gnu_license] for details.
+
+
+[cran_version_badges]: http://www.r-pkg.org/badges/version/largeList
+[cran_link]: https://CRAN.R-project.org/package=largeList
+[build_status_badges]: https://travis-ci.org/Yuchun-Zhang/R_largeList.svg?branch=master
+[build_status_badges_dev]: https://travis-ci.org/Yuchun-Zhang/R_largeList.svg?branch=v0.3.1
+[build_status_link]: https://travis-ci.org/Yuchun-Zhang/R_largeList
+[cran_download_badges]: http://cranlogs.r-pkg.org/badges/largeList
+[github_dev]: https://github.com/Yuchun-Zhang/R_largeList/tree/v0.3.1
+[largeList_vignettes]: https://cran.r-project.org/web/packages/largeList/vignettes/intro_largeList.html
+[gnu_license]: http://www.gnu.org/licenses/

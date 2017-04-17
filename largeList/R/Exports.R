@@ -3,9 +3,10 @@
 #' @return An integer.
 #' @seealso \code{\link{largeList}}
 #' @examples 
-#' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-#' saveList(list1, "example.llo")
-#' getListLength("example.llo")
+#' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+#' saveList(object = list_1, file = "example.llo")
+#' getListLength(file = "example.llo")
+#' 
 #' @export
 getListLength <- function(file) {
     .Call(C_getListLength, file)
@@ -16,9 +17,10 @@ getListLength <- function(file) {
 #' @return \code{TRUE/FALSE}
 #' @seealso \code{\link{largeList}}
 #' @examples 
-#' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-#' saveList(list1, "example.llo", compress = FALSE)
-#' isListCompressed("example.llo") # get FALSE
+#' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+#' saveList(object = list_1, file = "example.llo", compress = FALSE)
+#' isListCompressed(file = "example.llo") # get FALSE
+#' 
 #' @export
 isListCompressed <- function(file) {
   .Call(C_isListCompressed, file)
@@ -29,9 +31,10 @@ isListCompressed <- function(file) {
 #' @return A charater vector.
 #' @seealso \code{\link{largeList}}
 #' @examples 
-#' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-#' saveList(list1, "example.llo")
-#' getListName("example.llo")
+#' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+#' saveList(object = list1, file = "example.llo")
+#' getListName(file = "example.llo")
+#' 
 #' @export
 getListName <- function(file) {
     .Call(C_getListName, file)
@@ -51,11 +54,17 @@ getListName <- function(file) {
 #' @return A list object.
 #' @seealso \code{\link{largeList}}
 #' @examples 
-#' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-#' saveList(list1, "example.llo")
-#' readList("example.llo")
-#' readList("example.llo",c(1, 3))
-#' readList("example.llo",c("A", "B"))
+#' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+#' saveList(object = list_1, file = "example.llo")
+#' # read the whole list
+#' readList(file = "example.llo")
+#' # by numeric indices
+#' readList(file = "example.llo", index = c(1, 3))
+#' # by names
+#' readList(file = "example.llo", index = c("A", "B"))
+#' # by logical indices
+#' readList(file = "example.llo", index = c(T, F, T))
+#' 
 #' @export
 readList <- function(file, index = NULL) {
     .Call(C_readList, file, index, getOption("largeList.report.progress"))
@@ -73,10 +82,15 @@ readList <- function(file, index = NULL) {
 #' @return invisible \code{TRUE} if no error occurs.
 #' @seealso \code{\link{largeList}}
 #' @examples 
-#' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-#' saveList(list1, "example.llo")
-#' removeFromList("example.llo", c("A"))
-#' removeFromList("example.llo", c(2))
+#' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+#' saveList(object = list_1, file = "example.llo")
+#' # by numeric indices
+#' removeFromList(file = "example.llo", index = c(2))
+#' # by name
+#' removeFromList(file = "example.llo", index = c("A"))
+#' # by logical indices
+#' removeFromList(file = "example.llo", index = c(T))
+#' 
 #' @export
 removeFromList <- function(file, index) {
     res <- .Call(C_removeFromList, file, index, getOption("largeList.report.progress"))
@@ -98,8 +112,12 @@ removeFromList <- function(file, index) {
 #' @return invisible \code{TRUE} if no error occurs.
 #' @seealso \code{\link{largeList}}
 #' @examples 
-#' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-#' saveList(list1, "example.llo")
+#' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+#' # save list_1 to file using compression.
+#' saveList(object = list_1, file = "example.llo", append = FALSE, compress = TRUE)
+#' # append list_1 to file, compress option will be extracted from the file.
+#' saveList(object = list_1, file = "example.llo", append = TRUE)
+#' 
 #' @export
 
 saveList <- function(object, file, append = FALSE, compress = TRUE) {
@@ -120,10 +138,15 @@ saveList <- function(object, file, append = FALSE, compress = TRUE) {
 #' @return invisible \code{TRUE} if no error occurs.
 #' @seealso \code{\link{largeList}}
 #' @examples 
-#' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-#' saveList(list1, "example.llo")
-#' modifyInList("example.llo", c(1,2), list("AA","BB"))
-#' modifyInList("example.llo", c("AA","BB"), list("A","B"))
+#' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+#' saveList(object = list_1, file = "example.llo")
+#' # by numeric indices
+#' modifyInList(file = "example.llo", index = c(1,2), object = list("AA","BB"))
+#' # by names
+#' modifyInList(file = "example.llo", index = c("AA","BB"), object = list("A","B"))
+#' # by logical indices
+#' modifyInList(file = "example.llo", index = c(T, F, T), object = list("A","B"))
+#' 
 #' @export
 modifyInList <- function(file, index, object) {
   res <- .Call(C_modifyInList, file, index, object, getOption("largeList.report.progress"))
@@ -131,7 +154,7 @@ modifyInList <- function(file, index, object) {
 
 #' Modify names of elements in a list file.
 #' @details 
-#' Modify naems of elements with given indices by replacement values provided in parameter name If the length 
+#' Modify names of elements with given indices by replacement values provided in parameter name. If the length 
 #' of replacement values is shorter than the length of indices, values will be used circularly. 
 #' @param file Name of file.
 #' @param index A numeric or logical vector.
@@ -139,9 +162,13 @@ modifyInList <- function(file, index, object) {
 #' @return invisible \code{TRUE} if no error occurs.
 #' @seealso \code{\link{largeList}}
 #' @examples 
-#' list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-#' saveList(list1, "example.llo")
-#' modifyNameInList("example.llo", c(1,2), c("AA","BB"))
+#' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+#' saveList(object = list_1, file = "example.llo")
+#' # by numeric indices
+#' modifyNameInList(file = "example.llo", index = c(1,2), name = c("AA","BB"))
+#' # by logical indices
+#' modifyNameInList(file = "example.llo", index = c(T, T, F), name = c("AA","BB"))
+#' 
 #' @export
 modifyNameInList <- function(file, index, name) {
   res <- .Call(C_modifyNameInList, file, index, name)

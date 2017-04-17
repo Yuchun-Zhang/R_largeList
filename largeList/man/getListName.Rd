@@ -16,9 +16,10 @@ A charater vector.
 Get names of elements in a list file.
 }
 \examples{
-list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-saveList(list1, "example.llo")
-getListName("example.llo")
+list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+saveList(object = list1, file = "example.llo")
+getListName(file = "example.llo")
+
 }
 \seealso{
 \code{\link{largeList}}

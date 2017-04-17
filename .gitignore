@@ -9,4 +9,5 @@
 /**/*.Rbuildignore
 /**/*.Rproj
 /**/*.Rd
+/**/*.html
 .Rproj.user

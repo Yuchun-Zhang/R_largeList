@@ -31,8 +31,12 @@ When it takes long time to process, some verbose info will be printed to console
 which can be switched off by setting \code{options(list(largeList.report.progress = FALSE))}.
 }
 \examples{
-list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-saveList(list1, "example.llo")
+list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+# save list_1 to file using compression.
+saveList(object = list_1, file = "example.llo", append = FALSE, compress = TRUE)
+# append list_1 to file, compress option will be extracted from the file.
+saveList(object = list_1, file = "example.llo", append = TRUE)
+
 }
 \seealso{
 \code{\link{largeList}}

@@ -28,10 +28,15 @@ When it takes long time to process, some verbose info will be printed to console
 which can be switched off by setting \code{options(list(largeList.report.progress = FALSE))}.
 }
 \examples{
-list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-saveList(list1, "example.llo")
-modifyInList("example.llo", c(1,2), list("AA","BB"))
-modifyInList("example.llo", c("AA","BB"), list("A","B"))
+list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+saveList(object = list_1, file = "example.llo")
+# by numeric indices
+modifyInList(file = "example.llo", index = c(1,2), object = list("AA","BB"))
+# by names
+modifyInList(file = "example.llo", index = c("AA","BB"), object = list("A","B"))
+# by logical indices
+modifyInList(file = "example.llo", index = c(T, F, T), object = list("A","B"))
+
 }
 \seealso{
 \code{\link{largeList}}

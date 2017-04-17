@@ -16,9 +16,10 @@ isListCompressed(file)
 Check if elements are compressed in the file.
 }
 \examples{
-list1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-saveList(list1, "example.llo", compress = FALSE)
-isListCompressed("example.llo") # get FALSE
+list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+saveList(object = list_1, file = "example.llo", compress = FALSE)
+isListCompressed(file = "example.llo") # get FALSE
+
 }
 \seealso{
 \code{\link{largeList}}
