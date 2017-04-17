@@ -27,12 +27,15 @@ which can be switched off by setting \code{options(list(largeList.report.progres
 \examples{
 list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
 saveList(object = list_1, file = "example.llo")
+
 # by numeric indices
 removeFromList(file = "example.llo", index = c(2))
+
 # by name
 removeFromList(file = "example.llo", index = c("A"))
+
 # by logical indices
-removeFromList(file = "example.llo", index = c(T))
+removeFromList(file = "example.llo", index = c(TRUE))
 
 }
 \seealso{

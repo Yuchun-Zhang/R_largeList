@@ -152,7 +152,7 @@ Through operator overloadings, list objects stored in file can be manipulated pr
 ### Bind large list file to R handle
 **getList** creates a R object of class "largeList" and bind it with a file. 
 ```{r}
-# by setting truncate == TRUE, file will be trauncated if exists.
+# by setting truncate == TRUE, file will be truncated if exists.
 largelist_object <- getList("example.llo", verbose = TRUE, truncate = TRUE)
 
 # by setting truncate == FALSE, it will bind to existing file.

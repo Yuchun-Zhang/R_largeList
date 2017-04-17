@@ -32,7 +32,7 @@ isListCompressed <- function(file) {
 #' @seealso \code{\link{largeList}}
 #' @examples 
 #' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
-#' saveList(object = list1, file = "example.llo")
+#' saveList(object = list_1, file = "example.llo")
 #' getListName(file = "example.llo")
 #' 
 #' @export
@@ -56,14 +56,18 @@ getListName <- function(file) {
 #' @examples 
 #' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
 #' saveList(object = list_1, file = "example.llo")
+#' 
 #' # read the whole list
 #' readList(file = "example.llo")
+#' 
 #' # by numeric indices
 #' readList(file = "example.llo", index = c(1, 3))
+#' 
 #' # by names
 #' readList(file = "example.llo", index = c("A", "B"))
+#' 
 #' # by logical indices
-#' readList(file = "example.llo", index = c(T, F, T))
+#' readList(file = "example.llo", index = c(TRUE, FALSE, TRUE))
 #' 
 #' @export
 readList <- function(file, index = NULL) {
@@ -84,12 +88,15 @@ readList <- function(file, index = NULL) {
 #' @examples 
 #' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
 #' saveList(object = list_1, file = "example.llo")
+#' 
 #' # by numeric indices
 #' removeFromList(file = "example.llo", index = c(2))
+#' 
 #' # by name
 #' removeFromList(file = "example.llo", index = c("A"))
+#' 
 #' # by logical indices
-#' removeFromList(file = "example.llo", index = c(T))
+#' removeFromList(file = "example.llo", index = c(TRUE))
 #' 
 #' @export
 removeFromList <- function(file, index) {
@@ -113,8 +120,10 @@ removeFromList <- function(file, index) {
 #' @seealso \code{\link{largeList}}
 #' @examples 
 #' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
+#' 
 #' # save list_1 to file using compression.
 #' saveList(object = list_1, file = "example.llo", append = FALSE, compress = TRUE)
+#' 
 #' # append list_1 to file, compress option will be extracted from the file.
 #' saveList(object = list_1, file = "example.llo", append = TRUE)
 #' 
@@ -140,12 +149,15 @@ saveList <- function(object, file, append = FALSE, compress = TRUE) {
 #' @examples 
 #' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
 #' saveList(object = list_1, file = "example.llo")
+#' 
 #' # by numeric indices
 #' modifyInList(file = "example.llo", index = c(1,2), object = list("AA","BB"))
+#' 
 #' # by names
 #' modifyInList(file = "example.llo", index = c("AA","BB"), object = list("A","B"))
+#' 
 #' # by logical indices
-#' modifyInList(file = "example.llo", index = c(T, F, T), object = list("A","B"))
+#' modifyInList(file = "example.llo", index = c(TRUE, FALSE, TRUE), object = list("A","B"))
 #' 
 #' @export
 modifyInList <- function(file, index, object) {
@@ -164,10 +176,12 @@ modifyInList <- function(file, index, object) {
 #' @examples 
 #' list_1 <- list("A" = c(1,2), "B" = "abc", list(1, 2, 3))
 #' saveList(object = list_1, file = "example.llo")
+#' 
 #' # by numeric indices
 #' modifyNameInList(file = "example.llo", index = c(1,2), name = c("AA","BB"))
+#' 
 #' # by logical indices
-#' modifyNameInList(file = "example.llo", index = c(T, T, F), name = c("AA","BB"))
+#' modifyNameInList(file = "example.llo", index = c(TRUE, TRUE, FALSE), name = c("AA","BB"))
 #' 
 #' @export
 modifyNameInList <- function(file, index, name) {
