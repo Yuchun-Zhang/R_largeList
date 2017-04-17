@@ -1,8 +1,8 @@
 Package: largeList
 Type: Package
 Title: Serialization Interface for Large List Objects
-Version: 0.3.0
-Date: 2016-11-05
+Version: 0.3.1
+Date: 2017-04-17
 Author: Yuchun Zhang 
 Maintainer: Yuchun Zhang <yczhangvrc@gmail.com>
 Depends: R (>= 3.2.0)
@@ -11,4 +11,5 @@ License: GPL (>= 2)
 RoxygenNote: 6.0.1
 BugReports: https://github.com/Yuchun-Zhang/R_largeList/issues
 URL: https://github.com/Yuchun-Zhang/R_largeList
-Suggests: testthat, futile.logger
+VignetteBuilder: knitr
+Suggests: testthat, futile.logger, knitr

@@ -67,9 +67,8 @@ provides a quick demonstration for the basic usage of main functions.
 ## License
 
 The R package **largeList** is free software and comes with ABSOLUTELY NO WARRANTY.
-You can redistribute it and/or modify it under the terms of the GNU General Public License 
-as published by the Free Software Foundation, either version 3 of the License, or any later version
-(at your option).  See the [GNU General Public License][gnu_license] for details.
+You can redistribute it and/or modify it under the terms of the GNU General Public License,
+see the [GNU General Public License][gnu_license] for details.
 
 
 [cran_version_badges]: http://www.r-pkg.org/badges/version/largeList
