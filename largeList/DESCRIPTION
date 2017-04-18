@@ -1,8 +1,8 @@
 Package: largeList
 Type: Package
 Title: Serialization Interface for Large List Objects
-Version: 0.3.1
-Date: 2017-04-17
+Version: 0.3.2
+Date: 2017-04-18
 Author: Yuchun Zhang 
 Maintainer: Yuchun Zhang <yczhangvrc@gmail.com>
 Depends: R (>= 3.2.0)

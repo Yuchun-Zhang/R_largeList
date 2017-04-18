@@ -33,7 +33,7 @@
 #define UTF8_MASK (1<<3)
 
 #define NAMELENGTH 16
-#define CURRENT_VERSION ((0<<8) + (3<<4) + 1)
+#define CURRENT_VERSION ((0<<8) + (3<<4) + 2)
 #define READABLE_VERSION ((0<<8) + (2<<4) + 1)
 #define LIST_HEAD_POSITION 26
 #define LENGTH_POSITION 30

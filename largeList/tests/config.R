@@ -1,23 +1,10 @@
-mac_dir <- "~/Documents/Rtest/"
-win_dir <- "C:/Rtest"
-linux_dir <- "~/Documents/Rtest"
+working_dir <- "working_directory"
+rds_file_name <- "rds_file_use_to_test.rds"
+llo_file_name <- "temp_large_list_file.llo"
 
-switch(Sys.info()['sysname'],
-       "Darwin" = {working_dir <- mac_dir},
-       "Windows" = {working_dir <- win_dir},
-       "Linux" = {working_dir <- linux_dir})
-
-rds_file_name <- "./ranListSmall.rds"
-llo_file_name <- "./ranListSmall.llo"
 repeat_time <- 20
 original <- FALSE
 compress <- TRUE
-
-# rds_file_name <- "./ranListMid.rds"
-# llo_file_name <- "./ranListMid.llo"
-# repeat_time <- 20
-# original <- FALSE
-# compress <- TRUE
 
 options(list(largeList.report.progress = FALSE))
 
