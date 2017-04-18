@@ -25,7 +25,7 @@ The latest version of package is under development at [GitHub][github_dev] in br
 'v0.3.1'. You may install it with **devtools** by
 
 ```R
-devtools::install_github("Yuchun-Zhang/R_largeList", ref = "v0.3.1", subdir = "largeList")
+devtools::install_github("Yuchun-Zhang/R_largeList", ref = "v0.3.2", subdir = "largeList")
 ```
 
 ## Get Started
@@ -35,6 +35,9 @@ provides a quick demonstration for the basic usage of main functions.
 
 
 # Change Log
+
+### v0.3.2
+* [f] Remove predefined platform specified directories in testing part.
 
 ### v0.3.1
 * [u] Improve algorithm for new position calculations in function removeFromList and modifyInList.
@@ -74,9 +77,9 @@ see the [GNU General Public License][gnu_license] for details.
 [cran_version_badges]: http://www.r-pkg.org/badges/version/largeList
 [cran_link]: https://CRAN.R-project.org/package=largeList
 [build_status_badges]: https://travis-ci.org/Yuchun-Zhang/R_largeList.svg?branch=master
-[build_status_badges_dev]: https://travis-ci.org/Yuchun-Zhang/R_largeList.svg?branch=v0.3.1
+[build_status_badges_dev]: https://travis-ci.org/Yuchun-Zhang/R_largeList.svg?branch=v0.3.2
 [build_status_link]: https://travis-ci.org/Yuchun-Zhang/R_largeList
 [cran_download_badges]: http://cranlogs.r-pkg.org/badges/largeList
-[github_dev]: https://github.com/Yuchun-Zhang/R_largeList/tree/v0.3.1
+[github_dev]: https://github.com/Yuchun-Zhang/R_largeList/tree/v0.3.2
 [largeList_vignettes]: https://cran.r-project.org/web/packages/largeList/vignettes/intro_largeList.html
 [gnu_license]: http://www.gnu.org/licenses/
