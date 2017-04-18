@@ -22,7 +22,7 @@ install.packages("largeList")
 
 
 The latest version of package is under development at [GitHub][github_dev] in branch
-'v0.3.1'. You may install it with **devtools** by
+'v0.3.2'. You may install it with **devtools** by
 
 ```R
 devtools::install_github("Yuchun-Zhang/R_largeList", ref = "v0.3.2", subdir = "largeList")
